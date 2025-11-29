@@ -1,0 +1,245 @@
+'use client';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { toast } from '@/hooks/use-toast';
+import { intelligentFormCompletion } from '@/ai/flows/intelligent-form-completion';
+import { Loader2, Sparkles } from 'lucide-react';
+import React from 'react';
+
+const formSchema = z.object({
+  fullName: z.string().min(2, 'Full name must be at least 2 characters.'),
+  email: z.string().email('Invalid email address.'),
+  contactNumber: z.string().min(10, 'Contact number is too short.'),
+  address: z.string().min(5, 'Address is too short.'),
+  occupation: z.string().min(2, 'Occupation is required.'),
+  sponsoringEagle: z.string().min(2, 'Sponsor name is required.'),
+  region: z.string({ required_error: 'Please select a region.' }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+export default function MembershipForm() {
+  const [isAutofilling, setIsAutofilling] = React.useState(false);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      fullName: '',
+      email: '',
+      contactNumber: '',
+      address: '',
+      occupation: '',
+      sponsoringEagle: '',
+    },
+  });
+
+  function onSubmit(data: FormValues) {
+    toast({
+      title: 'Application Submitted',
+      description: 'Your membership application has been successfully submitted.',
+    });
+    console.log(data);
+    form.reset();
+  }
+
+  async function handleAiAutofill() {
+    setIsAutofilling(true);
+    try {
+      const fieldLabels: Record<keyof FormValues, string> = {
+        fullName: "Full Name",
+        email: "Email Address",
+        contactNumber: "Contact Number",
+        address: "Home Address",
+        occupation: "Occupation",
+        sponsoringEagle: "Sponsoring Eagle's Name",
+        region: "Eagle Region",
+      };
+
+      const suggestions = await intelligentFormCompletion({
+        userRole: 'Member',
+        formType: 'Membership application',
+        currentFormFields: fieldLabels,
+        previousFormData: {
+            fullName: "Juan Dela Cruz",
+            email: "juan.d.cruz@example.com",
+            region: "NCR"
+        },
+        organizationData: {
+            defaultRegion: "NCR"
+        }
+      });
+      
+      for (const [key, value] of Object.entries(suggestions)) {
+        if (value && key in form.getValues()) {
+            form.setValue(key as keyof FormValues, value);
+        }
+      }
+
+      toast({
+        title: 'AI Autofill Complete',
+        description: 'Suggested values have been filled in.',
+      });
+
+    } catch (error) {
+      console.error('AI Autofill failed:', error);
+      toast({
+        variant: 'destructive',
+        title: 'AI Autofill Failed',
+        description: 'Could not fetch AI suggestions. Please fill the form manually.',
+      });
+    } finally {
+      setIsAutofilling(false);
+    }
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <div className="flex justify-end">
+            <Button type="button" variant="outline" onClick={handleAiAutofill} disabled={isAutofilling}>
+                {isAutofilling ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <Sparkles className="mr-2 h-4 w-4 text-accent" />
+                )}
+                AI Autofill
+            </Button>
+        </div>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="fullName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Full Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Juan Dela Cruz" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email Address</FormLabel>
+                <FormControl>
+                  <Input placeholder="juan.d.cruz@example.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="contactNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Contact Number</FormLabel>
+                <FormControl>
+                  <Input placeholder="0917-XXX-XXXX" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Home Address</FormLabel>
+                <FormControl>
+                  <Input placeholder="123 Rizal St, Metro Manila" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="occupation"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Occupation</FormLabel>
+                <FormControl>
+                  <Input placeholder="Software Engineer" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="sponsoringEagle"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Sponsoring Eagle</FormLabel>
+                <FormControl>
+                  <Input placeholder="Eagle John Smith" {...field} />
+                </FormControl>
+                <FormDescription>
+                  The name of the eagle who is sponsoring your application.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="region"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Eagle Region</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  value={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your region" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="ncr">National Capital Region (NCR)</SelectItem>
+                    <SelectItem value="car">Cordillera Administrative Region (CAR)</SelectItem>
+                    <SelectItem value="region1">Ilocos Region (Region I)</SelectItem>
+                    <SelectItem value="region2">Cagayan Valley (Region II)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline">Cancel</Button>
+            <Button type="submit">Submit Application</Button>
+        </div>
+      </form>
+    </Form>
+  );
+}
