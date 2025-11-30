@@ -3,13 +3,20 @@ import type { SVGProps } from 'react';
 export function Logo(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      {...props}
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        {...props}
     >
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" opacity=".3"/>
-      <path d="M12,3c-4.97,0-9,4.03-9,9c0,4.97,4.03,9,9,9s9-4.03,9-9C21,7.03,16.97,3,12,3z M16.48,15.34 c-0.3,0.46-0.94,0.59-1.4,0.29l-2.45-1.59c-0.35-0.23-0.81-0.23-1.16,0l-2.45,1.59c-0.46,0.3-1.1,0.17-1.4-0.29 c-0.3-0.46-0.17-1.1,0.29-1.4l2.45-1.59c0.35-0.23,0.53-0.64,0.53-1.06V7.75c0-0.55,0.45-1,1-1s1,0.45,1,1v3.54 c0,0.42,0.18,0.83,0.53,1.06l2.45,1.59C16.65,14.24,16.78,14.88,16.48,15.34z"/>
+        <path d="M22 17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10z" />
+        <path d="M12.1 12.5a2.5 2.5 0 0 1-4.2 0" />
+        <path d="M16.1 12.5a2.5 2.5 0 0 1-4.2 0" />
+        <path d="M14.1 8.5a2.5 2.5 0 0 1-4.2 0" />
+        <path d="M9 17a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2H9v-2z" />
     </svg>
   );
 }

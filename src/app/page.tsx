@@ -25,30 +25,30 @@ import {
 } from '@/firebase';
 import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { Notification, Task, Document } from '@/lib/types';
+import type { Notification, Task, Document, Attendance } from '@/lib/types';
 
 const quickAccessItems = [
   {
-    title: 'Standard Forms',
+    title: 'General Documents',
     description: 'Resolutions, Letters, etc.',
     icon: FileText,
     href: '/documents',
   },
   {
-    title: 'Financial Forms',
+    title: 'Financial Records',
     description: 'Budgets, Expense Reports',
     icon: Wallet,
     href: '/documents',
   },
   {
-    title: 'Attendance Sheets',
+    title: 'Meeting Attendance',
     description: 'Meeting & Event Attendance',
     icon: ClipboardCheck,
     href: '/documents',
   },
   {
-    title: 'Ledgers',
-    description: 'Financial Records',
+    title: 'Financial Ledgers',
+    description: 'Financial Records & Analytics',
     icon: Book,
     href: '/analytics',
   },

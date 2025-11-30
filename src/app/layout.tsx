@@ -6,7 +6,7 @@ import { FirebaseClientProvider } from '@/firebase';
 import { AuthProvider } from '@/firebase/auth/auth-provider';
 
 export const metadata: Metadata = {
-  title: 'Eagles Nest Online (TFOE-PE)',
+  title: 'The Fraternal Order of Eagles - Philippine Eagle',
   description: 'Official Portal for The Fraternal Order of Eagles - Philippine Eagle',
 };
 
