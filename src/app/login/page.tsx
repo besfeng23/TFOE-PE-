@@ -28,10 +28,12 @@ import { useAuth } from '@/firebase';
 import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
+  signInAnonymously,
 } from 'firebase/auth';
 import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { Separator } from '@/components/ui/separator';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -41,6 +43,7 @@ const formSchema = z.object({
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordResetting, setIsPasswordResetting] = useState(false);
+  const [isGuestLoading, setIsGuestLoading] = useState(false);
   const auth = useAuth();
   const router = useRouter();
 
@@ -108,6 +111,27 @@ export default function LoginPage() {
     }
   }
 
+  const handleAnonymousLogin = async () => {
+    setIsGuestLoading(true);
+    try {
+      await signInAnonymously(auth);
+      toast({
+        title: 'Guest Login Successful',
+        description: "Welcome! You're logged in as a guest.",
+      });
+      router.push('/');
+    } catch (error: any) {
+      console.error('Anonymous login error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Guest Login Failed',
+        description: 'Could not log in as a guest. Please try again.',
+      });
+    } finally {
+      setIsGuestLoading(false);
+    }
+  }
+
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>
@@ -166,15 +190,21 @@ export default function LoginPage() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || isGuestLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Login
             </Button>
-            <Button variant="outline" className="w-full" disabled>
-              Login with GCash (OTP)
-            </Button>
           </form>
         </Form>
+        <div className="relative my-4">
+          <Separator />
+          <span className="absolute left-1/2 -translate-x-1/2 -top-3 bg-card px-2 text-xs text-muted-foreground">OR</span>
+        </div>
+         <Button variant="secondary" className="w-full" onClick={handleAnonymousLogin} disabled={isLoading || isGuestLoading}>
+            {isGuestLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Login as Guest
+        </Button>
+
         <div className="mt-4 text-center text-sm">
           Don&apos;t have an account?{' '}
           <Link href="/signup" className="underline">

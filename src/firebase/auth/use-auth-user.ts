@@ -22,6 +22,9 @@ export function useAuthUser(options: { redirectTo?: string, redirectIfFound?: bo
 
   const userProfileRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
+    // For anonymous users, we don't expect a profile, but the hook needs a valid path.
+    // We can point to a non-existent document or handle it based on isAnonymous flag.
+    // If you create profiles for anonymous users, this logic might change.
     return doc(firestore, 'userProfiles', user.uid);
   }, [user, firestore]);
 
@@ -30,12 +33,14 @@ export function useAuthUser(options: { redirectTo?: string, redirectIfFound?: bo
   useEffect(() => {
     if (isUserLoading) return; // Don't do anything while loading
 
-    // If redirectIfFound is set, redirect if the user was found
-    if (options.redirectIfFound && user) {
+    // If redirectIfFound is set (e.g., on login/signup pages),
+    // redirect if the user is found AND they are not an anonymous user.
+    if (options.redirectIfFound && user && !user.isAnonymous) {
       router.push(options.redirectTo || '/');
     }
 
-    // If redirectIfFound is NOT set, redirect if the user was NOT found
+    // If we are NOT on an auth page (redirectIfFound is false),
+    // redirect if the user was NOT found.
     if (!options.redirectIfFound && !user && options.redirectTo) {
         router.push(options.redirectTo);
     }
@@ -44,7 +49,7 @@ export function useAuthUser(options: { redirectTo?: string, redirectIfFound?: bo
 
   return {
     user,
-    profile,
+    profile: user?.isAnonymous ? { firstName: 'Guest', lastName: 'User', roleId: 'Guest' } as UserProfile : profile,
     isUserLoading,
     isProfileLoading,
     error: userError || profileError,
