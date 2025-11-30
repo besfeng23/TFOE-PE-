@@ -16,6 +16,8 @@ import { Logo } from '../icons/logo';
 import { SidebarNav } from './sidebar-nav';
 import { UserNav } from './user-nav';
 import { useAuthUser } from '@/firebase';
+import { Globe, Mail, MapPin } from 'lucide-react';
+import { Separator } from '../ui/separator';
 
 const unauthenticatedRoutes = ['/login', '/signup'];
 
@@ -111,7 +113,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="bg-background">
+      <SidebarInset className="bg-background flex flex-col">
         <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="md:hidden" />
@@ -124,6 +126,28 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main className="flex-1 p-4 sm:p-6">{children}</main>
+        <footer className="p-4 sm:p-6 border-t bg-background/80">
+          <div className="container mx-auto px-0">
+              <div className='grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-muted-foreground'>
+                  <div className='flex items-start gap-3'>
+                      <MapPin className='h-4 w-4 mt-0.5 shrink-0'/>
+                      <span>4th Floor Vargas Building, Brgy. West Fairview Compound, Quezon City, Philippines</span>
+                  </div>
+                   <div className='flex items-start gap-3'>
+                      <Mail className='h-4 w-4 mt-0.5 shrink-0'/>
+                      <a href="mailto:np@tfoe-pei.org" className='hover:text-primary'>np@tfoe-pei.org</a>
+                  </div>
+                   <div className='flex items-start gap-3'>
+                      <Globe className='h-4 w-4 mt-0.5 shrink-0'/>
+                      <a href="https://tfoe-pei.org" target="_blank" rel="noopener noreferrer" className='hover:text-primary'>tfoe-pei.org</a>
+                  </div>
+              </div>
+              <Separator className='my-4'/>
+              <p className='text-xs text-center text-muted-foreground/80'>
+                © {new Date().getFullYear()} The Fraternal Order of Eagles - Philippine Eagle. All rights reserved.
+              </p>
+          </div>
+        </footer>
       </SidebarInset>
     </SidebarProvider>
   );
