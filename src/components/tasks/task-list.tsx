@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import {
   useUser,
   useFirestore,
@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, FileWarning } from 'lucide-react';
+import { Plus, Trash2, FileWarning, ListTodo } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Task {
@@ -168,5 +168,3 @@ export default function TaskList() {
     </div>
   );
 }
-
-    

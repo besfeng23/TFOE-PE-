@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import React from 'react';
+import Link from 'next/link';
 import {
   SidebarProvider,
   Sidebar,
@@ -11,31 +12,46 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
+import { SheetTitle } from '@/components/ui/sheet';
 import { Logo } from '../icons/logo';
 import { SidebarNav } from './sidebar-nav';
 import { UserNav } from './user-nav';
 import { useAuthUser } from '@/firebase';
-import { Skeleton } from '../ui/skeleton';
 
 const unauthenticatedRoutes = ['/login', '/signup'];
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isUserLoading } = useAuthUser();
+  const { user, isUserLoading } = useAuthUser();
 
-  if (unauthenticatedRoutes.includes(pathname)) {
+  const isUnauthenticatedRoute = unauthenticatedRoutes.includes(pathname);
+
+  if (isUserLoading && !isUnauthenticatedRoute) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Logo className="h-16 w-16 animate-pulse text-primary" />
+          <p className="text-muted-foreground">Loading Portal...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isUnauthenticatedRoute) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
         {children}
       </div>
     );
   }
 
+  // If we are still loading, and we are not on an auth page, show a loader
+  // This prevents a flicker of the login page before redirecting to the dashboard
   if (isUserLoading) {
     return (
-       <div className="flex min-h-screen items-center justify-center">
+       <div className="flex min-h-screen items-center justify-center bg-background">
          <div className="flex flex-col items-center gap-4">
-            <Logo className="h-16 w-16 text-primary animate-pulse" />
+            <Logo className="h-16 w-16 animate-pulse text-primary" />
             <p className="text-muted-foreground">Loading Portal...</p>
          </div>
        </div>
@@ -47,15 +63,14 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       <Sidebar
         variant="sidebar"
         collapsible="icon"
-        className="border-sidebar-border"
+        className="border-sidebar-border bg-sidebar text-sidebar-foreground"
       >
+        <SheetTitle className="sr-only">Main Menu</SheetTitle>
         <SidebarHeader className="p-4">
           <Link href="/" className="flex items-center gap-2">
             <Logo className="size-8 text-sidebar-primary" />
             <div className="flex flex-col">
-              <h2
-                className="font-headline text-lg font-semibold tracking-tight text-sidebar-foreground group-data-[collapsible=icon]:hidden"
-              >
+              <h2 className="font-headline text-lg font-semibold tracking-tight text-sidebar-foreground group-data-[collapsible=icon]:hidden">
                 Eagles Nest
               </h2>
               <p className="text-xs text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden">
@@ -74,7 +89,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset>
+      <SidebarInset className="bg-background">
         <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="md:hidden" />
