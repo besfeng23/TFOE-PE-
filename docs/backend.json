@@ -375,6 +375,84 @@
         "completed",
         "createdAt"
       ]
+    },
+    "Partnership": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Partnership",
+      "type": "object",
+      "description": "Represents a partnership with a corporation or private entity.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Partnership entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the partner organization."
+        },
+        "contactPerson": {
+          "type": "string",
+          "description": "Primary contact person at the partner organization."
+        },
+        "email": {
+          "type": "string",
+          "description": "Contact email for the partner.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Contact phone number for the partner."
+        },
+        "address": {
+          "type": "string",
+          "description": "Physical address of the partner."
+        },
+        "partnershipType": {
+          "type": "string",
+          "description": "Type of partnership.",
+          "enum": ["Corporate", "NGO", "Private"]
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the partnership.",
+          "enum": ["Active", "Inactive"]
+        }
+      },
+      "required": ["id", "name", "contactPerson", "email", "partnershipType", "status"]
+    },
+    "Endorsement": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Endorsement",
+      "type": "object",
+      "description": "Represents an endorsement letter generated for a partner.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Endorsement entity."
+        },
+        "partnershipId": {
+          "type": "string",
+          "description": "Reference to Partnership. The partner being endorsed."
+        },
+        "subject": {
+          "type": "string",
+          "description": "The subject line of the endorsement letter."
+        },
+        "body": {
+          "type": "string",
+          "description": "The full text content of the endorsement letter."
+        },
+        "generatedDate": {
+          "type": "string",
+          "description": "Date and time when the letter was generated.",
+          "format": "date-time"
+        },
+        "generatedByUserId": {
+          "type": "string",
+          "description": "Reference to UserProfile. The user who generated the letter."
+        }
+      },
+      "required": ["id", "partnershipId", "subject", "body", "generatedDate", "generatedByUserId"]
     }
   },
   "auth": {
@@ -552,8 +630,41 @@
             }
           ]
         }
+      },
+      {
+        "path": "partnerships/{partnershipId}",
+        "definition": {
+          "entityName": "Partnership",
+          "schema": {
+            "$ref": "#/backend/entities/Partnership"
+          },
+          "description": "Stores information about corporate and private partners.",
+          "params": [
+            {
+              "name": "partnershipId",
+              "description": "Unique identifier for the partnership."
+            }
+          ]
+        }
+      },
+      {
+        "path": "endorsements/{endorsementId}",
+        "definition": {
+          "entityName": "Endorsement",
+          "schema": {
+            "$ref": "#/backend/entities/Endorsement"
+          },
+          "description": "Stores generated endorsement letters for partners.",
+          "params": [
+            {
+              "name": "endorsementId",
+              "description": "Unique identifier for the endorsement letter."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to adhere to the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. It leverages denormalization and structural segregation to optimize security rule implementation and data access patterns.  \n\n*   **User Profiles:** User profiles are stored in a collection named `userProfiles` with the document ID matching the user's Firebase Auth UID. This enables path-based ownership for user-specific data, simplifying security rules.\n*   **Tasks & Notifications:** Tasks and Notifications are stored in subcollections under each `userProfiles` document. This allows for secure, scalable querying of a user's own data without exposing it to others, following best practices for user-private data.\n*   **Roles:** Roles are stored in a `roles` collection, enabling easy management of roles within the application. User profiles store a `roleId` to reference the user's role.\n*   **Documents:** Documents are stored in a `documents` collection. The `uploadedByUserId` field in each document denormalizes ownership, enabling secure listing and filtering of documents based on the uploader.\n*   **Categories:** Categories are stored in a `categories` collection, providing a simple lookup for document categorization.\n*   **Events:** Events are stored in an `events` collection, allowing for easy retrieval and display of event information.\n*   **Attendance:** Attendance records are stored in an `attendance` collection. Each document records the user (`userId`) and event (`eventId`).\n*   **Receipts:** Receipts are stored in a `receipts` collection and are associated with a `userId` to identify the user who made the payment.\n*   **Automated Summaries:** Automated Summaries are stored in the `automatedSummaries` collection, with a `documentId` pointing to the source document.\n\n**Authorization Independence (Denormalization):**\nThe structure avoids `get()` calls in security rules by denormalizing authorization context. The `documents` collection contains the `uploadedByUserId` field, eliminating the need to fetch the user profile to determine ownership. Other entities like `attendance` and `receipts` are stored in root collections with associated `userId` or `eventId` fields, allowing direct rule application without requiring parent document reads.  This approach ensures that operations remain atomic and security rules are straightforward.\n\n**QAPs (Rules are not Filters):**\nThe structure enables secure `list` operations by segregating data based on ownership and purpose. Private user data (e.g., notifications, receipts) are now stored in user-specific subcollections, ensuring that only the owner can query them. Documents are secured by the `uploadedByUserId` field, allowing filtering of documents that the user has uploaded. The structure supports different security postures by utilizing different collections for data with varying security needs (e.g., public events vs. private user receipts).\n\nBy adhering to these principles and strategies, the Firestore structure provides a secure, scalable, and debuggable solution for the application's data storage needs."
+    "reasoning": "The Firestore data structure is designed to adhere to the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. It leverages denormalization and structural segregation to optimize security rule implementation and data access patterns.  \n\n*   **User Profiles:** User profiles are stored in a collection named `userProfiles` with the document ID matching the user's Firebase Auth UID. This enables path-based ownership for user-specific data, simplifying security rules.\n*   **Tasks & Notifications:** Tasks and Notifications are stored in subcollections under each `userProfiles` document. This allows for secure, scalable querying of a user's own data without exposing it to others, following best practices for user-private data.\n*   **Roles:** Roles are stored in a `roles` collection, enabling easy management of roles within the application. User profiles store a `roleId` to reference the user's role.\n*   **Documents:** Documents are stored in a `documents` collection. The `uploadedByUserId` field in each document denormalizes ownership, enabling secure listing and filtering of documents based on the uploader.\n*   **Categories:** Categories are stored in a `categories` collection, providing a simple lookup for document categorization.\n*   **Events:** Events are stored in an `events` collection, allowing for easy retrieval and display of event information.\n*   **Attendance:** Attendance records are stored in an `attendance` collection. Each document records the user (`userId`) and event (`eventId`).\n*   **Receipts:** Receipts are stored in a `receipts` collection and are associated with a `userId` to identify the user who made the payment.\n*   **Automated Summaries:** Automated Summaries are stored in the `automatedSummaries` collection, with a `documentId` pointing to the source document.\n*   **Partnerships & Endorsements**: New collections for `partnerships` and `endorsements` are added at the root level. This allows for clear, admin-gated access to manage external partnerships and related documents, separating them from user-specific or public content.\n\n**Authorization Independence (Denormalization):**\nThe structure avoids `get()` calls in security rules by denormalizing authorization context. The `documents` collection contains the `uploadedByUserId` field, eliminating the need to fetch the user profile to determine ownership. Other entities like `attendance` and `receipts` are stored in root collections with associated `userId` or `eventId` fields, allowing direct rule application without requiring parent document reads.  This approach ensures that operations remain atomic and security rules are straightforward.\n\n**QAPs (Rules are not Filters):**\nThe structure enables secure `list` operations by segregating data based on ownership and purpose. Private user data (e.g., notifications, receipts) are now stored in user-specific subcollections, ensuring that only the owner can query them. Documents are secured by the `uploadedByUserId` field, allowing filtering of documents that the user has uploaded. The structure supports different security postures by utilizing different collections for data with varying security needs (e.g., public events vs. private user receipts).\n\nBy adhering to these principles and strategies, the Firestore structure provides a secure, scalable, and debuggable solution for the application's data storage needs."
   }
 }
+

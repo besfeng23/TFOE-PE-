@@ -13,7 +13,7 @@
  *   rules that allow users to safely list their own data without any risk of exposing others' data.
  * - Public Read-Only Collections: Collections like 'roles', and 'categories' are treated as
  *   public lookup data, readable by any signed-in user but not writable by clients.
- * - Admin-Only Writable Collections: The 'events' collection is publicly readable, but only admins can write to it.
+ * - Admin-Only Writable Collections: The 'events' and 'partnerships' collections are publicly readable, but only admins can write to them.
  * - Owner-Only Writes for Public Content: The 'documents' collection is publicly readable, but write
  *   operations (create, update, delete) are restricted to the original author.
  * - Admin Role Check: The `isAdmin()` function checks a custom claim on the user's auth token.
@@ -195,6 +195,29 @@ service cloud.firestore {
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
+    
+    /**
+     * @description Partnerships are public to read, but only admins can manage them.
+     * @path /partnerships/{partnershipId}
+     * @principle Secures public data by making it admin-only for writes.
+     */
+    match /partnerships/{partnershipId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    /**
+     * @description Endorsement letters are admin-only.
+     * @path /endorsements/{endorsementId}
+     * @principle Restricts access to sensitive generated documents.
+     */
+    match /endorsements/{endorsementId} {
+        allow read, write: if isAdmin();
+    }
+
 
     /**
      * @description Users can manage their own attendance records. Admins can list all for analytics.
@@ -236,3 +259,4 @@ service cloud.firestore {
     }
   }
 }
+

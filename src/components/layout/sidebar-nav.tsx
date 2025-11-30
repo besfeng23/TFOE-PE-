@@ -13,6 +13,7 @@ import {
   Calendar,
   ClipboardPenLine,
   FileText,
+  Handshake,
   LayoutDashboard,
   ListTodo,
   MessageCircle,
@@ -40,6 +41,12 @@ const navItems = [
     icon: Users,
     label: 'Members',
     match: (pathname: string) => pathname.startsWith('/members'),
+  },
+  {
+    href: '/partnerships',
+    icon: Handshake,
+    label: 'Partnerships',
+    match: (pathname: string) => pathname.startsWith('/partnerships'),
   },
   {
     href: '/applications',
@@ -116,3 +123,4 @@ export function SidebarNav() {
     </div>
   );
 }
+

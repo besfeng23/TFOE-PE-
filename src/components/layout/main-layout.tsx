@@ -33,7 +33,8 @@ const pageTitles: { [key: string]: string } = {
   '/members': 'Members',
   '/settings': 'Settings',
   '/profile': 'Profile',
-  '/fees': 'Membership Fees'
+  '/fees': 'Membership Fees',
+  '/partnerships': 'Partnerships',
 };
 
 const getPageTitle = (pathname: string): string => {
@@ -154,3 +155,4 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
+

@@ -61,3 +61,23 @@ export interface Event {
     meetingId?: string;
     passcode?: string;
 }
+
+export interface Partnership {
+    id: string;
+    name: string;
+    contactPerson: string;
+    email: string;
+    phone: string;
+    address: string;
+    partnershipType: 'Corporate' | 'NGO' | 'Private';
+    status: 'Active' | 'Inactive';
+}
+
+export interface Endorsement {
+    id: string;
+    partnershipId: string;
+    subject: string;
+    body: string;
+    generatedDate: Timestamp;
+    generatedByUserId: string;
+}
