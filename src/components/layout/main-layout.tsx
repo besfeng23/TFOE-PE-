@@ -16,6 +16,7 @@ import { Logo } from '../icons/logo';
 import { SidebarNav } from './sidebar-nav';
 import { UserNav } from './user-nav';
 import { useAuthUser } from '@/firebase';
+import { SheetTitle } from '@/components/ui/sheet';
 
 const unauthenticatedRoutes = ['/login', '/signup'];
 
