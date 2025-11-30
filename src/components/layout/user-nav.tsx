@@ -57,7 +57,7 @@ export function UserNav({ isSidebar = false }: UserNavProps) {
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="h-auto w-full justify-start p-2"
+            className="h-auto w-full justify-start p-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
             {triggerContent}
           </Button>
