@@ -12,7 +12,6 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { SheetTitle } from '@/components/ui/sheet';
 import { Logo } from '../icons/logo';
 import { SidebarNav } from './sidebar-nav';
 import { UserNav } from './user-nav';
@@ -65,7 +64,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         collapsible="icon"
         className="border-sidebar-border bg-sidebar text-sidebar-foreground"
       >
-        <SheetTitle className="sr-only">Main Menu</SheetTitle>
         <SidebarHeader className="p-4">
           <Link href="/" className="flex items-center gap-2">
             <Logo className="size-8 text-sidebar-primary" />
