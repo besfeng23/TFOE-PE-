@@ -4,24 +4,26 @@
  * The primary goal is to ensure users can only access and manage their own information while
  * allowing read-only access to communal resources like documents and events.
  *
- * Data Structure: The data is organized into flat, top-level collections. There are no user-specific
- * subcollections. Instead, documents containing private user data (e.g., Receipts, Notifications)
- * include a denormalized 'userId' field. This design choice is crucial for the authorization logic.
+ * Data Structure: Private user data (Tasks, Notifications) is stored in subcollections under the
+ * user's profile document. This is a critical design for secure list queries. Other data is organized
+ * into flat, top-level collections. For collections that contain user-related but not strictly private data
+ * (e.g., 'receipts'), documents include a denormalized 'userId' field.
  *
  * Key Security Decisions:
  * - User Profile Segregation: Users can only create, read, and modify their own profile document, which is
  *   keyed by their authentication UID. Listing all user profiles is strictly forbidden to protect user privacy.
+ * - Private Subcollections: By placing tasks and notifications in subcollections (/userProfiles/{userId}/tasks/{taskId}),
+ *   we can create rules that allow users to safely list their own data without any risk of exposing others' data.
  * - Public Read-Only Collections: Collections like 'roles', 'categories', and 'events' are treated as
  *   public lookup data, readable by any signed-in user but not writable by clients. This assumes
  *   such data is managed by backend processes or administrative tools.
  * - Owner-Only Writes for Public Content: The 'documents' collection is publicly readable, but write
  *   operations (create, update, delete) are restricted to the original author, identified by the
  *   denormalized 'uploadedByUserId' field.
- * - Secure Listing for Private Data: For top-level collections containing sensitive, user-specific data
- *   ('receipts', 'notifications', 'attendance'), list operations are disabled. This is a critical
- *   security measure because Firestore rules cannot filter a list query on a document field (like 'userId')
- *   at the collection level, which would otherwise expose all users' private data. For secure listing,
- *   this data should be moved to user-specific subcollections (e.g., /userProfiles/{userId}/receipts/{receiptId}).
+ * - Secure Listing for Top-Level Private Data: For top-level collections containing sensitive data
+ *   that isn't naturally nested ('receipts', 'attendance'), list operations are disabled. Firestore
+ *   rules cannot filter a list query on a document field ('userId'), which would otherwise expose all
+ *   users' private data. For these, secure access is provided for individual documents only (`get`).
  *
  * Denormalization for Authorization: To ensure fast and secure rule evaluation, authorization fields are
  * denormalized directly onto the documents. For example, 'documents' contain an 'uploadedByUserId', and
@@ -88,7 +90,7 @@ service cloud.firestore {
 
     /**
      * Validates that the resource being created has a 'userId' matching the creator.
-     * Used for collections like receipts, notifications, and attendance.
+     * Used for collections like receipts and attendance.
      */
     function hasValidOwnerIdOnCreate() {
       return request.resource.data.userId == request.auth.uid;
@@ -127,6 +129,17 @@ service cloud.firestore {
        * @principle Secures a user-owned subcollection, allowing safe list and get operations.
        */
       match /tasks/{taskId} {
+        allow read, write: if isOwner(userProfileId);
+      }
+
+      /**
+       * @description Users can manage their own notifications within their profile.
+       * @path /userProfiles/{userProfileId}/notifications/{notificationId}
+       * @allow (list) A user listing their own notifications: `auth.uid == 'user_abc'`, `list /userProfiles/user_abc/notifications`
+       * @deny (get) A user trying to read another user's notification: `auth.uid == 'user_123'`, `get /userProfiles/user_abc/notifications/notif_xyz`
+       * @principle Secures a user-owned subcollection, allowing safe list and get operations for private data.
+       */
+      match /notifications/{notificationId} {
         allow read, write: if isOwner(userProfileId);
       }
     }
@@ -220,22 +233,7 @@ service cloud.firestore {
       allow update: if isExistingOwner(resource.data.userId) && hasImmutableOwnerId();
       allow delete: if isExistingOwner(resource.data.userId);
     }
-
-    /**
-     * @description Users can only access their own notifications. Listing is denied for privacy.
-     * @path /notifications/{notificationId}
-     * @allow (update) A user marking their own notification as read: `auth.uid == resource.data.userId`.
-     * @deny (get) A user trying to read someone else's notification.
-     * @principle Enforces document ownership for reads and writes. Listing is denied on this top-level collection to prevent data leakage.
-     */
-    match /notifications/{notificationId} {
-      allow get: if isOwner(resource.data.userId);
-      allow list: if false; // Denied to prevent leaking all users' notification data.
-      allow create: if isSignedIn() && hasValidOwnerIdOnCreate();
-      allow update: if isExistingOwner(resource.data.userId) && hasImmutableOwnerId();
-      allow delete: if isExistingOwner(resource.data.userId);
-    }
-
+    
     /**
      * @description AI-generated summaries are public, read-only data for all signed-in users.
      * @path /automatedSummaries/{automatedSummaryId}

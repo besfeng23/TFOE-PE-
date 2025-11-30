@@ -95,8 +95,7 @@ export default function DashboardPage() {
   const notificationsQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
-      collection(firestore, 'notifications'),
-      where('userId', '==', user.uid),
+      collection(firestore, `userProfiles/${user.uid}/notifications`),
       orderBy('timestamp', 'desc')
     );
   }, [firestore, user]);
@@ -130,7 +129,7 @@ export default function DashboardPage() {
 
   const handleToggleRead = (id: string, read: boolean) => {
     if (!firestore || !user) return;
-    const notificationRef = doc(firestore, 'notifications', id);
+    const notificationRef = doc(firestore, `userProfiles/${user.uid}/notifications`, id);
     updateDocumentNonBlocking(notificationRef, { read });
   };
   
@@ -260,3 +259,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
