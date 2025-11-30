@@ -1,0 +1,243 @@
+/**
+ * Core Philosophy: This ruleset establishes a hybrid security model. It combines a strict
+ * user-ownership model for private data with a public-read model for shared, non-sensitive data.
+ * The primary goal is to ensure users can only access and manage their own information while
+ * allowing read-only access to communal resources like documents and events.
+ *
+ * Data Structure: The data is organized into flat, top-level collections. There are no user-specific
+ * subcollections. Instead, documents containing private user data (e.g., Receipts, Notifications)
+ * include a denormalized 'userId' field. This design choice is crucial for the authorization logic.
+ *
+ * Key Security Decisions:
+ * - User Profile Segregation: Users can only create, read, and modify their own profile document, which is
+ *   keyed by their authentication UID. Listing all user profiles is strictly forbidden to protect user privacy.
+ * - Public Read-Only Collections: Collections like 'roles', 'categories', and 'events' are treated as
+ *   public lookup data, readable by any signed-in user but not writable by clients. This assumes
+ *   such data is managed by backend processes or administrative tools.
+ * - Owner-Only Writes for Public Content: The 'documents' collection is publicly readable, but write
+ *   operations (create, update, delete) are restricted to the original author, identified by the
+ *   denormalized 'uploadedByUserId' field.
+ * - Secure Listing for Private Data: For top-level collections containing sensitive, user-specific data
+ *   ('receipts', 'notifications', 'attendance'), list operations are disabled. This is a critical
+ *   security measure because Firestore rules cannot filter a list query on a document field (like 'userId')
+ *   at the collection level, which would otherwise expose all users' private data. For secure listing,
+ *   this data should be moved to user-specific subcollections (e.g., /userProfiles/{userId}/receipts/{receiptId}).
+ *
+ * Denormalization for Authorization: To ensure fast and secure rule evaluation, authorization fields are
+ * denormalized directly onto the documents. For example, 'documents' contain an 'uploadedByUserId', and
+ * 'receipts' contain a 'userId'. This eliminates the need for slow and costly `get()` calls to other
+ * documents during rule evaluation, making the security model more performant and reliable.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----------------------------------------------------------------------
+    // Helper Functions
+    // ----------------------------------------------------------------------
+
+    /**
+     * Returns true if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Returns true if the authenticated user's UID matches the provided userId.
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    /**
+     * Returns true if the document exists and the user is the owner.
+     * Used for safe update and delete operations.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+    
+    /**
+     * Validates that the user profile being created has an 'id' field matching the document's UID.
+     */
+    function hasValidUserProfileIdOnCreate(userProfileId) {
+      return request.resource.data.id == userProfileId;
+    }
+
+    /**
+     * Enforces immutability of the user profile's 'id' field during an update.
+     */
+    function hasImmutableUserProfileId() {
+      return request.resource.data.id == resource.data.id;
+    }
+    
+    /**
+     * Validates that the document being created has an 'uploadedByUserId' matching the creator.
+     */
+    function hasValidCreatorIdOnCreate() {
+      return request.resource.data.uploadedByUserId == request.auth.uid;
+    }
+
+    /**
+     * Enforces immutability of the document's 'uploadedByUserId' field.
+     */
+    function hasImmutableCreatorId() {
+      return request.resource.data.uploadedByUserId == resource.data.uploadedByUserId;
+    }
+
+    /**
+     * Validates that the resource being created has a 'userId' matching the creator.
+     * Used for collections like receipts, notifications, and attendance.
+     */
+    function hasValidOwnerIdOnCreate() {
+      return request.resource.data.userId == request.auth.uid;
+    }
+
+    /**
+     * Enforces immutability of a resource's 'userId' field during an update.
+     */
+    function hasImmutableOwnerId() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    // ----------------------------------------------------------------------
+    // Collection Rules
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Users can create, read, and update their own profile. Listing all users is denied.
+     * @path /userProfiles/{userProfileId}
+     * @allow (create) An authenticated user creating their own profile: `auth.uid == 'user_abc'`, `create /userProfiles/user_abc`
+     * @deny (get) A user trying to read another user's profile: `auth.uid == 'user_123'`, `get /userProfiles/user_abc`
+     * @principle Restricts access to a user's own data tree and enforces self-creation.
+     */
+    match /userProfiles/{userProfileId} {
+      allow get: if isOwner(userProfileId);
+      allow list: if false;
+      allow create: if isOwner(userProfileId) && hasValidUserProfileIdOnCreate(userProfileId);
+      allow update: if isExistingOwner(userProfileId) && hasImmutableUserProfileId();
+      allow delete: if isExistingOwner(userProfileId);
+    }
+
+    /**
+     * @description Roles are public, read-only data for all signed-in users.
+     * @path /roles/{roleId}
+     * @allow (get) Any authenticated user reading a role: `auth != null`, `get /roles/admin_role`
+     * @deny (create) Any user trying to create a new role: `auth != null`, `create /roles/new_role`
+     * @principle Secures lookup data by making it read-only for clients, assuming it's managed by a backend.
+     */
+    match /roles/{roleId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Documents are public to read, but only the original uploader can modify or delete them.
+     * @path /documents/{documentId}
+     * @allow (create) An authenticated user uploading a document with their UID as 'uploadedByUserId'.
+     * @deny (update) A user trying to modify a document they did not upload.
+     * @principle Implements a "Public Read with Owner-Only Writes" pattern using a denormalized ownership field.
+     */
+    match /documents/{documentId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && hasValidCreatorIdOnCreate();
+      allow update: if isExistingOwner(resource.data.uploadedByUserId) && hasImmutableCreatorId();
+      allow delete: if isExistingOwner(resource.data.uploadedByUserId);
+    }
+
+    /**
+     * @description Categories are public, read-only data for all signed-in users.
+     * @path /categories/{categoryId}
+     * @allow (get) Any authenticated user reading a category: `auth != null`, `get /categories/financials`
+     * @deny (create) Any user trying to create a new category: `auth != null`, `create /categories/new_cat`
+     * @principle Secures lookup data by making it read-only for clients, assuming it's managed by a backend.
+     */
+    match /categories/{categoryId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Events are public, read-only data for all signed-in users.
+     * @path /events/{eventId}
+     * @allow (get) Any authenticated user reading an event: `auth != null`, `get /events/annual_meeting`
+     * @deny (create) Any user trying to create a new event: `auth != null`, `create /events/new_event`
+     * @principle Secures lookup data by making it read-only for clients, assuming it's managed by a backend.
+     */
+    match /events/{eventId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Users can manage their own attendance records. Listing all attendance is denied for privacy.
+     * @path /attendance/{attendanceId}
+     * @allow (create) A user creating their own attendance record: `auth.uid == 'user_abc'`, `create /attendance/att_123` with data `{ userId: 'user_abc' }`
+     * @deny (get) A user trying to read another's attendance record.
+     * @principle Enforces document ownership for writes and reads. Listing is denied on this top-level collection to prevent data leakage.
+     */
+    match /attendance/{attendanceId} {
+      allow get: if isOwner(resource.data.userId);
+      allow list: if false; // Denied to prevent leaking all users' attendance data.
+      allow create: if isSignedIn() && hasValidOwnerIdOnCreate();
+      allow update: if isExistingOwner(resource.data.userId) && hasImmutableOwnerId();
+      allow delete: if isExistingOwner(resource.data.userId);
+    }
+
+    /**
+     * @description Users can only access their own payment receipts. Listing is denied for privacy.
+     * @path /receipts/{receiptId}
+     * @allow (get) A user reading their own receipt: `auth.uid == resource.data.userId`.
+     * @deny (list) Any user trying to list all receipts in the system.
+     * @principle Enforces document ownership for reads and writes. Listing is denied on this top-level collection to prevent data leakage.
+     */
+    match /receipts/{receiptId} {
+      allow get: if isOwner(resource.data.userId);
+      allow list: if false; // Denied to prevent leaking all users' receipt data.
+      allow create: if isSignedIn() && hasValidOwnerIdOnCreate();
+      allow update: if isExistingOwner(resource.data.userId) && hasImmutableOwnerId();
+      allow delete: if isExistingOwner(resource.data.userId);
+    }
+
+    /**
+     * @description Users can only access their own notifications. Listing is denied for privacy.
+     * @path /notifications/{notificationId}
+     * @allow (update) A user marking their own notification as read: `auth.uid == resource.data.userId`.
+     * @deny (get) A user trying to read someone else's notification.
+     * @principle Enforces document ownership for reads and writes. Listing is denied on this top-level collection to prevent data leakage.
+     */
+    match /notifications/{notificationId} {
+      allow get: if isOwner(resource.data.userId);
+      allow list: if false; // Denied to prevent leaking all users' notification data.
+      allow create: if isSignedIn() && hasValidOwnerIdOnCreate();
+      allow update: if isExistingOwner(resource.data.userId) && hasImmutableOwnerId();
+      allow delete: if isExistingOwner(resource.data.userId);
+    }
+
+    /**
+     * @description AI-generated summaries are public, read-only data for all signed-in users.
+     * @path /automatedSummaries/{automatedSummaryId}
+     * @allow (get) Any authenticated user reading a summary.
+     * @deny (create) Any user trying to create a new summary, as this is done by a backend process.
+     * @principle Secures machine-generated data by making it read-only for clients.
+     */
+    match /automatedSummaries/{automatedSummaryId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}

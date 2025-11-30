@@ -1,0 +1,483 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user profile within the TFOE-PE application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "User's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "User's last name."
+        },
+        "membershipNumber": {
+          "type": "string",
+          "description": "User's membership number."
+        },
+        "idPhotoUrl": {
+          "type": "string",
+          "description": "URL to the user's ID photo.",
+          "format": "uri"
+        },
+        "contactInfo": {
+          "type": "string",
+          "description": "User's contact information (e.g., phone number)."
+        },
+        "roleId": {
+          "type": "string",
+          "description": "Reference to Role. (Relationship: Role 1:N UserProfile)"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "roleId"
+      ]
+    },
+    "Role": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Role",
+      "type": "object",
+      "description": "Represents a user role (e.g., Secretary, Member, Admin).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Role entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the role (e.g., Secretary, Member, Admin)."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the role and its permissions."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "Document": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Document",
+      "type": "object",
+      "description": "Represents a document uploaded to the system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Document entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the document."
+        },
+        "fileUrl": {
+          "type": "string",
+          "description": "URL to the document file.",
+          "format": "uri"
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "Reference to Category. (Relationship: Category 1:N Document)"
+        },
+        "uploadDate": {
+          "type": "string",
+          "description": "Date and time when the document was uploaded.",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "number",
+          "description": "Version number of the document."
+        },
+        "uploadedByUserId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Document). The user who uploaded the document."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "fileUrl",
+        "categoryId",
+        "uploadDate",
+        "version",
+        "uploadedByUserId"
+      ]
+    },
+    "Category": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Category",
+      "type": "object",
+      "description": "Represents a document category (e.g., Forms, Resolutions, Financials).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Category entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the category."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the category."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "Event": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Event",
+      "type": "object",
+      "description": "Represents an event or program.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Event entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the event."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the event."
+        },
+        "startDate": {
+          "type": "string",
+          "description": "Start date and time of the event.",
+          "format": "date-time"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "End date and time of the event.",
+          "format": "date-time"
+        },
+        "location": {
+          "type": "string",
+          "description": "Location of the event."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "startDate",
+        "endDate",
+        "location"
+      ]
+    },
+    "Attendance": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Attendance",
+      "type": "object",
+      "description": "Represents the attendance of a user at an event.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Attendance entity."
+        },
+        "eventId": {
+          "type": "string",
+          "description": "Reference to Event. (Relationship: Event 1:N Attendance)"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Attendance)"
+        },
+        "attended": {
+          "type": "boolean",
+          "description": "Indicates whether the user attended the event."
+        }
+      },
+      "required": [
+        "id",
+        "eventId",
+        "userId",
+        "attended"
+      ]
+    },
+    "Receipt": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Receipt",
+      "type": "object",
+      "description": "Represents a receipt generated for a payment.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Receipt entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Receipt). The user who made the payment."
+        },
+        "paymentDate": {
+          "type": "string",
+          "description": "Date and time of the payment.",
+          "format": "date-time"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount paid."
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Payment method used (e.g., GCash, bank transfer, cash)."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "paymentDate",
+        "amount",
+        "paymentMethod"
+      ]
+    },
+    "Notification": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Notification",
+      "type": "object",
+      "description": "Represents a notification sent to a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Notification entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Notification).  The user who the notification is for."
+        },
+        "message": {
+          "type": "string",
+          "description": "Message of the notification."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp of when the notification was created",
+          "format": "date-time"
+        },
+        "read": {
+          "type": "boolean",
+          "description": "Has the notification been read?"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "message",
+        "timestamp",
+        "read"
+      ]
+    },
+    "AutomatedSummary": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AutomatedSummary",
+      "type": "object",
+      "description": "Represents a summary generated by the AI-powered summarization tool.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the AutomatedSummary entity."
+        },
+        "documentId": {
+          "type": "string",
+          "description": "Reference to Document. (Relationship: Document 1:N AutomatedSummary). The document that was summarized."
+        },
+        "summaryText": {
+          "type": "string",
+          "description": "The summarized text."
+        },
+        "parameters": {
+          "type": "string",
+          "description": "Parameters used for summarization (e.g., length, focus areas)."
+        },
+        "generatedDate": {
+          "type": "string",
+          "description": "Date and time when the summary was generated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "documentId",
+        "summaryText",
+        "parameters",
+        "generatedDate"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "userProfiles/{userProfileId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile data. Document ID is equal to the user's Firebase Auth UID, for easy association. Includes denormalized roleId.",
+          "params": [
+            {
+              "name": "userProfileId",
+              "description": "The Firebase Auth UID of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "roles/{roleId}",
+        "definition": {
+          "entityName": "Role",
+          "schema": {
+            "$ref": "#/backend/entities/Role"
+          },
+          "description": "Stores role definitions.",
+          "params": [
+            {
+              "name": "roleId",
+              "description": "Unique identifier for the role."
+            }
+          ]
+        }
+      },
+      {
+        "path": "documents/{documentId}",
+        "definition": {
+          "entityName": "Document",
+          "schema": {
+            "$ref": "#/backend/entities/Document"
+          },
+          "description": "Stores document metadata. Includes denormalized 'uploadedByUserId' for authorization independence.",
+          "params": [
+            {
+              "name": "documentId",
+              "description": "Unique identifier for the document."
+            }
+          ]
+        }
+      },
+      {
+        "path": "categories/{categoryId}",
+        "definition": {
+          "entityName": "Category",
+          "schema": {
+            "$ref": "#/backend/entities/Category"
+          },
+          "description": "Stores document categories.",
+          "params": [
+            {
+              "name": "categoryId",
+              "description": "Unique identifier for the category."
+            }
+          ]
+        }
+      },
+      {
+        "path": "events/{eventId}",
+        "definition": {
+          "entityName": "Event",
+          "schema": {
+            "$ref": "#/backend/entities/Event"
+          },
+          "description": "Stores event information.",
+          "params": [
+            {
+              "name": "eventId",
+              "description": "Unique identifier for the event."
+            }
+          ]
+        }
+      },
+      {
+        "path": "attendance/{attendanceId}",
+        "definition": {
+          "entityName": "Attendance",
+          "schema": {
+            "$ref": "#/backend/entities/Attendance"
+          },
+          "description": "Stores attendance records for events.",
+          "params": [
+            {
+              "name": "attendanceId",
+              "description": "Unique identifier for the attendance record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "receipts/{receiptId}",
+        "definition": {
+          "entityName": "Receipt",
+          "schema": {
+            "$ref": "#/backend/entities/Receipt"
+          },
+          "description": "Stores payment receipt information.",
+          "params": [
+            {
+              "name": "receiptId",
+              "description": "Unique identifier for the receipt."
+            }
+          ]
+        }
+      },
+      {
+        "path": "notifications/{notificationId}",
+        "definition": {
+          "entityName": "Notification",
+          "schema": {
+            "$ref": "#/backend/entities/Notification"
+          },
+          "description": "Stores notifications for users.",
+          "params": [
+            {
+              "name": "notificationId",
+              "description": "Unique identifier for the notification."
+            }
+          ]
+        }
+      },
+      {
+        "path": "automatedSummaries/{automatedSummaryId}",
+        "definition": {
+          "entityName": "AutomatedSummary",
+          "schema": {
+            "$ref": "#/backend/entities/AutomatedSummary"
+          },
+          "description": "Stores summaries generated by the AI-powered summarization tool.",
+          "params": [
+            {
+              "name": "automatedSummaryId",
+              "description": "Unique identifier for the automated summary."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to adhere to the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. It leverages denormalization and structural segregation to optimize security rule implementation and data access patterns.  \n\n*   **User Profiles:** User profiles are stored in a collection named `userProfiles` with the document ID matching the user's Firebase Auth UID. This enables path-based ownership for user-specific data, simplifying security rules.\n*   **Roles:** Roles are stored in a `roles` collection, enabling easy management of roles within the application. User profiles store a `roleId` to reference the user's role.\n*   **Documents:** Documents are stored in a `documents` collection. The `uploadedByUserId` field in each document denormalizes ownership, enabling secure listing and filtering of documents based on the uploader.\n*   **Categories:** Categories are stored in a `categories` collection, providing a simple lookup for document categorization.\n*   **Events:** Events are stored in an `events` collection, allowing for easy retrieval and display of event information.\n*   **Attendance:** Attendance records are stored in an `attendance` collection. Each document records the user (`userId`) and event (`eventId`).\n*   **Receipts:** Receipts are stored in a `receipts` collection and are associated with a `userId` to identify the user who made the payment.\n*   **Notifications:** Notifications are stored in a `notifications` collection and are associated with a `userId` to identify the intended recipient.\n*   **Automated Summaries:** Automated Summaries are stored in the `automatedSummaries` collection, with a `documentId` pointing to the source document.\n\n**Authorization Independence (Denormalization):**\nThe structure avoids `get()` calls in security rules by denormalizing authorization context. The `documents` collection contains the `uploadedByUserId` field, eliminating the need to fetch the user profile to determine ownership. Other entities like `attendance`, `receipts`, and `notifications` are stored in root collections with associated `userId` or `eventId` fields, allowing direct rule application without requiring parent document reads.  This approach ensures that operations remain atomic and security rules are straightforward.\n\n**QAPs (Rules are not Filters):**\nThe structure enables secure `list` operations by segregating data based on ownership and purpose. Private user data (e.g., notifications, receipts) are stored with the `userId`, which is used in security rules to ensure that only the user can access them.  Documents are secured by the `uploadedByUserId` field, allowing filtering documents that the user has uploaded. The structure supports different security postures by utilizing different collections for data with varying security needs (e.g., public events vs. private user receipts).\n\nBy adhering to these principles and strategies, the Firestore structure provides a secure, scalable, and debuggable solution for the application's data storage needs."
+  }
+}
