@@ -141,8 +141,8 @@ export default function LoginPage() {
         <CardTitle className="text-2xl font-headline text-center">
           Eagles Nest Online
         </CardTitle>
-        <CardDescription className="text-center">
-          Enter your credentials to access the portal
+        <CardDescription className="text-center italic">
+          &quot;Service Through Strong Brotherhood&quot;
         </CardDescription>
       </CardHeader>
       <CardContent>
