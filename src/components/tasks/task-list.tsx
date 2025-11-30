@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import {
-  useUser,
+  useAuthUser,
   useFirestore,
   useCollection,
   useMemoFirebase,
@@ -25,7 +25,7 @@ import type { Task } from '@/lib/types';
 
 
 export default function TaskList() {
-  const { user, isUserLoading } = useUser();
+  const { user, isUserLoading } = useAuthUser();
   const firestore = useFirestore();
   const [newTaskTitle, setNewTaskTitle] = useState('');
 
@@ -46,8 +46,10 @@ export default function TaskList() {
   } = useCollection<Task>(tasksQuery);
 
   const handleAddTask = () => {
-    if (!tasksCollectionRef || !newTaskTitle.trim()) return;
+    if (!tasksCollectionRef || !newTaskTitle.trim() || !user) return;
+    const docRef = doc(tasksCollectionRef);
     addDocumentNonBlocking(tasksCollectionRef, {
+      id: docRef.id,
       title: newTaskTitle.trim(),
       completed: false,
       createdAt: serverTimestamp(),
@@ -109,6 +111,8 @@ export default function TaskList() {
     </div>
   )
 
+  const isLoading = isUserLoading || areTasksLoading;
+
   return (
     <div className="space-y-6">
       <div className="flex gap-2">
@@ -118,19 +122,19 @@ export default function TaskList() {
           value={newTaskTitle}
           onChange={(e) => setNewTaskTitle(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
-          disabled={!user}
+          disabled={!user || isLoading}
         />
-        <Button onClick={handleAddTask} disabled={!user || !newTaskTitle.trim()}>
+        <Button onClick={handleAddTask} disabled={!user || !newTaskTitle.trim() || isLoading}>
           <Plus className="mr-2 h-4 w-4" />
           Add Task
         </Button>
       </div>
 
       <div className="space-y-4">
-        {(isUserLoading || areTasksLoading) && renderLoadingState()}
-        {!isUserLoading && !areTasksLoading && error && renderErrorState()}
-        {!isUserLoading && !areTasksLoading && !error && tasks && tasks.length === 0 && renderEmptyState()}
-        {!isUserLoading && !areTasksLoading && !error && tasks && tasks.map((task) => (
+        {isLoading && renderLoadingState()}
+        {!isLoading && error && renderErrorState()}
+        {!isLoading && !error && tasks && tasks.length === 0 && renderEmptyState()}
+        {!isLoading && !error && tasks && tasks.map((task) => (
           <div
             key={task.id}
             className="flex items-center gap-4 rounded-md border p-3"

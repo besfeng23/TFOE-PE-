@@ -8,7 +8,7 @@ export default function TasksPage() {
             <CardHeader>
                 <CardTitle className="font-headline">My Tasks</CardTitle>
                 <CardDescription>
-                    Manage your to-do list and action items.
+                    Manage your to-do list and action items. Changes are saved automatically.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -18,5 +18,3 @@ export default function TasksPage() {
     </div>
   )
 }
-
-    

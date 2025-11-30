@@ -158,7 +158,7 @@ service cloud.firestore {
     }
 
     /**
-     * @description Documents are public to read, but only the original uploader can modify or delete them. Admins can list for analytics.
+     * @description Documents are public to read, but only the original uploader can modify or delete them.
      * @path /documents/{documentId}
      * @principle Implements "Public Read with Owner-Only Writes" pattern.
      */
