@@ -18,7 +18,7 @@ export default {
     extend: {
       fontFamily: {
         body: ['Source Sans Pro', 'sans-serif'],
-        headline: ['Merriweather', 'serif'],
+        headline: ['Roboto Slab', 'serif'],
         code: ['monospace'],
       },
       colors: {
