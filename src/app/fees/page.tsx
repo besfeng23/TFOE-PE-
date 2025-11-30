@@ -21,6 +21,11 @@ const applicationFees = [
 const renewalFees = [
     { item: "National Annual Dues", amount: "P 300.00" },
     { item: "Regional Dues", amount: "P 200.00" },
+    { item: "Club Share", amount: "P 200.00" },
+    { item: "Mortuary", amount: "P 200.00" },
+    { item: "National Office Operating Fund", amount: "P 100.00" },
+    { item: "National Office Rental Fund", amount: "P 100.00" },
+    { item: "National ID Renewal", amount: "P 100.00" },
 ];
 
 export default function FeesPage() {
@@ -72,6 +77,10 @@ export default function FeesPage() {
                                             <TableCell className="text-right">{fee.amount}</TableCell>
                                         </TableRow>
                                     ))}
+                                     <TableRow className="font-bold">
+                                        <TableCell>TOTAL FEES</TableCell>
+                                        <TableCell className="text-right">P 1,200.00</TableCell>
+                                    </TableRow>
                                 </TableBody>
                             </Table>
                         </div>
