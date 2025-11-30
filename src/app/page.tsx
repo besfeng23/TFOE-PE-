@@ -102,14 +102,28 @@ export default function DashboardPage() {
   const { data: notifications, isLoading: areNotificationsLoading } = useCollection(notificationsQuery);
 
   const { data: users, isLoading: areUsersLoading } = useCollection(
-    useMemoFirebase(() => collection(firestore, 'userProfiles'), [firestore])
+    useMemoFirebase(() => {
+      if (!firestore) return null;
+      return collection(firestore, 'userProfiles')
+    }, [firestore])
   );
   const { data: documents, isLoading: areDocumentsLoading } = useCollection(
-    useMemoFirebase(() => collection(firestore, 'documents'), [firestore])
+    useMemoFirebase(() => {
+      if (!firestore) return null;
+      return collection(firestore, 'documents')
+    }, [firestore])
   );
-  const { data: attendance, isLoading: areAttendanceLoading } = useCollection(
-    useMemoFirebase(() => collection(firestore, 'attendance'), [firestore])
-  );
+  
+  // This query is now scoped to the logged-in user to respect security rules.
+  const attendanceQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(
+      collection(firestore, 'attendance'),
+      where('userId', '==', user.uid)
+    );
+  }, [firestore, user]);
+
+  const { data: attendance, isLoading: areAttendanceLoading } = useCollection(attendanceQuery);
 
 
   const handleToggleRead = (id: string, read: boolean) => {
@@ -180,7 +194,7 @@ export default function DashboardPage() {
              ) : (
                 <div className="text-2xl font-bold">{attendance?.length ?? 0}</div>
              )}
-            <p className="text-xs text-muted-foreground">Total attendance records</p>
+            <p className="text-xs text-muted-foreground">Your attendance records</p>
           </CardContent>
         </Card>
       </div>
