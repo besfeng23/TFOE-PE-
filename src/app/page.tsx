@@ -23,9 +23,9 @@ import {
   useFirestore,
   updateDocumentNonBlocking,
 } from '@/firebase';
-import { collection, query, where, orderBy, doc } from 'firebase/firestore';
+import { collection, query, where, orderBy, doc, Timestamp } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { Notification, Task, Document, Attendance } from '@/lib/types';
+import type { Notification, Task, Event } from '@/lib/types';
 
 const quickAccessItems = [
   {
@@ -88,11 +88,31 @@ function NotificationItem({ notification, onToggleRead }: { notification: Notifi
   );
 }
 
+function StatCard({ title, value, description, icon: Icon, isLoading }: { title: string, value: number, description: string, icon: React.ElementType, isLoading: boolean }) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <Icon className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <Skeleton className="h-7 w-12" />
+        ) : (
+          <div className="text-2xl font-bold">{value}</div>
+        )}
+        <p className="text-xs text-muted-foreground">{description}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
 
 export default function DashboardPage() {
   const { user, profile, isUserLoading, isProfileLoading } = useAuthUser();
   const firestore = useFirestore();
 
+  // Notifications query for all notifications
   const notificationsQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
@@ -102,13 +122,28 @@ export default function DashboardPage() {
   }, [firestore, user]);
 
   const { data: notifications, isLoading: areNotificationsLoading } = useCollection<Notification>(notificationsQuery);
+  
+  // Query for unread notifications for the stat card
+  const unreadNotificationsQuery = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return query(collection(firestore, `userProfiles/${user.uid}/notifications`), where('read', '==', false));
+  }, [firestore, user]);
+
+  const { data: unreadNotifications, isLoading: areUnreadNotificationsLoading } = useCollection<Notification>(unreadNotificationsQuery);
+
 
   const tasksQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return query(collection(firestore, `userProfiles/${user.uid}/tasks`), where('completed', '==', false));
   }, [firestore, user]);
-
   const { data: pendingTasks, isLoading: areTasksLoading } = useCollection<Task>(tasksQuery);
+  
+  const eventsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'events'), where('startDate', '>=', Timestamp.now()));
+  }, [firestore]);
+
+  const { data: upcomingEvents, isLoading: areEventsLoading } = useCollection<Event>(eventsQuery);
 
   const handleToggleRead = (id: string, read: boolean) => {
     if (!firestore || !user) return;
@@ -138,28 +173,35 @@ export default function DashboardPage() {
         )}
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">My Pending Tasks</CardTitle>
-            <ListTodo className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {areTasksLoading ? (
-              <Skeleton className="h-7 w-12" />
-            ) : (
-              <div className="text-2xl font-bold">{pendingTasks?.length ?? 0}</div>
-            )}
-            <p className="text-xs text-muted-foreground">Tasks that require your action</p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <StatCard 
+            title="Pending Tasks"
+            value={pendingTasks?.length ?? 0}
+            description="Tasks that require your action"
+            icon={ListTodo}
+            isLoading={areTasksLoading}
+        />
+         <StatCard 
+            title="Upcoming Events"
+            value={upcomingEvents?.length ?? 0}
+            description="Events scheduled in the future"
+            icon={Calendar}
+            isLoading={areEventsLoading}
+        />
+        <StatCard 
+            title="Unread Notifications"
+            value={unreadNotifications?.length ?? 0}
+            description="New messages and alerts"
+            icon={Bell}
+            isLoading={areUnreadNotificationsLoading}
+        />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="lg:col-span-1 space-y-4">
             {quickAccessItems.map((item) => (
               <Link href={item.href} key={item.title}>
-                <Card className="hover:bg-muted/50 transition-colors h-full">
+                <Card className="hover:bg-muted/50 transition-colors h-full flex flex-col justify-center">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">
                       {item.title}
@@ -176,7 +218,7 @@ export default function DashboardPage() {
             ))}
         </div>
 
-        <Card>
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Notifications</CardTitle>
             <CardDescription>
