@@ -113,14 +113,14 @@ service cloud.firestore {
      * @description Users can read/update their own profile. Admins can manage all profiles.
      * @path /userProfiles/{userProfileId}
      * @allow (get) Any signed-in user can read any profile.
-     * @allow (list) An admin can list all profiles for analytics.
+     * @allow (list) Any signed-in user can list profiles for the directory.
      * @allow (create) An admin can create a new user profile.
      * @allow (update) A user can update their own profile, or an admin can update any profile.
      * @allow (delete) An admin can delete any user profile.
      */
     match /userProfiles/{userProfileId} {
       allow get: if isSignedIn();
-      allow list: if isAdmin();
+      allow list: if isSignedIn();
       allow create: if isAdmin();
       allow update: if isOwner(userProfileId) || isAdmin();
       allow delete: if isAdmin();
