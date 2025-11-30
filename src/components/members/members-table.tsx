@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, useState } from 'react';
@@ -88,13 +89,13 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
 
   if (isLoading) {
     return (
-        <div className="rounded-lg border">
+        <div className="rounded-lg border overflow-x-auto">
             <Table>
                 <TableHeader>
                     <TableRow>
                         <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Role</TableHead>
+                        <TableHead className="hidden sm:table-cell">Email</TableHead>
+                        <TableHead className="hidden md:table-cell">Role</TableHead>
                         {isAdmin && <TableHead className="text-right">Actions</TableHead>}
                     </TableRow>
                 </TableHeader>
@@ -107,8 +108,8 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
                                     <Skeleton className="h-5 w-32" />
                                 </div>
                             </TableCell>
-                            <TableCell><Skeleton className="h-5 w-40" /></TableCell>
-                            <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                            <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-40" /></TableCell>
+                            <TableCell className="hidden md:table-cell"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
                              {isAdmin && <TableCell className="text-right">
                                 <Skeleton className="h-8 w-8 rounded-md ml-auto" />
                             </TableCell>}
@@ -126,13 +127,13 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
 
   return (
       <>
-        <div className="rounded-lg border">
+        <div className="rounded-lg border overflow-x-auto">
             <Table>
             <TableHeader>
                 <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
+                <TableHead className="hidden sm:table-cell">Email</TableHead>
+                <TableHead className="hidden md:table-cell">Role</TableHead>
                 {isAdmin && <TableHead className="text-right">Actions</TableHead>}
                 </TableRow>
             </TableHeader>
@@ -145,13 +146,16 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
                                 <AvatarImage src={profile.idPhotoUrl} data-ai-hint="person face" />
                                 <AvatarFallback>{profile.firstName?.charAt(0)}{profile.lastName?.charAt(0)}</AvatarFallback>
                             </Avatar>
-                            <span>{profile.firstName} {profile.lastName}</span>
+                            <div className="flex flex-col">
+                                <span>{profile.firstName} {profile.lastName}</span>
+                                <span className="sm:hidden text-xs text-muted-foreground">{profile.email}</span>
+                            </div>
                         </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                     {profile.email}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                     <Badge variant={profile.roleId === 'Admin' ? 'destructive' : 'secondary'}>{profile.roleId}</Badge>
                     </TableCell>
                     {isAdmin && (

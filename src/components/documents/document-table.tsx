@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -48,7 +49,7 @@ export default function DocumentTable() {
 
   if (isLoading) {
     return (
-        <div className="rounded-lg border">
+        <div className="rounded-lg border overflow-x-auto">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -86,24 +87,29 @@ export default function DocumentTable() {
 
   return (
     <>
-      <div className="rounded-lg border">
+      <div className="rounded-lg border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead className="hidden sm:table-cell">Category</TableHead>
+              <TableHead className="hidden md:table-cell">Date</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {documents && documents.map((doc) => (
               <TableRow key={doc.id}>
-                <TableCell className="font-medium">{doc.title}</TableCell>
-                <TableCell>
+                <TableCell className="font-medium">
+                  <div className='flex flex-col'>
+                    <span>{doc.title}</span>
+                    <Badge variant="secondary" className="sm:hidden mt-1 w-fit">{getCategoryName(doc.categoryId)}</Badge>
+                  </div>
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
                   <Badge variant="secondary">{getCategoryName(doc.categoryId)}</Badge>
                 </TableCell>
-                <TableCell>{doc.uploadDate.toDate().toLocaleDateString()}</TableCell>
+                <TableCell className="hidden md:table-cell">{doc.uploadDate.toDate().toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
                     <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setSelectedDocument(doc)}>
