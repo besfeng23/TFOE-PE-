@@ -42,3 +42,12 @@ export interface Attendance {
     userId: string;
     attended: boolean;
 }
+
+export interface Event {
+    id: string;
+    title: string;
+    description: string;
+    startDate: Timestamp;
+    endDate: Timestamp;
+    location: string;
+}

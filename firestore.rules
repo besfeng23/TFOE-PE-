@@ -11,8 +11,9 @@
  *   can create, read, update, and delete ANY user profile, but cannot change their own role.
  * - Private Subcollections: By placing tasks and notifications in subcollections, we can create
  *   rules that allow users to safely list their own data without any risk of exposing others' data.
- * - Public Read-Only Collections: Collections like 'roles', 'categories', and 'events' are treated as
+ * - Public Read-Only Collections: Collections like 'roles', and 'categories' are treated as
  *   public lookup data, readable by any signed-in user but not writable by clients.
+ * - Admin-Only Writable Collections: The 'events' collection is publicly readable, but only admins can write to it.
  * - Owner-Only Writes for Public Content: The 'documents' collection is publicly readable, but write
  *   operations (create, update, delete) are restricted to the original author.
  * - Admin Role Check: The `isAdmin()` function checks a custom claim on the user's auth token.
@@ -183,16 +184,16 @@ service cloud.firestore {
     }
 
     /**
-     * @description Events are public, read-only data for all signed-in users.
+     * @description Events are public to read, but only admins can create, update or delete them.
      * @path /events/{eventId}
-     * @principle Secures lookup data by making it read-only for clients.
+     * @principle Secures public data by making it admin-only for writes.
      */
     match /events/{eventId} {
       allow get: if isSignedIn();
       allow list: if isSignedIn();
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     /**
