@@ -118,6 +118,17 @@ service cloud.firestore {
       allow create: if isOwner(userProfileId) && hasValidUserProfileIdOnCreate(userProfileId);
       allow update: if isExistingOwner(userProfileId) && hasImmutableUserProfileId();
       allow delete: if isExistingOwner(userProfileId);
+
+      /**
+       * @description Users can manage their own tasks within their profile.
+       * @path /userProfiles/{userProfileId}/tasks/{taskId}
+       * @allow (list) A user listing their own tasks: `auth.uid == 'user_abc'`, `list /userProfiles/user_abc/tasks`
+       * @deny (get) A user trying to read another user's task: `auth.uid == 'user_123'`, `get /userProfiles/user_abc/tasks/task_xyz`
+       * @principle Secures a user-owned subcollection, allowing safe list and get operations.
+       */
+      match /tasks/{taskId} {
+        allow read, write: if isOwner(userProfileId);
+      }
     }
 
     /**
@@ -241,3 +252,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

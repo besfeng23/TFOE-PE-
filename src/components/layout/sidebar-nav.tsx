@@ -13,6 +13,7 @@ import {
   ClipboardPenLine,
   FileText,
   LayoutDashboard,
+  ListTodo,
   MessageCircle,
   Settings,
 } from 'lucide-react';
@@ -48,6 +49,12 @@ const navItems = [
     icon: Calendar,
     label: 'Events',
     match: (pathname: string) => pathname.startsWith('/events'),
+  },
+  {
+    href: '/tasks',
+    icon: ListTodo,
+    label: 'Tasks',
+    match: (pathname: string) => pathname.startsWith('/tasks'),
   },
   {
     href: '/messages',
@@ -94,3 +101,5 @@ export function SidebarNav() {
     </div>
   );
 }
+
+    

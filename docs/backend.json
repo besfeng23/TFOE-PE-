@@ -323,6 +323,37 @@
         "parameters",
         "generatedDate"
       ]
+    },
+    "Task": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Task",
+      "type": "object",
+      "description": "Represents a to-do item for a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Task entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The main description of the task."
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Indicates whether the task has been completed."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time when the task was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "completed",
+        "createdAt"
+      ]
     }
   },
   "auth": {
@@ -345,6 +376,26 @@
             {
               "name": "userProfileId",
               "description": "The Firebase Auth UID of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "userProfiles/{userProfileId}/tasks/{taskId}",
+        "definition": {
+          "entityName": "Task",
+          "schema": {
+            "$ref": "#/backend/entities/Task"
+          },
+          "description": "Stores individual to-do items for a user. Stored as a subcollection for secure querying.",
+          "params": [
+            {
+              "name": "userProfileId",
+              "description": "The UID of the user who owns the task."
+            },
+            {
+              "name": "taskId",
+              "description": "Unique identifier for the task."
             }
           ]
         }
@@ -478,6 +529,7 @@
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to adhere to the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. It leverages denormalization and structural segregation to optimize security rule implementation and data access patterns.  \n\n*   **User Profiles:** User profiles are stored in a collection named `userProfiles` with the document ID matching the user's Firebase Auth UID. This enables path-based ownership for user-specific data, simplifying security rules.\n*   **Roles:** Roles are stored in a `roles` collection, enabling easy management of roles within the application. User profiles store a `roleId` to reference the user's role.\n*   **Documents:** Documents are stored in a `documents` collection. The `uploadedByUserId` field in each document denormalizes ownership, enabling secure listing and filtering of documents based on the uploader.\n*   **Categories:** Categories are stored in a `categories` collection, providing a simple lookup for document categorization.\n*   **Events:** Events are stored in an `events` collection, allowing for easy retrieval and display of event information.\n*   **Attendance:** Attendance records are stored in an `attendance` collection. Each document records the user (`userId`) and event (`eventId`).\n*   **Receipts:** Receipts are stored in a `receipts` collection and are associated with a `userId` to identify the user who made the payment.\n*   **Notifications:** Notifications are stored in a `notifications` collection and are associated with a `userId` to identify the intended recipient.\n*   **Automated Summaries:** Automated Summaries are stored in the `automatedSummaries` collection, with a `documentId` pointing to the source document.\n\n**Authorization Independence (Denormalization):**\nThe structure avoids `get()` calls in security rules by denormalizing authorization context. The `documents` collection contains the `uploadedByUserId` field, eliminating the need to fetch the user profile to determine ownership. Other entities like `attendance`, `receipts`, and `notifications` are stored in root collections with associated `userId` or `eventId` fields, allowing direct rule application without requiring parent document reads.  This approach ensures that operations remain atomic and security rules are straightforward.\n\n**QAPs (Rules are not Filters):**\nThe structure enables secure `list` operations by segregating data based on ownership and purpose. Private user data (e.g., notifications, receipts) are stored with the `userId`, which is used in security rules to ensure that only the user can access them.  Documents are secured by the `uploadedByUserId` field, allowing filtering documents that the user has uploaded. The structure supports different security postures by utilizing different collections for data with varying security needs (e.g., public events vs. private user receipts).\n\nBy adhering to these principles and strategies, the Firestore structure provides a secure, scalable, and debuggable solution for the application's data storage needs."
+    "reasoning": "The Firestore data structure is designed to adhere to the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. It leverages denormalization and structural segregation to optimize security rule implementation and data access patterns.  \n\n*   **User Profiles:** User profiles are stored in a collection named `userProfiles` with the document ID matching the user's Firebase Auth UID. This enables path-based ownership for user-specific data, simplifying security rules.\n*   **Tasks:** Tasks are stored in a `tasks` subcollection under each `userProfiles` document. This allows for secure, scalable querying of a user's own tasks without exposing them to others, following best practices for user-private data.\n*   **Roles:** Roles are stored in a `roles` collection, enabling easy management of roles within the application. User profiles store a `roleId` to reference the user's role.\n*   **Documents:** Documents are stored in a `documents` collection. The `uploadedByUserId` field in each document denormalizes ownership, enabling secure listing and filtering of documents based on the uploader.\n*   **Categories:** Categories are stored in a `categories` collection, providing a simple lookup for document categorization.\n*   **Events:** Events are stored in an `events` collection, allowing for easy retrieval and display of event information.\n*   **Attendance:** Attendance records are stored in an `attendance` collection. Each document records the user (`userId`) and event (`eventId`).\n*   **Receipts:** Receipts are stored in a `receipts` collection and are associated with a `userId` to identify the user who made the payment.\n*   **Notifications:** Notifications are stored in a `notifications` collection and are associated with a `userId` to identify the intended recipient.\n*   **Automated Summaries:** Automated Summaries are stored in the `automatedSummaries` collection, with a `documentId` pointing to the source document.\n\n**Authorization Independence (Denormalization):**\nThe structure avoids `get()` calls in security rules by denormalizing authorization context. The `documents` collection contains the `uploadedByUserId` field, eliminating the need to fetch the user profile to determine ownership. Other entities like `attendance`, `receipts`, and `notifications` are stored in root collections with associated `userId` or `eventId` fields, allowing direct rule application without requiring parent document reads.  This approach ensures that operations remain atomic and security rules are straightforward.\n\n**QAPs (Rules are not Filters):**\nThe structure enables secure `list` operations by segregating data based on ownership and purpose. Private user data (e.g., notifications, receipts) are stored with the `userId`, which is used in security rules to ensure that only the user can access them.  Documents are secured by the `uploadedByUserId` field, allowing filtering documents that the user has uploaded. The structure supports different security postures by utilizing different collections for data with varying security needs (e.g., public events vs. private user receipts).\n\nBy adhering to these principles and strategies, the Firestore structure provides a secure, scalable, and debuggable solution for the application's data storage needs."
   }
 }
+    

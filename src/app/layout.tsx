@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { MainLayout } from '@/components/layout/main-layout';
 import { Toaster } from '@/components/ui/toaster';
+import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
   title: 'Eagles Nest Online (TFOE-PE)',
@@ -24,9 +25,13 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <MainLayout>{children}</MainLayout>
-        <Toaster />
+        <FirebaseClientProvider>
+          <MainLayout>{children}</MainLayout>
+          <Toaster />
+        </FirebaseClientProvider>
       </body>
     </html>
   );
 }
+
+    

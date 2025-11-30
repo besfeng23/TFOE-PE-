@@ -70,6 +70,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                : pathname.startsWith('/analytics') ? 'Analytics'
                : pathname.startsWith('/events') ? 'Events & Programs'
                : pathname.startsWith('/messages') ? 'Messages'
+               : pathname.startsWith('/tasks') ? 'Tasks'
                : pathname.startsWith('/settings') ? 'Settings'
                : pathname.startsWith('/profile') ? 'Profile'
                : 'Dashboard'}
@@ -84,3 +85,5 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
+
+    
