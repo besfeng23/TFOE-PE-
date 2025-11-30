@@ -21,6 +21,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { PartnershipFormDialog } from './partnership-form-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
+import { EndorsementLetterDialog } from './endorsement-letter-dialog';
 
 interface PartnershipsTableProps {
   searchTerm: string;
@@ -34,6 +35,7 @@ export default function PartnershipsTable({ searchTerm }: PartnershipsTableProps
   const [selectedPartner, setSelectedPartner] = useState<Partnership | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEndorsementDialogOpen, setIsEndorsementDialogOpen] = useState(false);
 
 
   const partnersQuery = useMemoFirebase(() => {
@@ -65,6 +67,11 @@ export default function PartnershipsTable({ searchTerm }: PartnershipsTableProps
   const handleDelete = (partner: Partnership) => {
     setSelectedPartner(partner);
     setIsDeleteDialogOpen(true);
+  }
+  
+  const handleGenerateEndorsement = (partner: Partnership) => {
+    setSelectedPartner(partner);
+    setIsEndorsementDialogOpen(true);
   }
   
   const confirmDelete = () => {
@@ -174,7 +181,7 @@ export default function PartnershipsTable({ searchTerm }: PartnershipsTableProps
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                     <DropdownMenuItem onClick={() => handleEdit(partner)}>Edit Partner</DropdownMenuItem>
-                                    <DropdownMenuItem>Generate Endorsement</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleGenerateEndorsement(partner)}>Generate Endorsement</DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem className='text-destructive focus:bg-destructive/10 focus:text-destructive' onClick={() => handleDelete(partner)}>Delete Partner</DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -194,6 +201,17 @@ export default function PartnershipsTable({ searchTerm }: PartnershipsTableProps
 
         {isAdmin && <PartnershipFormDialog isOpen={isFormOpen} onClose={closeForm} partner={selectedPartner} />}
         
+        {isAdmin && selectedPartner && (
+            <EndorsementLetterDialog
+                isOpen={isEndorsementDialogOpen}
+                onClose={() => {
+                    setIsEndorsementDialogOpen(false);
+                    setSelectedPartner(null);
+                }}
+                partner={selectedPartner}
+            />
+        )}
+
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
             <AlertDialogContent>
                 <AlertDialogHeader>
