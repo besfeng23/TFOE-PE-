@@ -110,14 +110,6 @@ export default function DashboardPage() {
 
   const { data: pendingTasks, isLoading: areTasksLoading } = useCollection<Task>(tasksQuery);
 
-  const documentsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'documents');
-  }, [firestore]);
-
-  const { data: documents, isLoading: areDocumentsLoading } = useCollection<Document>(documentsQuery);
-  
-
   const handleToggleRead = (id: string, read: boolean) => {
     if (!firestore || !user) return;
     const notificationRef = doc(firestore, `userProfiles/${user.uid}/notifications`, id);
@@ -146,7 +138,7 @@ export default function DashboardPage() {
         )}
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">My Pending Tasks</CardTitle>
@@ -159,20 +151,6 @@ export default function DashboardPage() {
               <div className="text-2xl font-bold">{pendingTasks?.length ?? 0}</div>
             )}
             <p className="text-xs text-muted-foreground">Tasks that require your action</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Documents Stored</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {areDocumentsLoading ? (
-               <Skeleton className="h-7 w-12" />
-            ) : (
-              <div className="text-2xl font-bold">{documents?.length ?? 0}</div>
-            )}
-            <p className="text-xs text-muted-foreground">Total documents uploaded</p>
           </CardContent>
         </Card>
       </div>
