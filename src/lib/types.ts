@@ -35,3 +35,10 @@ export interface Document {
     uploadedByUserId: string;
     content?: string; // For summarization demo
 }
+
+export interface Attendance {
+    id: string;
+    eventId: string;
+    userId: string;
+    attended: boolean;
+}

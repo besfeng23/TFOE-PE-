@@ -112,14 +112,14 @@ service cloud.firestore {
      * @description Users can read/update their own profile. Admins can manage all profiles.
      * @path /userProfiles/{userProfileId}
      * @allow (get) Any signed-in user can read any profile.
-     * @allow (list) Any signed-in user can list all profiles.
+     * @allow (list) An admin can list all profiles for analytics.
      * @allow (create) An admin can create a new user profile.
      * @allow (update) A user can update their own profile, or an admin can update any profile.
      * @allow (delete) An admin can delete any user profile.
      */
     match /userProfiles/{userProfileId} {
       allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow list: if isAdmin();
       allow create: if isAdmin();
       allow update: if isOwner(userProfileId) || isAdmin();
       allow delete: if isAdmin();
@@ -157,13 +157,13 @@ service cloud.firestore {
     }
 
     /**
-     * @description Documents are public to read, but only the original uploader can modify or delete them.
+     * @description Documents are public to read, but only the original uploader can modify or delete them. Admins can list for analytics.
      * @path /documents/{documentId}
      * @principle Implements "Public Read with Owner-Only Writes" pattern.
      */
     match /documents/{documentId} {
       allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow list: if isAdmin(); // Allow admin to list for analytics
       allow create: if isSignedIn() && hasValidCreatorIdOnCreate();
       allow update: if isExistingOwner(resource.data.uploadedByUserId) && hasImmutableCreatorId();
       allow delete: if isExistingOwner(resource.data.uploadedByUserId);
@@ -196,13 +196,13 @@ service cloud.firestore {
     }
 
     /**
-     * @description Users can manage their own attendance records. Listing all attendance is denied.
+     * @description Users can manage their own attendance records. Admins can list all for analytics.
      * @path /attendance/{attendanceId}
-     * @principle Enforces document ownership for writes and reads. Listing is denied to prevent data leakage.
+     * @principle Enforces document ownership for writes and reads. Listing is restricted to admins.
      */
     match /attendance/{attendanceId} {
       allow get: if isOwner(resource.data.userId);
-      allow list: if false; // Denied to prevent leaking all users' attendance data.
+      allow list: if isAdmin(); // Allow admin to list for analytics
       allow create: if isSignedIn() && hasValidOwnerIdOnCreate();
       allow update: if isExistingOwner(resource.data.userId) && hasImmutableOwnerId();
       allow delete: if isExistingOwner(resource.data.userId);
