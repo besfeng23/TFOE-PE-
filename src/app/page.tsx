@@ -21,10 +21,10 @@ import {
   useAuthUser,
   useMemoFirebase,
   useFirestore,
-  updateDocumentNonBlocking,
 } from '@/firebase';
 import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const quickAccessItems = [
   {
@@ -109,15 +109,15 @@ export default function DashboardPage() {
 
   const { data: pendingTasks, isLoading: areTasksLoading } = useCollection(tasksQuery);
 
-  const { data: documents, isLoading: areDocumentsLoading } = useCollection(
-    useMemoFirebase(() => {
-      if (!firestore || !user) return null;
-      return collection(firestore, 'documents')
-    }, [firestore, user])
-  );
+  const documentsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'documents');
+  }, [firestore, user]);
+
+  const { data: documents, isLoading: areDocumentsLoading } = useCollection(documentsQuery);
   
   const attendanceQuery = useMemoFirebase(() => {
-    if (!user) return null;
+    if (!user || !firestore) return null;
     return query(
       collection(firestore, 'attendance'),
       where('userId', '==', user.uid)
