@@ -12,7 +12,7 @@ import {
   Calendar,
   ClipboardCheck,
   FileText,
-  Users,
+  ListTodo,
   Wallet,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -101,12 +101,13 @@ export default function DashboardPage() {
 
   const { data: notifications, isLoading: areNotificationsLoading } = useCollection(notificationsQuery);
 
-  const { data: users, isLoading: areUsersLoading } = useCollection(
-    useMemoFirebase(() => {
-      if (!firestore) return null;
-      return collection(firestore, 'userProfiles')
-    }, [firestore])
-  );
+  const tasksQuery = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return query(collection(firestore, `userProfiles/${user.uid}/tasks`), where('completed', '==', false));
+  }, [firestore, user]);
+
+  const { data: pendingTasks, isLoading: areTasksLoading } = useCollection(tasksQuery);
+
   const { data: documents, isLoading: areDocumentsLoading } = useCollection(
     useMemoFirebase(() => {
       if (!firestore) return null;
@@ -157,16 +158,16 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Members</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">My Pending Tasks</CardTitle>
+            <ListTodo className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {areUsersLoading ? (
+            {areTasksLoading ? (
               <Skeleton className="h-7 w-12" />
             ) : (
-              <div className="text-2xl font-bold">{users?.length ?? 0}</div>
+              <div className="text-2xl font-bold">{pendingTasks?.length ?? 0}</div>
             )}
-            <p className="text-xs text-muted-foreground">Total members in the system</p>
+            <p className="text-xs text-muted-foreground">Tasks that require your action</p>
           </CardContent>
         </Card>
         <Card>
