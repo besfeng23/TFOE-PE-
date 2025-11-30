@@ -11,29 +11,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Link from 'next/link';
+import { useAuthUser } from '@/firebase';
 
 interface UserNavProps {
   isSidebar?: boolean;
 }
 
 export function UserNav({ isSidebar = false }: UserNavProps) {
-  const userProfileImage = PlaceHolderImages.find(
-    (img) => img.id === 'user-profile-1'
-  );
+  const { user, profile } = useAuthUser();
+
+  const userInitial = profile?.firstName?.charAt(0) || user?.email?.charAt(0) || 'U';
+  const userInitialLast = profile?.lastName?.charAt(0) || '';
+
 
   const triggerContent = (
     <div className="flex items-center gap-3">
       <Avatar className="h-8 w-8">
-        {userProfileImage && (
+        {profile?.idPhotoUrl && (
           <AvatarImage
-            src={userProfileImage.imageUrl}
+            src={profile.idPhotoUrl}
             alt="User avatar"
-            data-ai-hint={userProfileImage.imageHint}
           />
         )}
-        <AvatarFallback>EN</AvatarFallback>
+        <AvatarFallback>{userInitial}{userInitialLast}</AvatarFallback>
       </Avatar>
       <div
         className={`text-left ${
@@ -42,9 +43,9 @@ export function UserNav({ isSidebar = false }: UserNavProps) {
             : 'hidden md:block'
         }`}
       >
-        <p className="text-sm font-medium leading-none">Eagle Secretary</p>
+        <p className="text-sm font-medium leading-none">{profile?.firstName} {profile?.lastName}</p>
         <p className="text-xs leading-none text-muted-foreground">
-          secretary@tfoepe.org
+          {user?.email}
         </p>
       </div>
     </div>
@@ -64,9 +65,9 @@ export function UserNav({ isSidebar = false }: UserNavProps) {
         <DropdownMenuContent className="w-56" align="end" forceMount side="top">
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">Eagle Secretary</p>
+                <p className="text-sm font-medium leading-none">{profile?.firstName} {profile?.lastName}</p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  secretary@tfoepe.org
+                  {user?.email}
                 </p>
               </div>
             </DropdownMenuLabel>
@@ -93,23 +94,22 @@ export function UserNav({ isSidebar = false }: UserNavProps) {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            {userProfileImage && (
+             {profile?.idPhotoUrl && (
               <AvatarImage
-                src={userProfileImage.imageUrl}
+                src={profile.idPhotoUrl}
                 alt="User avatar"
-                data-ai-hint={userProfileImage.imageHint}
               />
             )}
-            <AvatarFallback>EN</AvatarFallback>
+            <AvatarFallback>{userInitial}{userInitialLast}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">Eagle Secretary</p>
+            <p className="text-sm font-medium leading-none">{profile?.firstName} {profile?.lastName}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              secretary@tfoepe.org
+             {user?.email}
             </p>
           </div>
         </DropdownMenuLabel>

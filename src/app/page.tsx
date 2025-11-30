@@ -1,3 +1,4 @@
+'use client';
 import {
   Card,
   CardContent,
@@ -11,9 +12,16 @@ import {
   Calendar,
   ClipboardCheck,
   FileText,
+  Users,
   Wallet,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useCollection, useAuthUser, useMemoFirebase } from '@/firebase';
+import { collection, query, where, orderBy } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import { Skeleton } from '@/components/ui/skeleton';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { doc } from 'firebase/firestore';
 
 const quickAccessItems = [
   {
@@ -48,94 +56,193 @@ const quickAccessItems = [
   },
 ];
 
-const notifications = [
-  {
-    title: 'New Resolution requires approval',
-    time: '2 hours ago',
-    read: false,
-  },
-  {
-    title: 'Membership application from Juan Dela Cruz',
-    time: '1 day ago',
-    read: false,
-  },
-  {
-    title: 'GMM Scheduled for July 30, 2024',
-    time: '3 days ago',
-    read: true,
-  },
-  {
-    title: 'Your expense report has been approved',
-    time: '5 days ago',
-    read: true,
-  },
-];
+function NotificationItem({ notification, onToggleRead }: { notification: any, onToggleRead: (id: string, read: boolean) => void }) {
+  return (
+    <div
+      key={notification.id}
+      className="flex cursor-pointer items-start gap-4 rounded-md p-2 hover:bg-muted"
+      onClick={() => onToggleRead(notification.id, !notification.read)}
+    >
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
+        <Bell className="h-4 w-4 text-secondary-foreground" />
+      </div>
+      <div className="flex-1">
+        <p
+          className={`font-medium ${
+            notification.read ? 'text-muted-foreground' : 'text-foreground'
+          }`}
+        >
+          {notification.message}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {new Date(notification.timestamp.toDate()).toLocaleString()}
+        </p>
+      </div>
+      {!notification.read && (
+        <div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-accent" />
+      )}
+    </div>
+  );
+}
+
 
 export default function DashboardPage() {
+  const { user, profile, isUserLoading, isProfileLoading } = useAuthUser();
+  const firestore = useFirestore();
+
+  const notificationsQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(
+      collection(firestore, 'notifications'),
+      where('userId', '==', user.uid),
+      orderBy('timestamp', 'desc')
+    );
+  }, [firestore, user]);
+
+  const { data: notifications, isLoading: areNotificationsLoading } = useCollection(notificationsQuery);
+
+  const { data: users, isLoading: areUsersLoading } = useCollection(
+    useMemoFirebase(() => collection(firestore, 'userProfiles'), [firestore])
+  );
+  const { data: documents, isLoading: areDocumentsLoading } = useCollection(
+    useMemoFirebase(() => collection(firestore, 'documents'), [firestore])
+  );
+  const { data: attendance, isLoading: areAttendanceLoading } = useCollection(
+    useMemoFirebase(() => collection(firestore, 'attendance'), [firestore])
+  );
+
+
+  const handleToggleRead = (id: string, read: boolean) => {
+    if (!firestore) return;
+    const notificationRef = doc(firestore, 'notifications', id);
+    updateDocumentNonBlocking(notificationRef, { read });
+  };
+  
+  const isLoading = isUserLoading || isProfileLoading;
+
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight font-headline">
-          Dashboard
-        </h1>
-        <p className="text-muted-foreground">
-          Welcome back, here's a quick overview of your nest.
-        </p>
+        {isLoading ? (
+          <>
+            <Skeleton className="h-9 w-64" />
+            <Skeleton className="mt-2 h-5 w-80" />
+          </>
+        ) : (
+          <>
+            <h1 className="text-3xl font-bold tracking-tight font-headline">
+              Welcome back, {profile?.firstName || 'User'}!
+            </h1>
+            <p className="text-muted-foreground">
+              Here&apos;s a quick overview of your nest.
+            </p>
+          </>
+        )}
       </div>
-
+      
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {quickAccessItems.map((item) => (
-          <Link href={item.href} key={item.title}>
-            <Card className="hover:bg-muted/50 transition-colors h-full">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {item.title}
-                </CardTitle>
-                <item.icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-xs text-muted-foreground">
-                  {item.description}
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Members</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {areUsersLoading ? (
+              <Skeleton className="h-7 w-12" />
+            ) : (
+              <div className="text-2xl font-bold">{users?.length ?? 0}</div>
+            )}
+            <p className="text-xs text-muted-foreground">Total members in the system</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Documents Stored</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {areDocumentsLoading ? (
+               <Skeleton className="h-7 w-12" />
+            ) : (
+              <div className="text-2xl font-bold">{documents?.length ?? 0}</div>
+            )}
+            <p className="text-xs text-muted-foreground">Total documents uploaded</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Event Attendance</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+             {areAttendanceLoading ? (
+               <Skeleton className="h-7 w-12" />
+             ) : (
+                <div className="text-2xl font-bold">{attendance?.length ?? 0}</div>
+             )}
+            <p className="text-xs text-muted-foreground">Total attendance records</p>
+          </CardContent>
+        </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Notifications</CardTitle>
-          <CardDescription>
-            Recent activities and pending actions.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {notifications.map((notification, index) => (
-              <div
-                key={index}
-                className="flex items-start gap-4"
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
-                  <Bell className="h-4 w-4 text-secondary-foreground" />
-                </div>
-                <div className="flex-1">
-                  <p className={`font-medium ${notification.read ? 'text-muted-foreground' : 'text-foreground'}`}>
-                    {notification.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {notification.time}
-                  </p>
-                </div>
-                {!notification.read && (
-                  <div className="mt-1 h-2 w-2 rounded-full bg-accent" />
-                )}
-              </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-4">
+            {quickAccessItems.map((item) => (
+              <Link href={item.href} key={item.title}>
+                <Card className="hover:bg-muted/50 transition-colors h-full">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      {item.title}
+                    </CardTitle>
+                    <item.icon className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xs text-muted-foreground">
+                      {item.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Notifications</CardTitle>
+            <CardDescription>
+              Recent activities and pending actions. Click to toggle read status.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              {areNotificationsLoading && (
+                <>
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-16 w-full" />
+                </>
+              )}
+              {!areNotificationsLoading && notifications && notifications.length > 0 &&
+                notifications.map((notification) => (
+                   <Link href="#" key={notification.id} passHref>
+                    <NotificationItem notification={notification} onToggleRead={handleToggleRead}/>
+                   </Link>
+                ))}
+              {!areNotificationsLoading && (!notifications || notifications.length === 0) && (
+                <div className="flex flex-col items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/30 bg-muted/50 p-12 text-center">
+                    <div className="rounded-full bg-background p-3">
+                        <Bell className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="mt-4 text-lg font-semibold">No new notifications</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        You're all caught up!
+                    </p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
