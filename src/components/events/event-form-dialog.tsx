@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
@@ -46,6 +46,8 @@ const formSchema = z.object({
   location: z.string().min(3, 'Location is required.'),
   startDate: z.date({ required_error: 'Start date is required.'}),
   endDate: z.date({ required_error: 'End date is required.'}),
+  meetingId: z.string().optional(),
+  passcode: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -61,8 +63,18 @@ export function EventFormDialog({ isOpen, onClose, event }: EventFormDialogProps
       title: '',
       description: '',
       location: '',
+      meetingId: '',
+      passcode: '',
     },
   });
+  
+  const locationValue = useWatch({
+    control: form.control,
+    name: 'location'
+  });
+
+  const isVirtualEvent = locationValue?.toLowerCase().includes('zoom') || locationValue?.toLowerCase().includes('online');
+
   
   useEffect(() => {
       if (event) {
@@ -78,6 +90,8 @@ export function EventFormDialog({ isOpen, onClose, event }: EventFormDialogProps
               location: '',
               startDate: undefined,
               endDate: undefined,
+              meetingId: '',
+              passcode: '',
           });
       }
   }, [event, form])
@@ -128,7 +142,7 @@ export function EventFormDialog({ isOpen, onClose, event }: EventFormDialogProps
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Event' : 'Add New Event'}</DialogTitle>
           <DialogDescription>
@@ -170,12 +184,42 @@ export function EventFormDialog({ isOpen, onClose, event }: EventFormDialogProps
                 <FormItem>
                   <FormLabel>Location</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., TFOE-PE National Headquarters" {...field} />
+                    <Input placeholder="e.g., Zoom, TFOE-PE National Headquarters" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            {isVirtualEvent && (
+                 <div className="grid grid-cols-2 gap-4">
+                     <FormField
+                        control={form.control}
+                        name="meetingId"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Meeting ID</FormLabel>
+                            <FormControl>
+                                <Input placeholder="e.g., 575 287 6257" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    <FormField
+                        control={form.control}
+                        name="passcode"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Passcode</FormLabel>
+                            <FormControl>
+                                <Input placeholder="e.g., 787283" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
                 <FormField
                     control={form.control}

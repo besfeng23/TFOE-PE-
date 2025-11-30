@@ -7,9 +7,10 @@ import { isSameDay } from 'date-fns';
 
 interface EventCalendarProps {
   events: Event[];
+  onDateSelect: (date: Date) => void;
 }
 
-export default function EventCalendar({ events }: EventCalendarProps) {
+export default function EventCalendar({ events, onDateSelect }: EventCalendarProps) {
   const eventDays = useMemo(() => {
     return events.map(event => event.startDate.toDate());
   }, [events]);
@@ -18,6 +19,7 @@ export default function EventCalendar({ events }: EventCalendarProps) {
     <Calendar
       mode="single"
       selected={new Date()}
+      onSelect={(date) => date && onDateSelect(date)}
       className="p-3 w-full"
       modifiers={{
         hasEvent: eventDays,

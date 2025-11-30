@@ -9,6 +9,7 @@ import { collection, query, orderBy } from 'firebase/firestore';
 import type { Event } from '@/lib/types';
 import EventCalendar from '@/components/events/event-calendar';
 import EventList from '@/components/events/event-list';
+import EventDetails from '@/components/events/event-details';
 import { EventFormDialog } from '@/components/events/event-form-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -18,7 +19,8 @@ export default function EventsPage() {
   const isAdmin = profile?.roleId === 'Admin';
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [eventForForm, setEventForForm] = useState<Event | null>(null);
+  const [selectedEventDetails, setSelectedEventDetails] = useState<Event | null>(null);
 
   const eventsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -28,18 +30,18 @@ export default function EventsPage() {
   const { data: events, isLoading: areEventsLoading, error } = useCollection<Event>(eventsQuery);
 
   const handleEdit = (event: Event) => {
-    setSelectedEvent(event);
+    setEventForForm(event);
     setIsFormOpen(true);
   };
 
   const handleAdd = () => {
-    setSelectedEvent(null);
+    setEventForForm(null);
     setIsFormOpen(true);
   };
 
   const closeForm = () => {
     setIsFormOpen(false);
-    setSelectedEvent(null);
+    setEventForForm(null);
   };
 
   const isLoading = isProfileLoading || areEventsLoading;
@@ -47,7 +49,7 @@ export default function EventsPage() {
   return (
     <>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardContent className="p-0">
               {isLoading ? (
@@ -55,10 +57,22 @@ export default function EventsPage() {
                   <Skeleton className="w-full h-[300px]" />
                 </div>
               ) : (
-                <EventCalendar events={events || []} />
+                <EventCalendar events={events || []} onDateSelect={(date) => {
+                    const eventOnDate = events?.find(e => e.startDate.toDate().toDateString() === date.toDateString());
+                    if (eventOnDate) {
+                        setSelectedEventDetails(eventOnDate);
+                    }
+                }}/>
               )}
             </CardContent>
           </Card>
+           {selectedEventDetails && (
+              <Card>
+                  <CardContent>
+                      <EventDetails event={selectedEventDetails} onClose={() => setSelectedEventDetails(null)} />
+                  </CardContent>
+              </Card>
+           )}
         </div>
         <div>
           <Card>
@@ -83,6 +97,8 @@ export default function EventsPage() {
                     events={events} 
                     isAdmin={isAdmin}
                     onEdit={handleEdit}
+                    onSelectEvent={setSelectedEventDetails}
+                    selectedEvent={selectedEventDetails}
                 />
             </CardContent>
           </Card>
@@ -92,7 +108,7 @@ export default function EventsPage() {
         <EventFormDialog
           isOpen={isFormOpen}
           onClose={closeForm}
-          event={selectedEvent}
+          event={eventForForm}
         />
       )}
     </>

@@ -50,4 +50,6 @@ export interface Event {
     startDate: Timestamp;
     endDate: Timestamp;
     location: string;
+    meetingId?: string;
+    passcode?: string;
 }

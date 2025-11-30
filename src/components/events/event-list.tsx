@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import type { Event } from '@/lib/types';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '../ui/button';
 import { MoreHorizontal, FileWarning } from 'lucide-react';
@@ -19,9 +18,11 @@ interface EventListProps {
     events: Event[] | null;
     isAdmin: boolean;
     onEdit: (event: Event) => void;
+    onSelectEvent: (event: Event | null) => void;
+    selectedEvent: Event | null;
 }
 
-export default function EventList({ isLoading, error, events, isAdmin, onEdit }: EventListProps) {
+export default function EventList({ isLoading, error, events, isAdmin, onEdit, onSelectEvent, selectedEvent }: EventListProps) {
     const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
     const firestore = useFirestore();
 
@@ -76,9 +77,13 @@ export default function EventList({ isLoading, error, events, isAdmin, onEdit }:
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-1">
             {events.map(event => (
-                <div key={event.id} className="flex items-start gap-4 p-2 rounded-md hover:bg-muted/50">
+                <div 
+                    key={event.id}
+                    className={`flex items-start gap-4 p-2 rounded-md cursor-pointer transition-colors ${selectedEvent?.id === event.id ? 'bg-muted' : 'hover:bg-muted/50'}`}
+                    onClick={() => onSelectEvent(event)}
+                >
                     <div className="flex-1">
                         <p className="font-semibold">{event.title}</p>
                         <p className="text-sm text-muted-foreground">
@@ -95,9 +100,9 @@ export default function EventList({ isLoading, error, events, isAdmin, onEdit }:
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => onEdit(event)}>Edit Event</DropdownMenuItem>
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(event); }}>Edit Event</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className='text-destructive focus:bg-destructive/10 focus:text-destructive' onClick={() => handleDelete(event)}>Delete Event</DropdownMenuItem>
+                                <DropdownMenuItem className='text-destructive focus:bg-destructive/10 focus:text-destructive' onClick={(e) => { e.stopPropagation(); handleDelete(event);}}>Delete Event</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     )}
