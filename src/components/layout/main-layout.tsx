@@ -27,17 +27,21 @@ const pageTitles: { [key: string]: string } = {
   '/events': 'Events & Programs',
   '/tasks': 'Tasks',
   '/messages': 'Messages',
+  '/members': 'Members',
   '/settings': 'Settings',
   '/profile': 'Profile'
 };
 
 const getPageTitle = (pathname: string): string => {
-  for (const path in pageTitles) {
-    if (pathname.startsWith(path) && path !== '/') {
-        return pageTitles[path];
+    if (pageTitles[pathname]) {
+      return pageTitles[pathname];
     }
-  }
-  return pageTitles['/'] ?? 'Dashboard';
+    for (const path in pageTitles) {
+        if (pathname.startsWith(path) && path !== '/') {
+            return pageTitles[path];
+        }
+    }
+    return pageTitles['/'] ?? 'Dashboard';
 }
 
 export function MainLayout({ children }: { children: React.ReactNode }) {

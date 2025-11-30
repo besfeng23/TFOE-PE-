@@ -16,6 +16,7 @@ import {
   ListTodo,
   MessageCircle,
   Settings,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -31,6 +32,12 @@ const navItems = [
     icon: FileText,
     label: 'Documents',
     match: (pathname: string) => pathname.startsWith('/documents'),
+  },
+   {
+    href: '/members',
+    icon: Users,
+    label: 'Members',
+    match: (pathname: string) => pathname.startsWith('/members'),
   },
   {
     href: '/applications',
@@ -54,7 +61,7 @@ const navItems = [
     href: '/tasks',
     icon: ListTodo,
     label: 'Tasks',
-    match: (pathname: string) => pathname.startsWith('/tasks'),
+    match: (pathname:string) => pathname.startsWith('/tasks'),
   },
   {
     href: '/messages',

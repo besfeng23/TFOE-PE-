@@ -115,8 +115,8 @@ service cloud.firestore {
      * @principle Restricts access to a user's own data tree and enforces self-creation.
      */
     match /userProfiles/{userProfileId} {
-      allow get: if isOwner(userProfileId);
-      allow list: if false;
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
       allow create: if isOwner(userProfileId) && hasValidUserProfileIdOnCreate(userProfileId);
       allow update: if isExistingOwner(userProfileId) && hasImmutableUserProfileId();
       allow delete: if isExistingOwner(userProfileId);
@@ -250,5 +250,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
