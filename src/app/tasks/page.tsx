@@ -1,3 +1,5 @@
+'use client';
+
 import TaskList from "@/components/tasks/task-list";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
