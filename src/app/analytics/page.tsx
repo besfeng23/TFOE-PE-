@@ -1,13 +1,14 @@
 'use client';
 
-import MemberEngagementChart from "@/components/analytics/member-engagement-chart";
-import FormSubmissionsChart from "@/components/analytics/form-submissions-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, FileText, CalendarCheck, ShieldAlert } from "lucide-react";
 import { useAuthUser, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query } from "firebase/firestore";
 import type { Document, UserProfile, Attendance } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import MembershipStatusChart from "@/components/analytics/membership-status-chart";
+import MembersByGovtLevelChart from "@/components/analytics/members-by-govt-level-chart";
+import React from "react";
 
 function AnalyticsCard({ title, icon: Icon, value, description, isLoading, error }: { title: string, icon: React.ElementType, value: string | number, description: string, isLoading: boolean, error?: any }) {
   return (
@@ -53,6 +54,38 @@ export default function AnalyticsPage() {
     return query(collection(firestore, 'attendance'));
   }, [firestore, isAdmin]);
   const { data: attendance, isLoading: attendanceLoading, error: attendanceError } = useCollection<Attendance>(attendanceQuery);
+
+
+  const membershipStatusData = React.useMemo(() => {
+    if (!profiles) return [];
+    const statusCounts = profiles.reduce((acc, profile) => {
+        const status = profile.membershipStatus || 'Unknown';
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(statusCounts).map(([status, count]) => ({
+        status,
+        count,
+        fill: `var(--chart-${Object.keys(statusCounts).indexOf(status) + 1})`
+    }));
+  }, [profiles]);
+
+  const membersByGovtLevelData = React.useMemo(() => {
+    if (!profiles) return [];
+    const branchCounts = profiles.reduce((acc, profile) => {
+        const branch = profile.governmentBranch || 'N/A';
+        if (branch !== 'N/A') {
+            acc[branch] = (acc[branch] || 0) + 1;
+        }
+        return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(branchCounts).map(([branch, members]) => ({
+        branch,
+        members,
+    }));
+  }, [profiles]);
 
 
   if (isProfileLoading) {
@@ -110,20 +143,20 @@ export default function AnalyticsPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Member Engagement</CardTitle>
-            <CardDescription>Monthly logins and activities (mock data).</CardDescription>
+            <CardTitle className="font-headline">Membership Status</CardTitle>
+            <CardDescription>Distribution of members by their current status.</CardDescription>
           </CardHeader>
           <CardContent>
-            <MemberEngagementChart />
+            {profilesLoading ? <Skeleton className="h-[300px] w-full" /> : <MembershipStatusChart data={membershipStatusData} />}
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Form Submissions</CardTitle>
-            <CardDescription>Monthly submissions by form type (mock data).</CardDescription>
+            <CardTitle className="font-headline">Members in Government</CardTitle>
+            <CardDescription>Number of members by government branch affiliation.</CardDescription>
           </CardHeader>
           <CardContent>
-            <FormSubmissionsChart />
+            {profilesLoading ? <Skeleton className="h-[300px] w-full" /> : <MembersByGovtLevelChart data={membersByGovtLevelData}/>}
           </CardContent>
         </Card>
       </div>
