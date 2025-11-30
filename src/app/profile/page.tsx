@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuthUser, updateDocumentNonBlocking } from '@/firebase';
-import { useFirestore } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useAuthUser, useFirestore } from '@/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
@@ -21,6 +20,8 @@ export default function ProfilePage() {
   const [lastName, setLastName] = useState('');
   const [contactInfo, setContactInfo] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  
+  const isAnonymousUser = user?.isAnonymous;
 
   useEffect(() => {
     if (profile) {
@@ -30,22 +31,39 @@ export default function ProfilePage() {
     }
   }, [profile]);
   
-  const handleSaveChanges = () => {
-    if (!user || !firestore) return;
+  const handleSaveChanges = async () => {
+    if (!user || !firestore || isAnonymousUser) {
+        toast({
+            variant: "destructive",
+            title: "Action Not Allowed",
+            description: "Guest users cannot update profile information.",
+        });
+        return;
+    };
+
     setIsSaving(true);
     const profileRef = doc(firestore, 'userProfiles', user.uid);
-    updateDocumentNonBlocking(profileRef, {
-      firstName,
-      lastName,
-      contactInfo,
-    });
     
-    // Non-blocking, so we can give feedback immediately
-    toast({
-        title: "Profile Updated",
-        description: "Your changes have been queued for saving.",
-    });
-    setIsSaving(false);
+    try {
+        await updateDoc(profileRef, {
+            firstName,
+            lastName,
+            contactInfo,
+        });
+        toast({
+            title: "Profile Updated",
+            description: "Your changes have been saved successfully.",
+        });
+    } catch (error) {
+        console.error("Profile update error:", error);
+        toast({
+            variant: "destructive",
+            title: "Update Failed",
+            description: "Could not save your changes. Please try again.",
+        });
+    } finally {
+        setIsSaving(false);
+    }
   };
   
   const isLoading = isUserLoading || isProfileLoading;
@@ -68,15 +86,17 @@ export default function ProfilePage() {
         ) : (
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
-              {profile?.idPhotoUrl && (
-                <AvatarImage src={profile.idPhotoUrl} alt="User avatar" />
+              {profile?.idPhotoUrl ? (
+                <AvatarImage src={profile.idPhotoUrl} alt="User avatar" data-ai-hint="person portrait"/>
+              ) : (
+                 <AvatarImage src="https://picsum.photos/seed/1/200/200" alt="User avatar" data-ai-hint="person portrait"/>
               )}
               <AvatarFallback>{profile?.firstName?.charAt(0)}{profile?.lastName?.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
               <h3 className="text-lg font-semibold">{profile?.firstName} {profile?.lastName}</h3>
-              <p className="text-sm text-muted-foreground">{user?.email}</p>
-              <Button variant="outline" size="sm" className="mt-2">Change Photo</Button>
+              <p className="text-sm text-muted-foreground">{user?.email || "guest@example.com"}</p>
+              <Button variant="outline" size="sm" className="mt-2" disabled={isAnonymousUser}>Change Photo</Button>
             </div>
           </div>
         )}
@@ -84,63 +104,45 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {isLoading ? (
             <>
-                <div className="space-y-2">
-                    <Skeleton className="h-5 w-20"/>
-                    <Skeleton className="h-10 w-full"/>
-                </div>
-                <div className="space-y-2">
-                    <Skeleton className="h-5 w-20"/>
-                    <Skeleton className="h-10 w-full"/>
-                </div>
-                <div className="space-y-2">
-                    <Skeleton className="h-5 w-20"/>
-                    <Skeleton className="h-10 w-full"/>
-                </div>
-                <div className="space-y-2">
-                    <Skeleton className="h-5 w-20"/>
-                    <Skeleton className="h-10 w-full"/>
-                </div>
-                <div className="space-y-2">
-                    <Skeleton className="h-5 w-20"/>
-                    <Skeleton className="h-10 w-full"/>
-                </div>
-                <div className="space-y-2">
-                    <Skeleton className="h-5 w-20"/>
-                    <Skeleton className="h-10 w-full"/>
-                </div>
+                <div className="space-y-2"><Skeleton className="h-5 w-20"/><Skeleton className="h-10 w-full"/></div>
+                <div className="space-y-2"><Skeleton className="h-5 w-20"/><Skeleton className="h-10 w-full"/></div>
+                <div className="space-y-2"><Skeleton className="h-5 w-20"/><Skeleton className="h-10 w-full"/></div>
+                <div className="space-y-2"><Skeleton className="h-5 w-20"/><Skeleton className="h-10 w-full"/></div>
+                <div className="space-y-2"><Skeleton className="h-5 w-20"/><Skeleton className="h-10 w-full"/></div>
+                <div className="space-y-2"><Skeleton className="h-5 w-20"/><Skeleton className="h-10 w-full"/></div>
             </>
           ) : (
              <>
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                  <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} disabled={isAnonymousUser}/>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                  <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} disabled={isAnonymousUser}/>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="membershipNumber">Membership Number</Label>
-                  <Input id="membershipNumber" value={profile?.membershipNumber || ''} readOnly />
+                  <Input id="membershipNumber" value={profile?.membershipNumber || 'N/A'} readOnly disabled />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
-                  <Input id="email" value={user?.email || ''} readOnly />
+                  <Input id="email" value={user?.email || 'N/A'} readOnly disabled />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="contact">Contact Info</Label>
-                  <Input id="contact" value={contactInfo} onChange={(e) => setContactInfo(e.target.value)} />
+                  <Input id="contact" value={contactInfo} onChange={(e) => setContactInfo(e.target.value)} disabled={isAnonymousUser}/>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="role">Role</Label>
-                  <Input id="role" value={profile?.roleId || ''} readOnly />
+                  <Input id="role" value={profile?.roleId || 'Guest'} readOnly disabled />
                 </div>
             </>
           )}
         </div>
         
         <div className="flex justify-end">
-          <Button onClick={handleSaveChanges} disabled={isLoading || isSaving}>
+          <Button onClick={handleSaveChanges} disabled={isLoading || isSaving || isAnonymousUser}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save Changes
           </Button>

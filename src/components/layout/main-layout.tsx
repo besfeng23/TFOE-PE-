@@ -16,15 +16,36 @@ import { Logo } from '../icons/logo';
 import { SidebarNav } from './sidebar-nav';
 import { UserNav } from './user-nav';
 import { useAuthUser } from '@/firebase';
-import { SheetTitle } from '@/components/ui/sheet';
 
 const unauthenticatedRoutes = ['/login', '/signup'];
+
+const pageTitles: { [key: string]: string } = {
+  '/': 'Dashboard',
+  '/documents': 'Documents',
+  '/applications': 'Applications',
+  '/analytics': 'Analytics',
+  '/events': 'Events & Programs',
+  '/tasks': 'Tasks',
+  '/messages': 'Messages',
+  '/settings': 'Settings',
+  '/profile': 'Profile'
+};
+
+const getPageTitle = (pathname: string): string => {
+  for (const path in pageTitles) {
+    if (pathname.startsWith(path) && path !== '/') {
+        return pageTitles[path];
+    }
+  }
+  return pageTitles['/'] ?? 'Dashboard';
+}
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, isUserLoading } = useAuthUser();
 
   const isUnauthenticatedRoute = unauthenticatedRoutes.includes(pathname);
+  const pageTitle = getPageTitle(pathname);
 
   if (isUserLoading && !isUnauthenticatedRoute) {
     return (
@@ -45,8 +66,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // If we are still loading, and we are not on an auth page, show a loader
-  // This prevents a flicker of the login page before redirecting to the dashboard
   if (isUserLoading) {
     return (
        <div className="flex min-h-screen items-center justify-center bg-background">
@@ -93,15 +112,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2">
             <SidebarTrigger className="md:hidden" />
             <h1 className="font-headline text-lg font-semibold">
-              {pathname.startsWith('/documents') ? 'Documents' 
-               : pathname.startsWith('/applications') ? 'Applications'
-               : pathname.startsWith('/analytics') ? 'Analytics'
-               : pathname.startsWith('/events') ? 'Events & Programs'
-               : pathname.startsWith('/messages') ? 'Messages'
-               : pathname.startsWith('/tasks') ? 'Tasks'
-               : pathname.startsWith('/settings') ? 'Settings'
-               : pathname.startsWith('/profile') ? 'Profile'
-               : 'Dashboard'}
+              {pageTitle}
             </h1>
           </div>
           <div className="hidden md:block">

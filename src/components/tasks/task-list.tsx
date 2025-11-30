@@ -21,13 +21,8 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2, FileWarning, ListTodo } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { Task } from '@/lib/types';
 
-interface Task {
-  id: string;
-  title: string;
-  completed: boolean;
-  createdAt: any;
-}
 
 export default function TaskList() {
   const { user, isUserLoading } = useUser();
@@ -48,7 +43,7 @@ export default function TaskList() {
     data: tasks,
     isLoading: areTasksLoading,
     error,
-  } = useCollection<Omit<Task, 'id'>>(tasksQuery);
+  } = useCollection<Task>(tasksQuery);
 
   const handleAddTask = () => {
     if (!tasksCollectionRef || !newTaskTitle.trim()) return;

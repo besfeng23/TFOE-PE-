@@ -21,10 +21,11 @@ import {
   useAuthUser,
   useMemoFirebase,
   useFirestore,
+  updateDocumentNonBlocking,
 } from '@/firebase';
 import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import type { Notification, Task, Document } from '@/lib/types';
 
 const quickAccessItems = [
   {
@@ -59,7 +60,7 @@ const quickAccessItems = [
   },
 ];
 
-function NotificationItem({ notification, onToggleRead }: { notification: any, onToggleRead: (id: string, read: boolean) => void }) {
+function NotificationItem({ notification, onToggleRead }: { notification: Notification, onToggleRead: (id: string, read: boolean) => void }) {
   return (
     <div
       className="flex cursor-pointer items-start gap-4 rounded-md p-2 hover:bg-muted"
@@ -100,21 +101,21 @@ export default function DashboardPage() {
     );
   }, [firestore, user]);
 
-  const { data: notifications, isLoading: areNotificationsLoading } = useCollection(notificationsQuery);
+  const { data: notifications, isLoading: areNotificationsLoading } = useCollection<Notification>(notificationsQuery);
 
   const tasksQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return query(collection(firestore, `userProfiles/${user.uid}/tasks`), where('completed', '==', false));
   }, [firestore, user]);
 
-  const { data: pendingTasks, isLoading: areTasksLoading } = useCollection(tasksQuery);
+  const { data: pendingTasks, isLoading: areTasksLoading } = useCollection<Task>(tasksQuery);
 
   const documentsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (!firestore) return null;
     return collection(firestore, 'documents');
-  }, [firestore, user]);
+  }, [firestore]);
 
-  const { data: documents, isLoading: areDocumentsLoading } = useCollection(documentsQuery);
+  const { data: documents, isLoading: areDocumentsLoading } = useCollection<Document>(documentsQuery);
   
 
   const handleToggleRead = (id: string, read: boolean) => {
