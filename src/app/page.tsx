@@ -116,16 +116,6 @@ export default function DashboardPage() {
 
   const { data: documents, isLoading: areDocumentsLoading } = useCollection(documentsQuery);
   
-  const attendanceQuery = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
-    return query(
-      collection(firestore, 'attendance'),
-      where('userId', '==', user.uid)
-    );
-  }, [firestore, user]);
-
-  const { data: attendance, isLoading: areAttendanceLoading } = useCollection(attendanceQuery);
-
 
   const handleToggleRead = (id: string, read: boolean) => {
     if (!firestore || !user) return;
@@ -155,7 +145,7 @@ export default function DashboardPage() {
         )}
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">My Pending Tasks</CardTitle>
@@ -182,20 +172,6 @@ export default function DashboardPage() {
               <div className="text-2xl font-bold">{documents?.length ?? 0}</div>
             )}
             <p className="text-xs text-muted-foreground">Total documents uploaded</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Event Attendance</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-             {areAttendanceLoading ? (
-               <Skeleton className="h-7 w-12" />
-             ) : (
-                <div className="text-2xl font-bold">{attendance?.length ?? 0}</div>
-             )}
-            <p className="text-xs text-muted-foreground">Your attendance records</p>
           </CardContent>
         </Card>
       </div>
