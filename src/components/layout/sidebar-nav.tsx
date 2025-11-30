@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -15,6 +16,7 @@ import {
   LayoutDashboard,
   ListTodo,
   MessageCircle,
+  Receipt,
   Settings,
   Users,
 } from 'lucide-react';
@@ -44,6 +46,12 @@ const navItems = [
     icon: ClipboardPenLine,
     label: 'Applications',
     match: (pathname: string) => pathname.startsWith('/applications'),
+  },
+  {
+    href: '/fees',
+    icon: Receipt,
+    label: 'Membership Fees',
+    match: (pathname: string) => pathname.startsWith('/fees'),
   },
   {
     href: '/analytics',

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -31,7 +32,8 @@ const pageTitles: { [key: string]: string } = {
   '/messages': 'Messages',
   '/members': 'Members',
   '/settings': 'Settings',
-  '/profile': 'Profile'
+  '/profile': 'Profile',
+  '/fees': 'Membership Fees'
 };
 
 const getPageTitle = (pathname: string): string => {
