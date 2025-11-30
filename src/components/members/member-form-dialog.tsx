@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -34,6 +35,7 @@ import { useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import type { UserProfile } from '@/lib/types';
+import { Separator } from '../ui/separator';
 
 interface MemberFormDialogProps {
   isOpen: boolean;
@@ -46,6 +48,10 @@ const formSchema = z.object({
   lastName: z.string().min(1, 'Last name is required.'),
   email: z.string().email('Please enter a valid email.'),
   roleId: z.string({ required_error: 'Please select a role.' }),
+  membershipStatus: z.enum(['Active', 'Inactive', 'Leadership']).optional(),
+  assignedGovernmentPosition: z.string().optional(),
+  governmentBranch: z.string().optional(),
+  positionType: z.enum(['Elected', 'Appointed', 'Volunteer', 'None']).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -62,18 +68,30 @@ export function MemberFormDialog({ isOpen, onClose, member }: MemberFormDialogPr
       lastName: '',
       email: '',
       roleId: 'Member',
+      membershipStatus: 'Active',
+      assignedGovernmentPosition: '',
+      governmentBranch: '',
+      positionType: 'None',
     },
   });
   
   useEffect(() => {
       if (member) {
-          form.reset(member);
+          form.reset({
+            ...member,
+            membershipStatus: member.membershipStatus || 'Active',
+            positionType: member.positionType || 'None',
+          });
       } else {
           form.reset({
               firstName: '',
               lastName: '',
               email: '',
               roleId: 'Member',
+              membershipStatus: 'Active',
+              assignedGovernmentPosition: '',
+              governmentBranch: '',
+              positionType: 'None',
           });
       }
   }, [member, form])
@@ -92,22 +110,16 @@ export function MemberFormDialog({ isOpen, onClose, member }: MemberFormDialogPr
     try {
         const docRef = isEditing
             ? doc(firestore, 'userProfiles', member.id)
-            : doc(collection(firestore, 'userProfiles')); // Create a new doc reference for new members
+            : doc(collection(firestore, 'userProfiles'));
 
         const profileData: Partial<UserProfile> = {
             ...data,
             id: isEditing ? member.id : docRef.id,
         };
         
-        // For new members, we need to create the user in Firebase Auth as well.
-        // This is a complex operation that should ideally be handled by a server-side function
-        // for security reasons (e.g., to prevent abuse). 
-        // For this client-side demo, we are only creating/updating the Firestore profile document.
         if (!isEditing) {
             // Note: In a real app, you would likely call a serverless function here
             // to create the Firebase Auth user and then create the profile.
-            // e.g., `await createUser({ email: data.email, password: 'defaultPassword' })`
-            // For now, we only create the profile doc. The user won't be able to log in.
         }
 
         await setDocumentNonBlocking(docRef, profileData, { merge: true });
@@ -133,7 +145,7 @@ export function MemberFormDialog({ isOpen, onClose, member }: MemberFormDialogPr
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Member' : 'Add New Member'}</DialogTitle>
           <DialogDescription>
@@ -141,8 +153,8 @@ export function MemberFormDialog({ isOpen, onClose, member }: MemberFormDialogPr
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-             <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-6">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                 control={form.control}
                 name="firstName"
@@ -178,36 +190,120 @@ export function MemberFormDialog({ isOpen, onClose, member }: MemberFormDialogPr
                 <FormItem>
                   <FormLabel>Email Address</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., juan.d.cruz@example.com" {...field} />
+                    <Input placeholder="e.g., juan.d.cruz@example.com" {...field} disabled={isEditing}/>
+                  </FormControl>
+                  {isEditing && <FormDescription>Email cannot be changed after creation.</FormDescription>}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                control={form.control}
+                name="roleId"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Organizational Role</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                        <SelectItem value="Member">Member</SelectItem>
+                        <SelectItem value="Secretary">Secretary</SelectItem>
+                        <SelectItem value="Admin">Admin</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="membershipStatus"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Membership Status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a status" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                        <SelectItem value="Active">Active</SelectItem>
+                        <SelectItem value="Inactive">Inactive</SelectItem>
+                        <SelectItem value="Leadership">Leadership</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+
+            <div className="space-y-2 pt-4">
+                <h4 className="font-medium">Government Position</h4>
+                <Separator />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="assignedGovernmentPosition"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Position / Title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., Barangay Captain, City Councilor" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="roleId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                control={form.control}
+                name="governmentBranch"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Gov. Branch / Affiliation</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
+                        <Input placeholder="e.g., Barangay XYZ, Quezon City Hall" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Member">Member</SelectItem>
-                      <SelectItem value="Secretary">Secretary</SelectItem>
-                      <SelectItem value="Admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                 <FormField
+                control={form.control}
+                name="positionType"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Position Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a type" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                        <SelectItem value="None">None</SelectItem>
+                        <SelectItem value="Elected">Elected Official</SelectItem>
+                        <SelectItem value="Appointed">Appointed Position</SelectItem>
+                        <SelectItem value="Volunteer">Volunteer Role</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
             
-            <DialogFooter>
+            
+            <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
                 Cancel
               </Button>

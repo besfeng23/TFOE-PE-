@@ -1,5 +1,9 @@
 import type { Timestamp } from "firebase/firestore";
 
+export type MembershipStatus = 'Active' | 'Inactive' | 'Leadership';
+export type PositionType = 'Elected' | 'Appointed' | 'Volunteer' | 'None';
+
+
 export interface UserProfile {
     id: string;
     email: string;
@@ -9,6 +13,10 @@ export interface UserProfile {
     idPhotoUrl?: string;
     contactInfo?: string;
     roleId: string;
+    assignedGovernmentPosition?: string;
+    governmentBranch?: string;
+    membershipStatus?: MembershipStatus;
+    positionType?: PositionType;
 }
 
 export interface Task {

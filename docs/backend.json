@@ -39,6 +39,24 @@
         "roleId": {
           "type": "string",
           "description": "Reference to Role. (Relationship: Role 1:N UserProfile)"
+        },
+        "assignedGovernmentPosition": {
+          "type": "string",
+          "description": "The member's assigned position in government, if any."
+        },
+        "governmentBranch": {
+          "type": "string",
+          "description": "The government branch or agency the member is affiliated with (e.g., Barangay, City Hall)."
+        },
+        "membershipStatus": {
+          "type": "string",
+          "description": "The member's current status in the organization.",
+          "enum": ["Active", "Inactive", "Leadership"]
+        },
+        "positionType": {
+            "type": "string",
+            "description": "The type of government position held by the member.",
+            "enum": ["Elected", "Appointed", "Volunteer", "None"]
         }
       },
       "required": [

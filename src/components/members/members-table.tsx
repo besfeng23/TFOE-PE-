@@ -47,12 +47,16 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
   const filteredProfiles = useMemo(() => {
     if (!profiles) return [];
     if (!searchTerm) return profiles;
+    
+    const lowercasedTerm = searchTerm.toLowerCase();
 
     return profiles.filter(profile => 
-        (profile.firstName && profile.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (profile.lastName && profile.lastName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (profile.email && profile.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (profile.roleId && profile.roleId.toLowerCase().includes(searchTerm.toLowerCase()))
+        (profile.firstName && profile.firstName.toLowerCase().includes(lowercasedTerm)) ||
+        (profile.lastName && profile.lastName.toLowerCase().includes(lowercasedTerm)) ||
+        (profile.email && profile.email.toLowerCase().includes(lowercasedTerm)) ||
+        (profile.roleId && profile.roleId.toLowerCase().includes(lowercasedTerm)) ||
+        (profile.governmentBranch && profile.governmentBranch.toLowerCase().includes(lowercasedTerm)) ||
+        (profile.membershipStatus && profile.membershipStatus.toLowerCase().includes(lowercasedTerm))
     );
 
   }, [profiles, searchTerm])
@@ -87,6 +91,16 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
     setSelectedMember(null);
   }
 
+  const getStatusBadgeVariant = (status?: string) => {
+    switch (status) {
+        case 'Active': return 'default';
+        case 'Leadership': return 'secondary';
+        case 'Inactive': return 'destructive';
+        default: return 'outline';
+    }
+  }
+
+
   if (isLoading) {
     return (
         <div className="rounded-lg border overflow-x-auto">
@@ -95,7 +109,8 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
                     <TableRow>
                         <TableHead>Name</TableHead>
                         <TableHead className="hidden sm:table-cell">Email</TableHead>
-                        <TableHead className="hidden md:table-cell">Role</TableHead>
+                        <TableHead className="hidden md:table-cell">Status</TableHead>
+                        <TableHead className="hidden lg:table-cell">Role</TableHead>
                         {isAdmin && <TableHead className="text-right">Actions</TableHead>}
                     </TableRow>
                 </TableHeader>
@@ -105,11 +120,15 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
                             <TableCell>
                                 <div className='flex items-center gap-3'>
                                     <Skeleton className="h-10 w-10 rounded-full" />
-                                    <Skeleton className="h-5 w-32" />
+                                    <div className="space-y-1">
+                                        <Skeleton className="h-4 w-24" />
+                                        <Skeleton className="h-3 w-32" />
+                                    </div>
                                 </div>
                             </TableCell>
                             <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-40" /></TableCell>
                             <TableCell className="hidden md:table-cell"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                            <TableCell className="hidden lg:table-cell"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
                              {isAdmin && <TableCell className="text-right">
                                 <Skeleton className="h-8 w-8 rounded-md ml-auto" />
                             </TableCell>}
@@ -133,7 +152,8 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
                 <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead className="hidden sm:table-cell">Email</TableHead>
-                <TableHead className="hidden md:table-cell">Role</TableHead>
+                <TableHead className="hidden md:table-cell">Status</TableHead>
+                <TableHead className="hidden lg:table-cell">Role</TableHead>
                 {isAdmin && <TableHead className="text-right">Actions</TableHead>}
                 </TableRow>
             </TableHeader>
@@ -156,7 +176,10 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
                     {profile.email}
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                    <Badge variant={profile.roleId === 'Admin' ? 'destructive' : 'secondary'}>{profile.roleId}</Badge>
+                        <Badge variant={getStatusBadgeVariant(profile.membershipStatus)}>{profile.membershipStatus || 'N/A'}</Badge>
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                    <Badge variant={profile.roleId === 'Admin' ? 'destructive' : 'outline'}>{profile.roleId}</Badge>
                     </TableCell>
                     {isAdmin && (
                         <TableCell className="text-right">
