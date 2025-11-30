@@ -257,6 +257,30 @@ service cloud.firestore {
       allow update: if false;
       allow delete: if false;
     }
+
+    /**
+     * @description Rules for real-time messaging.
+     * @path /conversations/{conversationId}
+     * @principle Participants can read/write to conversations they are part of.
+     */
+    match /conversations/{conversationId} {
+      // Allow read/write only if the user is a participant in the conversation.
+      allow read, write: if request.auth.uid in resource.data.participants;
+      
+      /**
+       * @description Rules for messages within a conversation.
+       * @path /conversations/{conversationId}/messages/{messageId}
+       * @principle Inherits parent rule; only conversation participants can read/write messages.
+       */
+      match /messages/{messageId} {
+        // A user can read messages if they are part of the parent conversation.
+        allow read: if get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants.hasAny([request.auth.uid]);
+        // A user can create a message if they are part of the conversation and are the sender.
+        allow create: if get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants.hasAny([request.auth.uid])
+                       && request.resource.data.senderId == request.auth.uid;
+      }
+    }
   }
 }
 
+    

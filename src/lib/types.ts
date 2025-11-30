@@ -81,3 +81,27 @@ export interface Endorsement {
     generatedDate: Timestamp;
     generatedByUserId: string;
 }
+
+export interface Conversation {
+    id: string;
+    participants: string[];
+    participantDetails: {
+        userId: string;
+        name: string;
+        photoUrl?: string;
+    }[];
+    lastMessage?: {
+        text: string;
+        timestamp: Timestamp;
+        senderId: string;
+    };
+}
+
+export interface Message {
+    id: string;
+    senderId: string;
+    text: string;
+    timestamp: Timestamp;
+}
+
+    

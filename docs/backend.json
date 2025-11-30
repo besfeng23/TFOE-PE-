@@ -453,6 +453,72 @@
         }
       },
       "required": ["id", "partnershipId", "subject", "body", "generatedDate", "generatedByUserId"]
+    },
+    "Conversation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Conversation",
+      "type": "object",
+      "description": "Represents a chat conversation between two or more users.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Conversation entity."
+        },
+        "participants": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "An array of UserProfile IDs for all participants in the conversation."
+        },
+        "participantDetails": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "userId": { "type": "string" },
+              "name": { "type": "string" },
+              "photoUrl": { "type": "string", "format": "uri" }
+            },
+            "required": ["userId", "name"]
+          },
+          "description": "Denormalized participant data for easy display in conversation lists."
+        },
+        "lastMessage": {
+          "type": "object",
+          "properties": {
+            "text": { "type": "string" },
+            "timestamp": { "type": "string", "format": "date-time" },
+            "senderId": { "type": "string" }
+          },
+          "description": "The most recent message sent in the conversation."
+        }
+      },
+      "required": ["id", "participants", "participantDetails"]
+    },
+    "Message": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Message",
+      "type": "object",
+      "description": "Represents a single message within a conversation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Message entity."
+        },
+        "senderId": {
+          "type": "string",
+          "description": "The UserProfile ID of the user who sent the message."
+        },
+        "text": {
+          "type": "string",
+          "description": "The text content of the message."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The date and time when the message was sent.",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "senderId", "text", "timestamp"]
     }
   },
   "auth": {
@@ -662,9 +728,33 @@
             }
           ]
         }
+      },
+       {
+        "path": "conversations/{conversationId}",
+        "definition": {
+          "entityName": "Conversation",
+          "schema": { "$ref": "#/backend/entities/Conversation" },
+          "description": "Stores metadata about a chat conversation, including participants.",
+          "params": [
+            { "name": "conversationId", "description": "Unique identifier for the conversation." }
+          ]
+        }
+      },
+      {
+        "path": "conversations/{conversationId}/messages/{messageId}",
+        "definition": {
+          "entityName": "Message",
+          "schema": { "$ref": "#/backend/entities/Message" },
+          "description": "Stores the individual messages for a specific conversation.",
+          "params": [
+            { "name": "conversationId", "description": "The ID of the parent conversation." },
+            { "name": "messageId", "description": "Unique identifier for the message." }
+          ]
+        }
       }
     ],
     "reasoning": "The Firestore data structure is designed to adhere to the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. It leverages denormalization and structural segregation to optimize security rule implementation and data access patterns.  \n\n*   **User Profiles:** User profiles are stored in a collection named `userProfiles` with the document ID matching the user's Firebase Auth UID. This enables path-based ownership for user-specific data, simplifying security rules.\n*   **Tasks & Notifications:** Tasks and Notifications are stored in subcollections under each `userProfiles` document. This allows for secure, scalable querying of a user's own data without exposing it to others, following best practices for user-private data.\n*   **Roles:** Roles are stored in a `roles` collection, enabling easy management of roles within the application. User profiles store a `roleId` to reference the user's role.\n*   **Documents:** Documents are stored in a `documents` collection. The `uploadedByUserId` field in each document denormalizes ownership, enabling secure listing and filtering of documents based on the uploader.\n*   **Categories:** Categories are stored in a `categories` collection, providing a simple lookup for document categorization.\n*   **Events:** Events are stored in an `events` collection, allowing for easy retrieval and display of event information.\n*   **Attendance:** Attendance records are stored in an `attendance` collection. Each document records the user (`userId`) and event (`eventId`).\n*   **Receipts:** Receipts are stored in a `receipts` collection and are associated with a `userId` to identify the user who made the payment.\n*   **Automated Summaries:** Automated Summaries are stored in the `automatedSummaries` collection, with a `documentId` pointing to the source document.\n*   **Partnerships & Endorsements**: New collections for `partnerships` and `endorsements` are added at the root level. This allows for clear, admin-gated access to manage external partnerships and related documents, separating them from user-specific or public content.\n\n**Authorization Independence (Denormalization):**\nThe structure avoids `get()` calls in security rules by denormalizing authorization context. The `documents` collection contains the `uploadedByUserId` field, eliminating the need to fetch the user profile to determine ownership. Other entities like `attendance` and `receipts` are stored in root collections with associated `userId` or `eventId` fields, allowing direct rule application without requiring parent document reads.  This approach ensures that operations remain atomic and security rules are straightforward.\n\n**QAPs (Rules are not Filters):**\nThe structure enables secure `list` operations by segregating data based on ownership and purpose. Private user data (e.g., notifications, receipts) are now stored in user-specific subcollections, ensuring that only the owner can query them. Documents are secured by the `uploadedByUserId` field, allowing filtering of documents that the user has uploaded. The structure supports different security postures by utilizing different collections for data with varying security needs (e.g., public events vs. private user receipts).\n\nBy adhering to these principles and strategies, the Firestore structure provides a secure, scalable, and debuggable solution for the application's data storage needs."
   }
 }
 
+    
