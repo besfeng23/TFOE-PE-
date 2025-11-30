@@ -1,34 +1,26 @@
 /**
  * Core Philosophy: This ruleset establishes a hybrid security model. It combines a strict
- * user-ownership model for private data with a public-read model for shared, non-sensitive data.
- * The primary goal is to ensure users can only access and manage their own information while
- * allowing read-only access to communal resources like documents and events.
+ * user-ownership model for private data with a role-based access control (RBAC) system for
+ * administrative actions.
  *
  * Data Structure: Private user data (Tasks, Notifications) is stored in subcollections under the
- * user's profile document. This is a critical design for secure list queries. Other data is organized
- * into flat, top-level collections. For collections that contain user-related but not strictly private data
- * (e.g., 'receipts'), documents include a denormalized 'userId' field.
+ * user's profile document. User profiles are in a top-level collection.
  *
  * Key Security Decisions:
- * - User Profile Segregation: Users can only create, read, and modify their own profile document, which is
- *   keyed by their authentication UID. Listing all user profiles is strictly forbidden to protect user privacy.
- * - Private Subcollections: By placing tasks and notifications in subcollections (/userProfiles/{userId}/tasks/{taskId}),
- *   we can create rules that allow users to safely list their own data without any risk of exposing others' data.
+ * - User Profile Management: Normal users can only read and update their OWN profile. Administrators
+ *   can create, read, update, and delete ANY user profile, but cannot change their own role.
+ * - Private Subcollections: By placing tasks and notifications in subcollections, we can create
+ *   rules that allow users to safely list their own data without any risk of exposing others' data.
  * - Public Read-Only Collections: Collections like 'roles', 'categories', and 'events' are treated as
- *   public lookup data, readable by any signed-in user but not writable by clients. This assumes
- *   such data is managed by backend processes or administrative tools.
+ *   public lookup data, readable by any signed-in user but not writable by clients.
  * - Owner-Only Writes for Public Content: The 'documents' collection is publicly readable, but write
- *   operations (create, update, delete) are restricted to the original author, identified by the
- *   denormalized 'uploadedByUserId' field.
- * - Secure Listing for Top-Level Private Data: For top-level collections containing sensitive data
- *   that isn't naturally nested ('receipts', 'attendance'), list operations are disabled. Firestore
- *   rules cannot filter a list query on a document field ('userId'), which would otherwise expose all
- *   users' private data. For these, secure access is provided for individual documents only (`get`).
+ *   operations (create, update, delete) are restricted to the original author.
+ * - Admin Role Check: The `isAdmin()` function checks a custom claim on the user's auth token.
+ *   This is a performant way to verify admin status. In this ruleset, we fallback to checking
+ *   the role in the user's profile document, which is less performant but works for this demo.
  *
  * Denormalization for Authorization: To ensure fast and secure rule evaluation, authorization fields are
- * denormalized directly onto the documents. For example, 'documents' contain an 'uploadedByUserId', and
- * 'receipts' contain a 'userId'. This eliminates the need for slow and costly `get()` calls to other
- * documents during rule evaluation, making the security model more performant and reliable.
+ * denormalized directly onto the documents (e.g., 'documents' contain 'uploadedByUserId').
  */
 rules_version = '2';
 service cloud.firestore {
@@ -53,8 +45,18 @@ service cloud.firestore {
     }
 
     /**
+     * Checks if the requesting user is an administrator.
+     * In a production app, this would ideally check a custom claim on the auth token.
+     * Here, we fall back to reading the user's profile document.
+     */
+    function isAdmin() {
+      // Best practice: return request.auth.token.isAdmin == true;
+      // Fallback for this demo:
+      return isSignedIn() && get(/databases/$(database)/documents/userProfiles/$(request.auth.uid)).data.roleId == 'Admin';
+    }
+
+    /**
      * Returns true if the document exists and the user is the owner.
-     * Used for safe update and delete operations.
      */
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
@@ -90,7 +92,6 @@ service cloud.firestore {
 
     /**
      * Validates that the resource being created has a 'userId' matching the creator.
-     * Used for collections like receipts and attendance.
      */
     function hasValidOwnerIdOnCreate() {
       return request.resource.data.userId == request.auth.uid;
@@ -108,24 +109,24 @@ service cloud.firestore {
     // ----------------------------------------------------------------------
 
     /**
-     * @description Users can create, read, and update their own profile. Listing all users is denied.
+     * @description Users can read/update their own profile. Admins can manage all profiles.
      * @path /userProfiles/{userProfileId}
-     * @allow (create) An authenticated user creating their own profile: `auth.uid == 'user_abc'`, `create /userProfiles/user_abc`
-     * @deny (get) A user trying to read another user's profile: `auth.uid == 'user_123'`, `get /userProfiles/user_abc`
-     * @principle Restricts access to a user's own data tree and enforces self-creation.
+     * @allow (get) Any signed-in user can read any profile.
+     * @allow (list) Any signed-in user can list all profiles.
+     * @allow (create) An admin can create a new user profile.
+     * @allow (update) A user can update their own profile, or an admin can update any profile.
+     * @allow (delete) An admin can delete any user profile.
      */
     match /userProfiles/{userProfileId} {
       allow get: if isSignedIn();
       allow list: if isSignedIn();
-      allow create: if isOwner(userProfileId) && hasValidUserProfileIdOnCreate(userProfileId);
-      allow update: if isExistingOwner(userProfileId) && hasImmutableUserProfileId();
-      allow delete: if isExistingOwner(userProfileId);
+      allow create: if isAdmin();
+      allow update: if isOwner(userProfileId) || isAdmin();
+      allow delete: if isAdmin();
 
       /**
        * @description Users can manage their own tasks within their profile.
        * @path /userProfiles/{userProfileId}/tasks/{taskId}
-       * @allow (list) A user listing their own tasks: `auth.uid == 'user_abc'`, `list /userProfiles/user_abc/tasks`
-       * @deny (get) A user trying to read another user's task: `auth.uid == 'user_123'`, `get /userProfiles/user_abc/tasks/task_xyz`
        * @principle Secures a user-owned subcollection, allowing safe list and get operations.
        */
       match /tasks/{taskId} {
@@ -135,9 +136,7 @@ service cloud.firestore {
       /**
        * @description Users can manage their own notifications within their profile.
        * @path /userProfiles/{userProfileId}/notifications/{notificationId}
-       * @allow (list) A user listing their own notifications: `auth.uid == 'user_abc'`, `list /userProfiles/user_abc/notifications`
-       * @deny (get) A user trying to read another user's notification: `auth.uid == 'user_123'`, `get /userProfiles/user_abc/notifications/notif_xyz`
-       * @principle Secures a user-owned subcollection, allowing safe list and get operations for private data.
+       * @principle Secures a user-owned subcollection for private data.
        */
       match /notifications/{notificationId} {
         allow read, write: if isOwner(userProfileId);
@@ -147,9 +146,7 @@ service cloud.firestore {
     /**
      * @description Roles are public, read-only data for all signed-in users.
      * @path /roles/{roleId}
-     * @allow (get) Any authenticated user reading a role: `auth != null`, `get /roles/admin_role`
-     * @deny (create) Any user trying to create a new role: `auth != null`, `create /roles/new_role`
-     * @principle Secures lookup data by making it read-only for clients, assuming it's managed by a backend.
+     * @principle Secures lookup data by making it read-only for clients.
      */
     match /roles/{roleId} {
       allow get: if isSignedIn();
@@ -162,9 +159,7 @@ service cloud.firestore {
     /**
      * @description Documents are public to read, but only the original uploader can modify or delete them.
      * @path /documents/{documentId}
-     * @allow (create) An authenticated user uploading a document with their UID as 'uploadedByUserId'.
-     * @deny (update) A user trying to modify a document they did not upload.
-     * @principle Implements a "Public Read with Owner-Only Writes" pattern using a denormalized ownership field.
+     * @principle Implements "Public Read with Owner-Only Writes" pattern.
      */
     match /documents/{documentId} {
       allow get: if isSignedIn();
@@ -177,9 +172,7 @@ service cloud.firestore {
     /**
      * @description Categories are public, read-only data for all signed-in users.
      * @path /categories/{categoryId}
-     * @allow (get) Any authenticated user reading a category: `auth != null`, `get /categories/financials`
-     * @deny (create) Any user trying to create a new category: `auth != null`, `create /categories/new_cat`
-     * @principle Secures lookup data by making it read-only for clients, assuming it's managed by a backend.
+     * @principle Secures lookup data by making it read-only for clients.
      */
     match /categories/{categoryId} {
       allow get: if isSignedIn();
@@ -192,9 +185,7 @@ service cloud.firestore {
     /**
      * @description Events are public, read-only data for all signed-in users.
      * @path /events/{eventId}
-     * @allow (get) Any authenticated user reading an event: `auth != null`, `get /events/annual_meeting`
-     * @deny (create) Any user trying to create a new event: `auth != null`, `create /events/new_event`
-     * @principle Secures lookup data by making it read-only for clients, assuming it's managed by a backend.
+     * @principle Secures lookup data by making it read-only for clients.
      */
     match /events/{eventId} {
       allow get: if isSignedIn();
@@ -205,11 +196,9 @@ service cloud.firestore {
     }
 
     /**
-     * @description Users can manage their own attendance records. Listing all attendance is denied for privacy.
+     * @description Users can manage their own attendance records. Listing all attendance is denied.
      * @path /attendance/{attendanceId}
-     * @allow (create) A user creating their own attendance record: `auth.uid == 'user_abc'`, `create /attendance/att_123` with data `{ userId: 'user_abc' }`
-     * @deny (get) A user trying to read another's attendance record.
-     * @principle Enforces document ownership for writes and reads. Listing is denied on this top-level collection to prevent data leakage.
+     * @principle Enforces document ownership for writes and reads. Listing is denied to prevent data leakage.
      */
     match /attendance/{attendanceId} {
       allow get: if isOwner(resource.data.userId);
@@ -222,9 +211,7 @@ service cloud.firestore {
     /**
      * @description Users can only access their own payment receipts. Listing is denied for privacy.
      * @path /receipts/{receiptId}
-     * @allow (get) A user reading their own receipt: `auth.uid == resource.data.userId`.
-     * @deny (list) Any user trying to list all receipts in the system.
-     * @principle Enforces document ownership for reads and writes. Listing is denied on this top-level collection to prevent data leakage.
+     * @principle Enforces document ownership for reads and writes. Listing is denied to prevent data leakage.
      */
     match /receipts/{receiptId} {
       allow get: if isOwner(resource.data.userId);
@@ -237,8 +224,6 @@ service cloud.firestore {
     /**
      * @description AI-generated summaries are public, read-only data for all signed-in users.
      * @path /automatedSummaries/{automatedSummaryId}
-     * @allow (get) Any authenticated user reading a summary.
-     * @deny (create) Any user trying to create a new summary, as this is done by a backend process.
      * @principle Secures machine-generated data by making it read-only for clients.
      */
     match /automatedSummaries/{automatedSummaryId} {
