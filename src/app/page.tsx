@@ -110,9 +110,9 @@ export default function DashboardPage() {
 
   const { data: documents, isLoading: areDocumentsLoading } = useCollection(
     useMemoFirebase(() => {
-      if (!firestore) return null;
+      if (!firestore || !user) return null;
       return collection(firestore, 'documents')
-    }, [firestore])
+    }, [firestore, user])
   );
   
   // This query is now scoped to the logged-in user to respect security rules.
