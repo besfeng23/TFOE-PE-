@@ -16,12 +16,15 @@ import {
   Wallet,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useCollection, useAuthUser, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import {
+  useCollection,
+  useAuthUser,
+  useMemoFirebase,
+  useFirestore,
+  updateDocumentNonBlocking,
+} from '@/firebase';
+import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { doc } from 'firebase/firestore';
 
 const quickAccessItems = [
   {
@@ -59,7 +62,6 @@ const quickAccessItems = [
 function NotificationItem({ notification, onToggleRead }: { notification: any, onToggleRead: (id: string, read: boolean) => void }) {
   return (
     <div
-      key={notification.id}
       className="flex cursor-pointer items-start gap-4 rounded-md p-2 hover:bg-muted"
       onClick={() => onToggleRead(notification.id, !notification.read)}
     >
@@ -115,7 +117,6 @@ export default function DashboardPage() {
     }, [firestore, user])
   );
   
-  // This query is now scoped to the logged-in user to respect security rules.
   const attendanceQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
@@ -128,7 +129,7 @@ export default function DashboardPage() {
 
 
   const handleToggleRead = (id: string, read: boolean) => {
-    if (!firestore) return;
+    if (!firestore || !user) return;
     const notificationRef = doc(firestore, 'notifications', id);
     updateDocumentNonBlocking(notificationRef, { read });
   };
@@ -239,9 +240,7 @@ export default function DashboardPage() {
               )}
               {!areNotificationsLoading && notifications && notifications.length > 0 &&
                 notifications.map((notification) => (
-                   <Link href="#" key={notification.id} passHref>
-                    <NotificationItem notification={notification} onToggleRead={handleToggleRead}/>
-                   </Link>
+                  <NotificationItem key={notification.id} notification={notification} onToggleRead={handleToggleRead}/>
                 ))}
               {!areNotificationsLoading && (!notifications || notifications.length === 0) && (
                 <div className="flex flex-col items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/30 bg-muted/50 p-12 text-center">

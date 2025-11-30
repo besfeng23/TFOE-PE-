@@ -14,18 +14,32 @@ import {
 import { Logo } from '../icons/logo';
 import { SidebarNav } from './sidebar-nav';
 import { UserNav } from './user-nav';
-import { Button } from '../ui/button';
-import Link from 'next/link';
+import { useAuthUser } from '@/firebase';
+import { Skeleton } from '../ui/skeleton';
+
+const unauthenticatedRoutes = ['/login', '/signup'];
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { isUserLoading } = useAuthUser();
 
-  if (pathname === '/login') {
+  if (unauthenticatedRoutes.includes(pathname)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         {children}
       </div>
     );
+  }
+
+  if (isUserLoading) {
+    return (
+       <div className="flex min-h-screen items-center justify-center">
+         <div className="flex flex-col items-center gap-4">
+            <Logo className="h-16 w-16 text-primary animate-pulse" />
+            <p className="text-muted-foreground">Loading Portal...</p>
+         </div>
+       </div>
+    )
   }
 
   return (

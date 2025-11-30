@@ -12,7 +12,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
-import { useAuthUser } from '@/firebase';
+import { useAuthUser, useAuth } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { signOut } from 'firebase/auth';
+import { toast } from '@/hooks/use-toast';
 
 interface UserNavProps {
   isSidebar?: boolean;
@@ -20,6 +23,26 @@ interface UserNavProps {
 
 export function UserNav({ isSidebar = false }: UserNavProps) {
   const { user, profile } = useAuthUser();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast({
+        title: 'Logged Out',
+        description: 'You have been successfully logged out.',
+      });
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Logout Failed',
+        description: 'An error occurred while logging out.',
+      });
+    }
+  };
 
   const userInitial = profile?.firstName?.charAt(0) || user?.email?.charAt(0) || 'U';
   const userInitialLast = profile?.lastName?.charAt(0) || '';
@@ -51,6 +74,30 @@ export function UserNav({ isSidebar = false }: UserNavProps) {
     </div>
   );
 
+  const dropdownContent = (
+    <>
+      <DropdownMenuLabel className="font-normal">
+        <div className="flex flex-col space-y-1">
+          <p className="text-sm font-medium leading-none">{profile?.firstName} {profile?.lastName}</p>
+          <p className="text-xs leading-none text-muted-foreground">
+            {user?.email}
+          </p>
+        </div>
+      </DropdownMenuLabel>
+      <DropdownMenuSeparator />
+      <DropdownMenuGroup>
+        <Link href="/profile">
+          <DropdownMenuItem>Profile</DropdownMenuItem>
+        </Link>
+        <Link href="/settings">
+          <DropdownMenuItem>Settings</DropdownMenuItem>
+        </Link>
+      </DropdownMenuGroup>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
+    </>
+  );
+
   if (isSidebar) {
     return (
       <DropdownMenu>
@@ -63,27 +110,7 @@ export function UserNav({ isSidebar = false }: UserNavProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" forceMount side="top">
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{profile?.firstName} {profile?.lastName}</p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {user?.email}
-                </p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <Link href="/profile">
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-              </Link>
-              <Link href="/settings">
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-              </Link>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <Link href="/login">
-              <DropdownMenuItem>Log out</DropdownMenuItem>
-            </Link>
+          {dropdownContent}
         </DropdownMenuContent>
       </DropdownMenu>
     );
@@ -105,27 +132,7 @@ export function UserNav({ isSidebar = false }: UserNavProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{profile?.firstName} {profile?.lastName}</p>
-            <p className="text-xs leading-none text-muted-foreground">
-             {user?.email}
-            </p>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <Link href="/profile">
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-          </Link>
-          <Link href="/settings">
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-          </Link>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <Link href="/login">
-          <DropdownMenuItem>Log out</DropdownMenuItem>
-        </Link>
+        {dropdownContent}
       </DropdownMenuContent>
     </DropdownMenu>
   );
