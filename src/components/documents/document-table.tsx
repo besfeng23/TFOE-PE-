@@ -19,10 +19,10 @@ import type { Document } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 
 const documentCategories: { [key: string]: string } = {
-    'Resolution': 'Resolution',
-    'Meeting Minutes': 'Meeting Minutes',
-    'Form': 'Form',
-    'Financials': 'Financials',
+    'resolution': 'Resolution',
+    'minutes': 'Meeting Minutes',
+    'form': 'Form',
+    'financials': 'Financials',
     'default': 'Document'
 }
 
@@ -41,6 +41,10 @@ export default function DocumentTable() {
   const getCategoryName = (categoryId: string) => {
     return documentCategories[categoryId] || documentCategories.default;
   }
+  
+  const handleDownload = (fileUrl: string) => {
+    window.open(fileUrl, '_blank');
+  };
 
   if (isLoading) {
     return (
@@ -106,11 +110,11 @@ export default function DocumentTable() {
                       <Sparkles className="h-4 w-4 text-accent" />
                        <span className="sr-only">Summarize</span>
                     </Button>
-                    <Button variant="outline" size="icon" className="h-8 w-8">
+                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleDownload(doc.fileUrl)}>
                       <Eye className="h-4 w-4" />
                       <span className="sr-only">Preview</span>
                     </Button>
-                    <Button variant="outline" size="icon" className="h-8 w-8">
+                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleDownload(doc.fileUrl)}>
                       <Download className="h-4 w-4" />
                        <span className="sr-only">Download</span>
                     </Button>
