@@ -19,14 +19,27 @@ export default function ConversationList({ onSelectConversation, selectedConvers
 
     const conversationsQuery = useMemoFirebase(() => {
         if (!firestore || !user) return null;
+        // The orderBy on a different field than the where clause field requires a composite index.
+        // For simplicity and to resolve the security rule issue, we remove ordering by lastMessage timestamp.
+        // The security rules can now more easily validate the query.
         return query(
             collection(firestore, 'conversations'),
-            where('participants', 'array-contains', user.uid),
-            orderBy('lastMessage.timestamp', 'desc')
+            where('participants', 'array-contains', user.uid)
         );
     }, [firestore, user]);
 
     const { data: conversations, isLoading, error } = useCollection<Conversation>(conversationsQuery);
+    
+    // Sort conversations on the client-side after fetching
+    const sortedConversations = React.useMemo(() => {
+        if (!conversations) return [];
+        return [...conversations].sort((a, b) => {
+            const aTimestamp = a.lastMessage?.timestamp?.toDate() || new Date(0);
+            const bTimestamp = b.lastMessage?.timestamp?.toDate() || new Date(0);
+            return bTimestamp.getTime() - aTimestamp.getTime();
+        });
+    }, [conversations]);
+
 
     if (isLoading) {
         return (
@@ -48,13 +61,13 @@ export default function ConversationList({ onSelectConversation, selectedConvers
         return <div className="text-destructive text-sm p-4">Error: {error.message}</div>
     }
 
-    if (!conversations || conversations.length === 0) {
+    if (!sortedConversations || sortedConversations.length === 0) {
         return <div className="text-center text-muted-foreground p-4 text-sm">No conversations yet. Start a new one!</div>
     }
 
     return (
         <div className="space-y-1">
-            {conversations.map(convo => {
+            {sortedConversations.map(convo => {
                 const otherParticipant = convo.participantDetails.find(p => p.userId !== user?.uid);
                 if (!otherParticipant) return null; // Should not happen in 1-on-1 chats
 

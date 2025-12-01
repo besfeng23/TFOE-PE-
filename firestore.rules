@@ -265,10 +265,10 @@ service cloud.firestore {
      * @principle Participants can read/write to conversations they are part of.
      */
     match /conversations/{conversationId} {
-      // A user can read a conversation if they are a participant.
-      // This single rule covers both `get` and `list` operations, as Firestore
-      // first applies the client's query filter and then checks if the resulting
-      // documents meet this security condition.
+      // A user can read a conversation document (get) or a list of conversation
+      // documents (list) if their UID is in the `participants` array.
+      // For a 'list' query, the client MUST use a `where('participants', 'array-contains', request.auth.uid)`
+      // filter to ensure they only request documents they are allowed to see.
       allow read: if request.auth.uid in resource.data.participants;
       
       // A user can create a conversation if their UID is in the participants list of the new document.
@@ -284,6 +284,7 @@ service cloud.firestore {
        */
       match /messages/{messageId} {
         // A user can read messages if they are part of the parent conversation.
+        // This rule uses `get()` to check the parent document's `participants` array.
         allow read: if get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants.hasAny([request.auth.uid]);
 
         // A user can create a message if they are part of the conversation and are the sender.
