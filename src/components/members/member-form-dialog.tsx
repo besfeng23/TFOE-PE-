@@ -41,6 +41,7 @@ interface MemberFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
   member?: UserProfile | null;
+  prefilledData?: Partial<UserProfile> | null;
 }
 
 const formSchema = z.object({
@@ -57,52 +58,52 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function MemberFormDialog({ isOpen, onClose, member }: MemberFormDialogProps) {
+const defaultValues: FormValues = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    roleId: 'Member',
+    membershipNumber: '',
+    membershipStatus: 'Active',
+    assignedGovernmentPosition: '',
+    governmentBranch: '',
+    positionType: 'None',
+};
+
+export function MemberFormDialog({ isOpen, onClose, member, prefilledData }: MemberFormDialogProps) {
   const [isSaving, setIsSaving] = useState(false);
   const firestore = useFirestore();
   const isEditing = !!member;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      roleId: 'Member',
-      membershipNumber: '',
-      membershipStatus: 'Active',
-      assignedGovernmentPosition: '',
-      governmentBranch: '',
-      positionType: 'None',
-    },
+    defaultValues: defaultValues,
   });
   
   useEffect(() => {
-      if (member) {
-          form.reset({
-            ...member,
-            membershipStatus: member.membershipStatus || 'Active',
-            positionType: member.positionType || 'None',
-          });
-      } else {
-          form.reset({
-              firstName: '',
-              lastName: '',
-              email: '',
-              roleId: 'Member',
-              membershipNumber: '',
-              membershipStatus: 'Active',
-              assignedGovernmentPosition: '',
-              governmentBranch: '',
-              positionType: 'None',
-          });
+      if (isOpen) {
+        if (member) {
+            form.reset({
+                ...member,
+                membershipStatus: member.membershipStatus || 'Active',
+                positionType: member.positionType || 'None',
+            });
+        } else if (prefilledData) {
+            form.reset({
+                ...defaultValues,
+                ...prefilledData,
+            });
+        } else {
+            form.reset(defaultValues);
+        }
       }
-  }, [member, form])
+  }, [member, prefilledData, form, isOpen]);
+
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       onClose();
-      form.reset();
+      form.reset(defaultValues);
     }
   };
 

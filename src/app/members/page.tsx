@@ -6,16 +6,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { useAuthUser, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
 import { MemberFormDialog } from "@/components/members/member-form-dialog";
-import { Download, Plus, Search } from "lucide-react";
+import { Download, FileUp, Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { collection, query } from "firebase/firestore";
 import type { UserProfile } from "@/lib/types";
 import { ReportDialog } from "@/components/members/report-dialog";
+import { AiImportDialog } from "@/components/members/ai-import-dialog";
 
 export default function MembersPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
+    const [isAiImportOpen, setIsAiImportOpen] = useState(false);
+    const [prefilledData, setPrefilledData] = useState<Partial<UserProfile> | null>(null);
+
     const { profile } = useAuthUser();
     const isAdmin = profile?.roleId === 'Admin';
     const firestore = useFirestore();
@@ -26,6 +30,18 @@ export default function MembersPage() {
     }, [firestore]);
 
     const { data: profiles, isLoading: profilesLoading } = useCollection<UserProfile>(usersQuery);
+
+    const handleAiImportComplete = (data: Partial<UserProfile>) => {
+        setPrefilledData(data);
+        setIsAiImportOpen(false);
+        setIsFormOpen(true);
+    };
+
+    const handleFormClose = () => {
+        setIsFormOpen(false);
+        // Clear prefilled data after the form is closed
+        setPrefilledData(null);
+    };
 
     return (
         <>
@@ -45,6 +61,10 @@ export default function MembersPage() {
                                         <Button variant="outline" onClick={() => setIsReportOpen(true)} disabled={profilesLoading}>
                                             <Download className="mr-2 h-4 w-4" />
                                             Generate Report
+                                        </Button>
+                                         <Button variant="outline" onClick={() => setIsAiImportOpen(true)}>
+                                            <FileUp className="mr-2 h-4 w-4" />
+                                            AI Import
                                         </Button>
                                         <Button onClick={() => setIsFormOpen(true)}>
                                             <Plus className="mr-2 h-4 w-4" />
@@ -75,7 +95,15 @@ export default function MembersPage() {
             {isAdmin && (
                 <MemberFormDialog
                     isOpen={isFormOpen}
-                    onClose={() => setIsFormOpen(false)}
+                    onClose={handleFormClose}
+                    prefilledData={prefilledData}
+                />
+            )}
+            {isAdmin && (
+                <AiImportDialog
+                    isOpen={isAiImportOpen}
+                    onClose={() => setIsAiImportOpen(false)}
+                    onImportComplete={handleAiImportComplete}
                 />
             )}
             {isAdmin && (
