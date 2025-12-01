@@ -30,7 +30,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
-import { useFirestore, setDocumentNonBlocking } from '@/firebase';
+import { useFirestore, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import type { Partnership } from '@/lib/types';
@@ -108,7 +108,7 @@ export function PartnershipFormDialog({ isOpen, onClose, partner }: PartnershipF
             id: isEditing ? partner.id : docRef.id,
         };
 
-        await setDocumentNonBlocking(docRef, partnerData, { merge: true });
+        setDocumentNonBlocking(docRef, partnerData, { merge: true });
         
         toast({
             title: isEditing ? 'Partner Updated' : 'Partner Added',

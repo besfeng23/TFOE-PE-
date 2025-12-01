@@ -36,17 +36,26 @@ export function ReportDialog({
     setError('');
     setCsvContent('');
 
+    if (!profiles || profiles.length === 0) {
+      setError('No member data available to generate a report.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const result = await generateMemberReport({ profiles });
+      if (!result || !result.csv) {
+        throw new Error("AI failed to return CSV content.");
+      }
       setCsvContent(result.csv);
       toast({
         title: "Report Generated",
         description: "Your member report is ready for download.",
       });
 
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      setError('Failed to generate the report. Please try again.');
+      setError(e.message || 'Failed to generate the report. Please try again.');
     } finally {
       setIsLoading(false);
     }

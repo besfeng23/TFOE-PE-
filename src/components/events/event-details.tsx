@@ -136,8 +136,8 @@ export default function EventDetails({ event, onClose }: EventDetailsProps) {
         />
         <InfoRow icon={MapPin} label="Location" value={event.location} />
         
-        {event.meetingId && <CopyableInfoRow icon={Clipboard} label="Meeting ID" value={event.meetingId} />}
-        {event.passcode && <CopyableInfoRow icon={Clipboard} label="Passcode" value={event.passcode} />}
+        <CopyableInfoRow icon={Clipboard} label="Meeting ID" value={event.meetingId} />
+        <CopyableInfoRow icon={Clipboard} label="Passcode" value={event.passcode} />
         {isAdmin && <AttendanceCounter eventId={event.id} />}
       </div>
 

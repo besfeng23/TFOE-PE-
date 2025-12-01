@@ -106,6 +106,7 @@ export default function MembersTable({ searchTerm, profiles, isLoading }: Member
                         <TableHead className="hidden sm:table-cell">Email</TableHead>
                         <TableHead className="hidden md:table-cell">Status</TableHead>
                         <TableHead className="hidden lg:table-cell">Role</TableHead>
+                        <TableHead className="hidden lg:table-cell">Affiliation</TableHead>
                         {isAdmin && <TableHead className="text-right">Actions</TableHead>}
                     </TableRow>
                 </TableHeader>
@@ -124,6 +125,7 @@ export default function MembersTable({ searchTerm, profiles, isLoading }: Member
                             <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-40" /></TableCell>
                             <TableCell className="hidden md:table-cell"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
                             <TableCell className="hidden lg:table-cell"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                            <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-28" /></TableCell>
                              {isAdmin && <TableCell className="text-right">
                                 <Skeleton className="h-8 w-8 rounded-md ml-auto" />
                             </TableCell>}
@@ -145,6 +147,7 @@ export default function MembersTable({ searchTerm, profiles, isLoading }: Member
                 <TableHead className="hidden sm:table-cell">Email</TableHead>
                 <TableHead className="hidden md:table-cell">Status</TableHead>
                 <TableHead className="hidden lg:table-cell">Role</TableHead>
+                <TableHead className="hidden lg:table-cell">Affiliation</TableHead>
                 {isAdmin && <TableHead className="text-right">Actions</TableHead>}
                 </TableRow>
             </TableHeader>
@@ -171,6 +174,9 @@ export default function MembersTable({ searchTerm, profiles, isLoading }: Member
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
                     <Badge variant={profile.roleId === 'Admin' ? 'destructive' : 'outline'}>{profile.roleId}</Badge>
+                    </TableCell>
+                     <TableCell className="hidden lg:table-cell">
+                        {profile.governmentBranch || 'N/A'}
                     </TableCell>
                     {isAdmin && (
                         <TableCell className="text-right">

@@ -125,7 +125,7 @@ export function MemberFormDialog({ isOpen, onClose, member }: MemberFormDialogPr
             // to create the Firebase Auth user and then create the profile.
         }
 
-        await setDocumentNonBlocking(docRef, profileData, { merge: true });
+        setDocumentNonBlocking(docRef, profileData, { merge: true });
         
         toast({
             title: isEditing ? 'Member Updated' : 'Member Added',

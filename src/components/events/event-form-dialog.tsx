@@ -52,6 +52,16 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+const defaultFormValues = {
+    title: '',
+    description: '',
+    location: '',
+    startDate: undefined,
+    endDate: undefined,
+    meetingId: '',
+    passcode: '',
+};
+
 export function EventFormDialog({ isOpen, onClose, event }: EventFormDialogProps) {
   const [isSaving, setIsSaving] = useState(false);
   const firestore = useFirestore();
@@ -59,13 +69,7 @@ export function EventFormDialog({ isOpen, onClose, event }: EventFormDialogProps
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      location: '',
-      meetingId: '',
-      passcode: '',
-    },
+    defaultValues: defaultFormValues,
   });
   
   const locationValue = useWatch({
@@ -77,29 +81,21 @@ export function EventFormDialog({ isOpen, onClose, event }: EventFormDialogProps
 
   
   useEffect(() => {
-      if (event) {
+      if (isOpen && event) {
           form.reset({
               ...event,
               startDate: event.startDate.toDate(),
               endDate: event.endDate.toDate(),
           });
-      } else {
-          form.reset({
-              title: '',
-              description: '',
-              location: '',
-              startDate: undefined,
-              endDate: undefined,
-              meetingId: '',
-              passcode: '',
-          });
+      } else if (isOpen && !event) {
+          form.reset(defaultFormValues);
       }
-  }, [event, form])
+  }, [event, form, isOpen])
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       onClose();
-      form.reset();
+      form.reset(defaultFormValues);
     }
   };
 
@@ -126,7 +122,6 @@ export function EventFormDialog({ isOpen, onClose, event }: EventFormDialogProps
             description: `"${data.title}" has been saved successfully.`,
         });
         onClose();
-        form.reset();
 
     } catch (error: any) {
         console.error('Save failed:', error);

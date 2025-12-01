@@ -19,19 +19,21 @@ export default function PartnershipsPage() {
         <>
             <div className="grid gap-6">
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle className="font-headline">Partnerships</CardTitle>
-                            <CardDescription>
-                                Manage corporate and private entity partnerships.
-                            </CardDescription>
+                    <CardHeader>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div>
+                                <CardTitle className="font-headline">Partnerships</CardTitle>
+                                <CardDescription>
+                                    Manage corporate and private entity partnerships.
+                                </CardDescription>
+                            </div>
+                            {isAdmin && (
+                                <Button onClick={() => setIsFormOpen(true)}>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add Partner
+                                </Button>
+                            )}
                         </div>
-                         {isAdmin && (
-                            <Button onClick={() => setIsFormOpen(true)}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add Partner
-                            </Button>
-                        )}
                     </CardHeader>
                     <CardContent>
                         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">

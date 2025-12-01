@@ -124,9 +124,9 @@ export function EndorsementLetterDialog({
         </DialogHeader>
 
         {isLoading ? (
-            <div className="flex items-center justify-center h-64">
+            <div className="flex flex-col items-center justify-center h-64 gap-2">
                 <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-                <p>Generating letter...</p>
+                <p className="text-muted-foreground">Generating letter, please wait...</p>
             </div>
         ) : error ? (
             <Alert variant="destructive">

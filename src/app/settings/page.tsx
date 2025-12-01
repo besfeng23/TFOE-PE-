@@ -32,7 +32,7 @@ export default function SettingsPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="picture">Profile Picture</Label>
-              <Input id="picture" type="file" disabled/>
+              <Input id="picture" type="file" />
             </div>
             <Button disabled>Save Changes</Button>
           </CardContent>
@@ -49,14 +49,14 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="logo">Organization Logo</Label>
-              <Input id="logo" type="file" disabled/>
+              <Input id="logo" type="file" />
             </div>
              <div className="flex items-center space-x-2">
-                <Switch id="dark-mode" disabled/>
+                <Switch id="dark-mode" />
                 <Label htmlFor="dark-mode">Enable Dark Mode</Label>
              </div>
              <p className="text-sm text-muted-foreground">Note: TFOE-PE brand colors are strictly applied.</p>
-            <Button disabled>Save Changes</Button>
+            <Button>Save Changes</Button>
           </CardContent>
         </Card>
       </TabsContent>
@@ -71,17 +71,17 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="current-password">Current Password</Label>
-              <Input id="current-password" type="password" disabled/>
+              <Input id="current-password" type="password" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="new-password">New Password</Label>
-              <Input id="new-password" type="password" disabled/>
+              <Input id="new-password" type="password" />
             </div>
             <div className="flex items-center space-x-2">
-                <Switch id="2fa" disabled/>
+                <Switch id="2fa"/>
                 <Label htmlFor="2fa">Enable Two-Factor Authentication (GCash)</Label>
             </div>
-            <Button disabled>Update Password</Button>
+            <Button>Update Password</Button>
           </CardContent>
         </Card>
       </TabsContent>

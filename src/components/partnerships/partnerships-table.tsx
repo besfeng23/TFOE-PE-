@@ -144,8 +144,8 @@ export default function PartnershipsTable({ searchTerm }: PartnershipsTableProps
             <Table>
             <TableHeader>
                 <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead className="hidden sm:table-cell">Contact</TableHead>
+                    <TableHead>Partner Name</TableHead>
+                    <TableHead className="hidden sm:table-cell">Contact Person</TableHead>
                     <TableHead className="hidden md:table-cell">Type</TableHead>
                     <TableHead className="hidden lg:table-cell">Status</TableHead>
                     {isAdmin && <TableHead className="text-right">Actions</TableHead>}

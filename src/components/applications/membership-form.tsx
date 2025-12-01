@@ -218,8 +218,8 @@ export default function MembershipForm() {
                 <FormLabel>Eagle Region</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
                   value={field.value}
+                  defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -239,7 +239,7 @@ export default function MembershipForm() {
           />
         </div>
         <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline">Cancel</Button>
+            <Button type="button" variant="outline" onClick={() => form.reset()}>Cancel</Button>
             <Button type="submit">Submit Application</Button>
         </div>
       </form>

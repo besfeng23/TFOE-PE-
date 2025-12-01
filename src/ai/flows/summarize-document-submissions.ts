@@ -39,10 +39,15 @@ const prompt = ai.definePrompt({
   name: 'summarizeDocumentPrompt',
   input: {schema: SummarizeDocumentInputSchema},
   output: {schema: SummarizeDocumentOutputSchema},
-  prompt: `You are an expert summarizer, tasked with creating concise summaries of lengthy documents.
+  prompt: `You are an expert summarizer. Create a concise summary of the following document.
+  
+  {{#if focusAreas}}Focus on these key areas: {{{focusAreas}}}.{{/if}}
+  {{#if summaryLength}}The desired length is {{{summaryLength}}}.{{/if}}
 
-  Please provide a summary of the following document:
-  \"\"\"{{documentText}}\"\"\"`,
+  Document:
+  """
+  {{{documentText}}}
+  """`,
 });
 
 const summarizeDocumentFlow = ai.defineFlow(
