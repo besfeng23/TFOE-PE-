@@ -67,8 +67,8 @@ export interface Partnership {
     name: string;
     contactPerson: string;
     email: string;
-    phone: string;
-    address: string;
+    phone?: string;
+    address?: string;
     partnershipType: 'Corporate' | 'NGO' | 'Private';
     status: 'Active' | 'Inactive';
 }
@@ -104,4 +104,3 @@ export interface Message {
     timestamp: Timestamp;
 }
 
-    

@@ -48,6 +48,7 @@ const formSchema = z.object({
   lastName: z.string().min(1, 'Last name is required.'),
   email: z.string().email('Please enter a valid email.'),
   roleId: z.string({ required_error: 'Please select a role.' }),
+  membershipNumber: z.string().optional(),
   membershipStatus: z.enum(['Active', 'Inactive', 'Leadership']).optional(),
   assignedGovernmentPosition: z.string().optional(),
   governmentBranch: z.string().optional(),
@@ -68,6 +69,7 @@ export function MemberFormDialog({ isOpen, onClose, member }: MemberFormDialogPr
       lastName: '',
       email: '',
       roleId: 'Member',
+      membershipNumber: '',
       membershipStatus: 'Active',
       assignedGovernmentPosition: '',
       governmentBranch: '',
@@ -88,6 +90,7 @@ export function MemberFormDialog({ isOpen, onClose, member }: MemberFormDialogPr
               lastName: '',
               email: '',
               roleId: 'Member',
+              membershipNumber: '',
               membershipStatus: 'Active',
               assignedGovernmentPosition: '',
               governmentBranch: '',
@@ -200,23 +203,13 @@ export function MemberFormDialog({ isOpen, onClose, member }: MemberFormDialogPr
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                 control={form.control}
-                name="roleId"
+                name="membershipNumber"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Organizational Role</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
-                        <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select a role" />
-                        </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                        <SelectItem value="Member">Member</SelectItem>
-                        <SelectItem value="Leader">Leader</SelectItem>
-                        <SelectItem value="Secretary">Secretary</SelectItem>
-                        <SelectItem value="Admin">Admin</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <FormLabel>Membership Number</FormLabel>
+                    <FormControl>
+                        <Input placeholder="e.g., NCR-12345" {...field} />
+                    </FormControl>
                     <FormMessage />
                     </FormItem>
                 )}
@@ -244,6 +237,30 @@ export function MemberFormDialog({ isOpen, onClose, member }: MemberFormDialogPr
                 )}
                 />
             </div>
+             <FormField
+                control={form.control}
+                name="roleId"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Organizational Role</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                        <SelectItem value="Member">Member</SelectItem>
+                        <SelectItem value="Leader">Leader</SelectItem>
+                        <SelectItem value="Secretary">Secretary</SelectItem>
+                        <SelectItem value="Admin">Admin</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+
 
             <div className="space-y-2 pt-4">
                 <h4 className="font-medium">Government Position</h4>
@@ -304,7 +321,7 @@ export function MemberFormDialog({ isOpen, onClose, member }: MemberFormDialogPr
             </div>
             
             
-            <DialogFooter className="pt-4">
+            <DialogFooter className="pt-4 sticky bottom-0 bg-background pb-0 -mb-4">
               <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
                 Cancel
               </Button>

@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuthUser, useFirestore } from '@/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { useAuthUser, useFirestore, updateDocumentNonBlocking } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
@@ -46,7 +46,7 @@ export default function ProfilePage() {
     const profileRef = doc(firestore, 'userProfiles', user.uid);
     
     try {
-        await updateDoc(profileRef, {
+        await updateDocumentNonBlocking(profileRef, {
             firstName,
             lastName,
             contactInfo,

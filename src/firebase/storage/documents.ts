@@ -2,7 +2,7 @@
 
 import { FirebaseApp } from 'firebase/app';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Firestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { Firestore, collection, addDoc, serverTimestamp, doc } from 'firebase/firestore';
 
 interface DocumentUploadData {
   title: string;
@@ -45,7 +45,10 @@ export async function uploadDocumentAndCreateRecord(
 
   // Create the document record in Firestore
   const documentsCollection = collection(firestore, 'documents');
+  const newDocRef = doc(documentsCollection);
+  
   await addDoc(documentsCollection, {
+    id: newDocRef.id,
     title: data.title,
     categoryId: data.categoryId,
     fileUrl: downloadURL,

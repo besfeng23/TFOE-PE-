@@ -12,8 +12,8 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase, useAuthUser, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, query, orderBy, doc } from 'firebase/firestore';
+import { useFirestore, useAuthUser, deleteDocumentNonBlocking } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -25,9 +25,11 @@ import { toast } from '@/hooks/use-toast';
 
 interface MembersTableProps {
   searchTerm: string;
+  profiles: UserProfile[] | null;
+  isLoading: boolean;
 }
 
-export default function MembersTable({ searchTerm }: MembersTableProps) {
+export default function MembersTable({ searchTerm, profiles, isLoading }: MembersTableProps) {
   const firestore = useFirestore();
   const { profile: currentUserProfile } = useAuthUser();
   const isAdmin = currentUserProfile?.roleId === 'Admin';
@@ -36,14 +38,6 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-
-  const usersQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'userProfiles'), orderBy('lastName', 'asc'));
-  }, [firestore]);
-
-  const { data: profiles, isLoading, error } = useCollection<UserProfile>(usersQuery);
-  
   const filteredProfiles = useMemo(() => {
     if (!profiles) return [];
     if (!searchTerm) return profiles;
@@ -56,7 +50,8 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
         (profile.email && profile.email.toLowerCase().includes(lowercasedTerm)) ||
         (profile.roleId && profile.roleId.toLowerCase().includes(lowercasedTerm)) ||
         (profile.governmentBranch && profile.governmentBranch.toLowerCase().includes(lowercasedTerm)) ||
-        (profile.membershipStatus && profile.membershipStatus.toLowerCase().includes(lowercasedTerm))
+        (profile.membershipStatus && profile.membershipStatus.toLowerCase().includes(lowercasedTerm)) ||
+        (profile.membershipNumber && profile.membershipNumber.toLowerCase().includes(lowercasedTerm))
     );
 
   }, [profiles, searchTerm])
@@ -138,10 +133,6 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
             </Table>
         </div>
     )
-  }
-
-  if (error) {
-    return <div className='text-destructive bg-destructive/10 p-4 rounded-md'>Error loading members: {error.message}</div>
   }
 
   return (
