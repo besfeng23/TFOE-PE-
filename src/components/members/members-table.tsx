@@ -30,19 +30,6 @@ interface MembersTableProps {
   isLoading: boolean;
 }
 
-const newMember: UserProfile = {
-    id: 'paolo-calanog-id',
-    firstName: 'Paolo Carlo',
-    lastName: 'Dela Cruz Calanog',
-    email: 'paolo@calanog.com',
-    contactInfo: '+63 991 381 2000',
-    roleId: 'Admin',
-    assignedGovernmentPosition: 'National Chairman for Digitalization and Innovation',
-    governmentBranch: 'National Capital Region 86',
-    membershipStatus: 'Leadership',
-    positionType: 'Appointed',
-};
-
 export default function MembersTable({ searchTerm, profiles, isLoading }: MembersTableProps) {
   const firestore = useFirestore();
   const { profile: currentUserProfile } = useAuthUser();
@@ -52,23 +39,13 @@ export default function MembersTable({ searchTerm, profiles, isLoading }: Member
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const allProfiles = useMemo(() => {
-    if (!profiles) return [newMember];
-    // Avoid duplicates if the member is already in Firestore
-    if (profiles.some(p => p.email === newMember.email)) {
-        return profiles;
-    }
-    return [newMember, ...profiles];
-  }, [profiles]);
-
-
   const filteredProfiles = useMemo(() => {
-    if (!allProfiles) return [];
-    if (!searchTerm) return allProfiles;
+    if (!profiles) return [];
+    if (!searchTerm) return profiles;
     
     const lowercasedTerm = searchTerm.toLowerCase();
 
-    return allProfiles.filter(profile => 
+    return profiles.filter(profile => 
         (profile.firstName && profile.firstName.toLowerCase().includes(lowercasedTerm)) ||
         (profile.lastName && profile.lastName.toLowerCase().includes(lowercasedTerm)) ||
         (profile.email && profile.email.toLowerCase().includes(lowercasedTerm)) ||
@@ -78,7 +55,7 @@ export default function MembersTable({ searchTerm, profiles, isLoading }: Member
         (profile.membershipNumber && profile.membershipNumber.toLowerCase().includes(lowercasedTerm))
     );
 
-  }, [allProfiles, searchTerm])
+  }, [profiles, searchTerm])
 
   const handleEdit = (member: UserProfile) => {
     setSelectedMember(member);
