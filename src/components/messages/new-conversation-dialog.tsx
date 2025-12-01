@@ -31,7 +31,8 @@ export default function NewConversationDialog({ isOpen, onClose, profiles, isLoa
         try {
             // Check if a conversation already exists
             const conversationsRef = collection(firestore, 'conversations');
-            const q = query(conversationsRef, where('participants', '==', [user.uid, selectedProfile.id].sort()));
+            const sortedParticipants = [user.uid, selectedProfile.id].sort();
+            const q = query(conversationsRef, where('participants', '==', sortedParticipants));
             
             const existingConvos = await getDocs(q);
 
@@ -45,7 +46,7 @@ export default function NewConversationDialog({ isOpen, onClose, profiles, isLoa
                 const newConversationRef = doc(collection(firestore, 'conversations'));
                 const newConversationData: Conversation = {
                     id: newConversationRef.id,
-                    participants: [user.uid, selectedProfile.id].sort(),
+                    participants: sortedParticipants,
                     participantDetails: [
                         { userId: user.uid, name: `${currentUserProfile.firstName} ${currentUserProfile.lastName}`, photoUrl: currentUserProfile.idPhotoUrl || '' },
                         { userId: selectedProfile.id, name: `${selectedProfile.firstName} ${selectedProfile.lastName}`, photoUrl: selectedProfile.idPhotoUrl || '' }
@@ -57,7 +58,7 @@ export default function NewConversationDialog({ isOpen, onClose, profiles, isLoa
                     }
                 };
 
-                await addDocumentNonBlocking(conversationsRef, newConversationData);
+                await setDoc(newConversationRef, newConversationData);
                 onConversationStarted(newConversationData);
                 toast({ title: `Started conversation with ${selectedProfile.firstName}.` });
             }
@@ -66,6 +67,7 @@ export default function NewConversationDialog({ isOpen, onClose, profiles, isLoa
             toast({ variant: 'destructive', title: "Error", description: error.message });
         } finally {
             setIsCreating(false);
+            onClose();
         }
     };
 
@@ -104,3 +106,8 @@ export default function NewConversationDialog({ isOpen, onClose, profiles, isLoa
                             </>
                         )}
                     </CommandList>
+                </Command>
+            </DialogContent>
+        </Dialog>
+    );
+}
