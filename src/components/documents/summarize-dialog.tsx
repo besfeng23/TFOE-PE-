@@ -100,4 +100,10 @@ export function SummarizeDialog({
               </>
             ) : (
               'Generate Summary'
-            
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
