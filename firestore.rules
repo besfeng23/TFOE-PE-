@@ -270,8 +270,12 @@ service cloud.firestore {
      * @principle Participants can read/write to conversations they are part of.
      */
     match /conversations/{conversationId} {
-      // Allow read/write only if the user is a participant in the conversation.
-      allow read, write: if request.auth.uid in resource.data.participants;
+      // Allow a user to get/update a specific conversation document if they are a participant.
+      allow get, update, delete: if request.auth.uid in resource.data.participants;
+      // Allow a user to create a conversation if their UID is in the participants list.
+      allow create: if request.auth.uid in request.resource.data.participants;
+      // Allow a user to list conversations, but only if they are querying for their own conversations.
+      allow list: if request.auth.uid in request.query.where.value;
       
       /**
        * @description Rules for messages within a conversation.
