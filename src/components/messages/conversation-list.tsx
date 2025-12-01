@@ -88,5 +88,3 @@ export default function ConversationList({ onSelectConversation, selectedConvers
         </div>
     );
 }
-
-    

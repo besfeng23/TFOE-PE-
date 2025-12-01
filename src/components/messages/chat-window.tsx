@@ -132,5 +132,3 @@ export default function ChatWindow({ conversation }: ChatWindowProps) {
     </>
   );
 }
-
-    

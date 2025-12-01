@@ -109,5 +109,3 @@ export default function NewConversationDialog({ isOpen, onClose, profiles, isLoa
         </Dialog>
     );
 }
-
-    
