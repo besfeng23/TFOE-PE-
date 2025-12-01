@@ -5,18 +5,14 @@
 import { ai } from '@/ai/genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
-import { addDocumentNonBlocking, initializeFirebase } from '@/firebase';
-import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { initializeFirebaseAdmin } from '@/firebase/server';
+import { serverTimestamp } from 'firebase/firestore';
 
-const { firestore } = initializeFirebase();
+const { firestore } = initializeFirebaseAdmin();
 
 const GenerateVideoInputSchema = z.object({
   prompt: z.string().describe('The text prompt to generate the video from.'),
   durationSeconds: z.number().optional().default(5),
-});
-
-const GenerateVideoOutputSchema = z.object({
-  operation: z.any().describe('The long-running operation for video generation.'),
 });
 
 const CheckVideoOperationInputSchema = z.object({
@@ -70,6 +66,15 @@ export async function checkVideoOperation(input: z.infer<typeof CheckVideoOperat
             const base64Video = await streamToBase64(videoDownloadResponse.body);
             const dataUri = `data:video/mp4;base64,${base64Video}`;
             
+            // Save the data URI to a new document in a 'generatedVideos' collection
+            const newVideoRef = firestore.collection('generatedVideos').doc();
+            await newVideoRef.set({
+                id: newVideoRef.id,
+                prompt: (operation.input?.message?.content[0] as any)?.text || 'N/A',
+                videoUrl: dataUri,
+                createdAt: serverTimestamp(),
+            });
+
             // Modify the operation output to contain the data URI
             operation = {
                 ...operation,
