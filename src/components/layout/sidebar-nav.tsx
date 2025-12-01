@@ -20,6 +20,7 @@ import {
   Receipt,
   Settings,
   Users,
+  Video,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -84,6 +85,12 @@ const navItems = [
     label: 'Messages',
     match: (pathname: string) => pathname.startsWith('/messages'),
   },
+   {
+    href: '/video',
+    icon: Video,
+    label: 'Video Studio',
+    match: (pathname: string) => pathname.startsWith('/video'),
+  },
 ];
 
 export function SidebarNav() {
@@ -116,4 +123,10 @@ export function SidebarNav() {
             >
               <Settings />
               <span>Settings</span>
-            
+            </SidebarMenuButton>
+          </Link>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </div>
+  );
+}
