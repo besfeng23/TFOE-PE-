@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -116,4 +117,7 @@ export {
   DialogTrigger,
   DialogContent,
   DialogHeader,
-  
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+}
