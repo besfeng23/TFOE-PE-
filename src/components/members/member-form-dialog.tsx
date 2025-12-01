@@ -212,6 +212,7 @@ export function MemberFormDialog({ isOpen, onClose, member }: MemberFormDialogPr
                         </FormControl>
                         <SelectContent>
                         <SelectItem value="Member">Member</SelectItem>
+                        <SelectItem value="Leader">Leader</SelectItem>
                         <SelectItem value="Secretary">Secretary</SelectItem>
                         <SelectItem value="Admin">Admin</SelectItem>
                         </SelectContent>

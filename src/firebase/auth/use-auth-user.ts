@@ -19,21 +19,39 @@ export function useAuthUser(options: { redirectTo?: string, redirectIfFound?: bo
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useDoc<UserProfile>(userProfileRef);
 
   useEffect(() => {
-    if (isUserLoading) return;
+    if (isUserLoading || isProfileLoading) return;
 
-    if (options.redirectIfFound && user) {
+    const hasUser = !!user;
+    const hasProfile = !!profile || user?.isAnonymous;
+
+    if (options.redirectIfFound && hasUser && hasProfile) {
       router.push(options.redirectTo || '/');
     }
 
-    if (!options.redirectIfFound && !user && options.redirectTo) {
-        router.push(options.redirectTo);
+    if (!options.redirectIfFound && (!hasUser || userError)) {
+        router.push(options.redirectTo || '/login');
     }
-  }, [user, isUserLoading, router, options.redirectIfFound, options.redirectTo]);
+    
+  }, [user, profile, isUserLoading, isProfileLoading, userError, router, options.redirectIfFound, options.redirectTo]);
+
+
+  const getProfile = () => {
+    if (user?.isAnonymous) {
+      return { 
+        id: user.uid,
+        firstName: 'Guest', 
+        lastName: 'User', 
+        roleId: 'Guest',
+        email: 'guest@example.com'
+      } as UserProfile;
+    }
+    return profile;
+  }
 
 
   return {
     user,
-    profile: user?.isAnonymous ? { firstName: 'Guest', lastName: 'User', roleId: 'Guest' } as UserProfile : profile,
+    profile: getProfile(),
     isUserLoading,
     isProfileLoading,
     error: userError || profileError,

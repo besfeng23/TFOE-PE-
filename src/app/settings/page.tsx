@@ -18,23 +18,23 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="font-headline">Profile Settings</CardTitle>
             <CardDescription>
-              Manage your personal information.
+              Manage your personal information. These settings are managed on the Profile page.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" defaultValue="Eagle Secretary" />
+              <Input id="name" defaultValue="Eagle Secretary" disabled />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" defaultValue="secretary@tfoepe.org" />
+              <Input id="email" type="email" defaultValue="secretary@tfoepe.org" disabled />
             </div>
             <div className="space-y-2">
               <Label htmlFor="picture">Profile Picture</Label>
-              <Input id="picture" type="file" />
+              <Input id="picture" type="file" disabled/>
             </div>
-            <Button>Save Changes</Button>
+            <Button disabled>Save Changes</Button>
           </CardContent>
         </Card>
       </TabsContent>
@@ -49,14 +49,14 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="logo">Organization Logo</Label>
-              <Input id="logo" type="file" />
+              <Input id="logo" type="file" disabled/>
             </div>
              <div className="flex items-center space-x-2">
-                <Switch id="dark-mode" />
+                <Switch id="dark-mode" disabled/>
                 <Label htmlFor="dark-mode">Enable Dark Mode</Label>
              </div>
              <p className="text-sm text-muted-foreground">Note: TFOE-PE brand colors are strictly applied.</p>
-            <Button>Save Changes</Button>
+            <Button disabled>Save Changes</Button>
           </CardContent>
         </Card>
       </TabsContent>
@@ -71,17 +71,17 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="current-password">Current Password</Label>
-              <Input id="current-password" type="password" />
+              <Input id="current-password" type="password" disabled/>
             </div>
             <div className="space-y-2">
               <Label htmlFor="new-password">New Password</Label>
-              <Input id="new-password" type="password" />
+              <Input id="new-password" type="password" disabled/>
             </div>
             <div className="flex items-center space-x-2">
-                <Switch id="2fa" />
+                <Switch id="2fa" disabled/>
                 <Label htmlFor="2fa">Enable Two-Factor Authentication (GCash)</Label>
             </div>
-            <Button>Update Password</Button>
+            <Button disabled>Update Password</Button>
           </CardContent>
         </Card>
       </TabsContent>

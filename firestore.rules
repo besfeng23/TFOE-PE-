@@ -51,9 +51,15 @@ service cloud.firestore {
      * Here, we fall back to reading the user's profile document.
      */
     function isAdmin() {
-      // Best practice: return request.auth.token.isAdmin == true;
-      // Fallback for this demo:
       return isSignedIn() && get(/databases/$(database)/documents/userProfiles/$(request.auth.uid)).data.roleId == 'Admin';
+    }
+    
+    /**
+     * Checks if the requesting user is a Leader or an Admin.
+     */
+    function isLeaderOrAdmin() {
+        let userRole = get(/databases/$(database)/documents/userProfiles/$(request.auth.uid)).data.roleId;
+        return isSignedIn() && (userRole == 'Admin' || userRole == 'Leader');
     }
 
     /**
@@ -120,7 +126,7 @@ service cloud.firestore {
      */
     match /userProfiles/{userProfileId} {
       allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow list: if isLeaderOrAdmin();
       allow create: if isAdmin();
       allow update: if isOwner(userProfileId) || isAdmin();
       allow delete: if isAdmin();
@@ -226,7 +232,7 @@ service cloud.firestore {
      */
     match /attendance/{attendanceId} {
       allow get: if isOwner(resource.data.userId);
-      allow list: if isAdmin(); // Allow admin to list for analytics
+      allow list: if isLeaderOrAdmin(); // Allow admin and leaders to list for analytics
       allow create: if isSignedIn() && hasValidOwnerIdOnCreate();
       allow update: if isExistingOwner(resource.data.userId) && hasImmutableOwnerId();
       allow delete: if isExistingOwner(resource.data.userId);
@@ -282,5 +288,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
