@@ -66,4 +66,7 @@ const generateEndorsementLetterFlow = ai.defineFlow(
     outputSchema: GenerateEndorsementLetterOutputSchema,
   },
   async input => {
-    const
+    const { output } = await prompt(input);
+    return output!;
+  }
+);
