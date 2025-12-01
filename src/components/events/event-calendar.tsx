@@ -35,4 +35,11 @@ export default function EventCalendar({ events, onDateSelect }: EventCalendarPro
             return (
                 <div className='relative'>
                     {props.date.getDate()}
-                    {hasEvent && <div className='absolute bottom-0.5 left-1/2 -translate-x-1
+                    {hasEvent && <div className='absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1.5 w-1.5 rounded-full bg-primary' />}
+                </div>
+            )
+        }
+      }}
+    />
+  );
+}
