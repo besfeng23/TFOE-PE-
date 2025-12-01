@@ -3,7 +3,7 @@
  * @fileOverview An AI flow to extract member information from an uploaded file (e.g., an ID card image).
  *
  * - extractMemberFromFile - A function that handles the member data extraction process.
- * - ExtractMemberInput - The input type for the extractMemberFromFile function.
+ * - ExtractMemberInput - The input type for the extractMemberFromFile functionthemed
  * - ExtractMemberOutput - The return type for the extractMemberFromFile function.
  */
 
@@ -58,4 +58,7 @@ const extractMemberFromFileFlow = ai.defineFlow(
     outputSchema: ExtractMemberOutputSchema,
   },
   async input => {
-    const
+    const { output } = await prompt(input);
+    return output!;
+  }
+);
