@@ -16,5 +16,4 @@ export default function ApplicationsPage() {
             </CardContent>
         </Card>
     </div>
-  )
-}
+  

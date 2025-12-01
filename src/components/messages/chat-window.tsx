@@ -128,7 +128,4 @@ export default function ChatWindow({ conversation }: ChatWindowProps) {
             <Send className="h-4 w-4" />
           </Button>
         </div>
-      </CardContent>
-    </>
-  );
-}
+      </

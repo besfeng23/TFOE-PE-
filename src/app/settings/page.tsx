@@ -83,8 +83,3 @@ export default function SettingsPage() {
             </div>
             <Button>Update Password</Button>
           </CardContent>
-        </Card>
-      </TabsContent>
-    </Tabs>
-  )
-}

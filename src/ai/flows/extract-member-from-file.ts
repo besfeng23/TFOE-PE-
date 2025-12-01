@@ -58,7 +58,4 @@ const extractMemberFromFileFlow = ai.defineFlow(
     outputSchema: ExtractMemberOutputSchema,
   },
   async input => {
-    const { output } = await prompt(input);
-    return output!;
-  }
-);
+    const

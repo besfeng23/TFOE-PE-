@@ -30,8 +30,4 @@ export default function DocumentsPage() {
           </div>
         </div>
         <DocumentTable />
-      </div>
-      <UploadDocumentDialog isOpen={isUploadDialogOpen} onClose={() => setIsUploadDialogOpen(false)} />
-    </>
-  );
-}
+      

@@ -57,5 +57,4 @@ export default function MembershipStatusChart({ data }: MembershipStatusChartPro
         <ChartLegend content={<ChartLegendContent nameKey="status" />} />
       </PieChart>
     </ChartContainer>
-  )
-}
+  

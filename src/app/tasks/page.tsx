@@ -17,6 +17,3 @@ export default function TasksPage() {
                 <TaskList />
             </CardContent>
         </Card>
-    </div>
-  )
-}

@@ -125,5 +125,3 @@ export default function EventList({ isLoading, error, events, isAdmin, onEdit, o
                 </AlertDialogContent>
             </AlertDialog>
         </div>
-    );
-}

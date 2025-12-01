@@ -116,11 +116,4 @@ export function SidebarNav() {
             >
               <Settings />
               <span>Settings</span>
-            </SidebarMenuButton>
-          </Link>
-        </SidebarMenuItem>
-      </SidebarMenu>
-    </div>
-  );
-}
-
+            

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useAuthUser, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 import type { Conversation } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Skeleton } from "../ui/skeleton";
@@ -20,9 +20,6 @@ export default function ConversationList({ onSelectConversation, selectedConvers
 
     const conversationsQuery = useMemoFirebase(() => {
         if (!firestore || !user) return null;
-        // The orderBy on a different field than the where clause field requires a composite index.
-        // For simplicity and to resolve the security rule issue, we remove ordering by lastMessage timestamp.
-        // The security rules can now more easily validate the query.
         return query(
             collection(firestore, 'conversations'),
             where('participants', 'array-contains', user.uid)

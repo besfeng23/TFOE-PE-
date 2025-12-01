@@ -158,8 +158,3 @@ export default function ProfilePage() {
               </Button>
             </div>
           </>
-        )}
-      </CardContent>
-    </Card>
-  )
-}

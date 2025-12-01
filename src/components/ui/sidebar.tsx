@@ -754,11 +754,4 @@ export {
   SidebarMenuItem,
   SidebarMenuSkeleton,
   SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-  SidebarProvider,
-  SidebarRail,
-  SidebarSeparator,
-  SidebarTrigger,
-  useSidebar,
-}
+  SidebarMenuSubButton

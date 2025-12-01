@@ -99,7 +99,4 @@ export interface Conversation {
 
 export interface Message {
     id: string;
-    senderId: string;
-    text: string;
-    timestamp: Timestamp;
-}
+    senderId: string

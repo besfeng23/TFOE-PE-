@@ -131,9 +131,4 @@ export function UserNav({ isSidebar = false }: UserNavProps) {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        {dropdownContent}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
+      <DropdownMenuContent className="w-56" align="end

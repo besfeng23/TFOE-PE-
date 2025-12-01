@@ -64,6 +64,4 @@ const generateMemberReportFlow = ai.defineFlow(
     }));
 
     const { output } = await prompt({ profiles: profilesToProcess });
-    return output!;
-  }
-);
+    return

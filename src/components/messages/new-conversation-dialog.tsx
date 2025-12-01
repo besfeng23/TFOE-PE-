@@ -104,8 +104,3 @@ export default function NewConversationDialog({ isOpen, onClose, profiles, isLoa
                             </>
                         )}
                     </CommandList>
-                </Command>
-            </DialogContent>
-        </Dialog>
-    );
-}

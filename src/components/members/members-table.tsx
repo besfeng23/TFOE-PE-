@@ -49,10 +49,7 @@ export default function MembersTable({ searchTerm, profiles, isLoading }: Member
         (profile.firstName && profile.firstName.toLowerCase().includes(lowercasedTerm)) ||
         (profile.lastName && profile.lastName.toLowerCase().includes(lowercasedTerm)) ||
         (profile.email && profile.email.toLowerCase().includes(lowercasedTerm)) ||
-        (profile.roleId && profile.roleId.toLowerCase().includes(lowercasedTerm)) ||
-        (profile.governmentBranch && profile.governmentBranch.toLowerCase().includes(lowercasedTerm)) ||
-        (profile.membershipStatus && profile.membershipStatus.toLowerCase().includes(lowercasedTerm)) ||
-        (profile.membershipNumber && profile.membershipNumber.toLowerCase().includes(lowercasedTerm))
+        (profile.roleId && profile.roleId.toLowerCase().includes(lowercasedTerm))
     );
 
   }, [profiles, searchTerm])
@@ -63,10 +60,6 @@ export default function MembersTable({ searchTerm, profiles, isLoading }: Member
   }
 
   const handleDelete = (member: UserProfile) => {
-    if (member.id === 'paolo-calanog-id') {
-        toast({ variant: 'destructive', title: 'Action Not Allowed', description: 'This is a sample user and cannot be deleted.' });
-        return;
-    }
     setSelectedMember(member);
     setIsDeleteDialogOpen(true);
   }
@@ -162,7 +155,7 @@ export default function MembersTable({ searchTerm, profiles, isLoading }: Member
                     <TableCell className="font-medium">
                         <div className="flex items-center gap-3">
                             <Avatar>
-                                <AvatarImage src={profile.idPhotoUrl} data-ai-hint="person face" />
+                                <AvatarImage src={profile.idPhotoUrl} />
                                 <AvatarFallback>{profile.firstName?.charAt(0)}{profile.lastName?.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col">

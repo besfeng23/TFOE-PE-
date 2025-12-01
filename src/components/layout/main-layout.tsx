@@ -26,15 +26,18 @@ const pageTitles: { [key: string]: string } = {
   '/': 'Dashboard',
   '/documents': 'Documents',
   '/applications': 'Applications',
-  '/analytics': 'Analytics',
+  '/analytics': 'Analytics Dashboard',
   '/events': 'Events & Programs',
   '/tasks': 'Tasks',
   '/messages': 'Messages',
-  '/members': 'Members',
+  '/members': 'Members Directory',
   '/settings': 'Settings',
-  '/profile': 'Profile',
+  '/profile': 'My Profile',
   '/fees': 'Membership Fees',
   '/partnerships': 'Partnerships',
+  '/ai-assistant': 'AI Assistant',
+  '/help': 'Help & Support',
+  '/settings/roles': 'Role Management',
 };
 
 const getPageTitle = (pathname: string): string => {
@@ -73,17 +76,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         {children}
       </div>
     );
-  }
-
-  if (isUserLoading) {
-    return (
-       <div className="flex min-h-screen items-center justify-center bg-background">
-         <div className="flex flex-col items-center gap-4">
-            <Logo className="h-16 w-16 animate-pulse text-primary" />
-            <p className="text-muted-foreground">Loading Portal...</p>
-         </div>
-       </div>
-    )
   }
 
   return (
@@ -155,4 +147,3 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
-
