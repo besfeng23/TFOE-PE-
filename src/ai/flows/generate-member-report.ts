@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A flow to generate a CSV report of member data.
@@ -64,4 +65,6 @@ const generateMemberReportFlow = ai.defineFlow(
     }));
 
     const { output } = await prompt({ profiles: profilesToProcess });
-    return
+    return output!;
+  }
+);

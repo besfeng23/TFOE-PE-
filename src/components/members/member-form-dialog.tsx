@@ -334,4 +334,6 @@ export function MemberFormDialog({ isOpen, onClose, member, prefilledData }: Mem
           </form>
         </Form>
       </DialogContent>
-    </Dialog
+    </Dialog>
+  );
+}
