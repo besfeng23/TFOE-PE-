@@ -90,7 +90,7 @@ export default function ProfilePage() {
             <div className="space-y-2"><Skeleton className="h-5 w-20"/><Skeleton className="h-10 w-full"/></div>
         </div>
     </>
-  )
+  );
 
   return (
     <Card>
@@ -158,3 +158,8 @@ export default function ProfilePage() {
               </Button>
             </div>
           </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
