@@ -172,4 +172,5 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | 
  */
 export const useUser = (): UserHookResult => { // Renamed from useAuthUser
   const { user, isUserLoading, userError } = useFirebase(); // Leverages the main hook
-  return { user, isUserLoading, userError
+  return { user, isUserLoading, userError };
+};
