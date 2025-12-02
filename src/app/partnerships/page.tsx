@@ -1,3 +1,4 @@
+
 'use client';
 
 import PartnershipsTable from "@/components/partnerships/partnerships-table";
