@@ -17,12 +17,10 @@ import { useAuthUser, useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { toast } from '@/hooks/use-toast';
+import { Settings, User } from 'lucide-react';
 
-interface UserNavProps {
-  isSidebar?: boolean;
-}
 
-export function UserNav({ isSidebar = false }: UserNavProps) {
+export function UserNav() {
   const { user, profile } = useAuthUser();
   const auth = useAuth();
   const router = useRouter();
@@ -48,80 +46,6 @@ export function UserNav({ isSidebar = false }: UserNavProps) {
   const userInitial = profile?.firstName?.charAt(0) || user?.email?.charAt(0) || 'U';
   const userInitialLast = profile?.lastName?.charAt(0) || '';
 
-
-  const triggerContent = (
-    <div className="flex items-center gap-3">
-      <Avatar className="h-9 w-9">
-        {profile?.idPhotoUrl ? (
-          <AvatarImage
-            src={profile.idPhotoUrl}
-            alt="User avatar"
-          />
-        ) : profile?.avatarUrl ? (
-          <AvatarImage
-            src={profile.avatarUrl}
-            alt="User avatar"
-          />
-        ) : null}
-        <AvatarFallback>{userInitial}{userInitialLast}</AvatarFallback>
-      </Avatar>
-      <div
-        className={`text-left overflow-hidden ${
-          isSidebar
-            ? 'group-data-[collapsible=icon]:hidden'
-            : 'hidden md:block'
-        }`}
-      >
-        <p className="text-sm font-medium leading-none truncate">{profile?.firstName} {profile?.lastName}</p>
-        <p className="text-xs leading-none text-muted-foreground truncate">
-          {profile?.roleId || user?.email}
-        </p>
-      </div>
-    </div>
-  );
-
-  const dropdownContent = (
-    <>
-      <DropdownMenuLabel className="font-normal">
-        <div className="flex flex-col space-y-1">
-          <p className="text-sm font-medium leading-none">{profile?.firstName} {profile?.lastName}</p>
-          <p className="text-xs leading-none text-muted-foreground">
-            {user?.email}
-          </p>
-        </div>
-      </DropdownMenuLabel>
-      <DropdownMenuSeparator />
-      <DropdownMenuGroup>
-        <Link href="/profile">
-          <DropdownMenuItem>Profile</DropdownMenuItem>
-        </Link>
-        <Link href="/settings">
-          <DropdownMenuItem>Settings</DropdownMenuItem>
-        </Link>
-      </DropdownMenuGroup>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
-    </>
-  );
-
-  if (isSidebar) {
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="h-auto w-full justify-start p-2 text-left text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          >
-            {triggerContent}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" align="end" forceMount side="top">
-          {dropdownContent}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  }
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -143,7 +67,47 @@ export function UserNav({ isSidebar = false }: UserNavProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
-        {dropdownContent}
+        <DropdownMenuLabel className="font-normal">
+            <div className="flex items-center gap-3">
+                 <Avatar className="h-10 w-10">
+                    {profile?.idPhotoUrl ? (
+                    <AvatarImage
+                        src={profile.idPhotoUrl}
+                        alt="User avatar"
+                    />
+                    ) : profile?.avatarUrl ? (
+                    <AvatarImage
+                        src={profile.avatarUrl}
+                        alt="User avatar"
+                    />
+                    ) : null}
+                    <AvatarFallback>{userInitial}{userInitialLast}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{profile?.firstName} {profile?.lastName}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                        {user?.email}
+                    </p>
+                </div>
+           </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <Link href="/profile">
+            <DropdownMenuItem>
+                <User className="mr-2 h-4 w-4" />
+                Profile
+            </DropdownMenuItem>
+          </Link>
+          <Link href="/settings">
+            <DropdownMenuItem>
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+            </DropdownMenuItem>
+          </Link>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
