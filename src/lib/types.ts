@@ -1,20 +1,52 @@
+
 import type { Timestamp } from "firebase/firestore";
 
-export type MembershipStatus = 'Active' | 'Inactive' | 'Leadership';
+export type MembershipStatus = 'Active' | 'Inactive' | 'Suspended' | 'Deceased';
 export type PositionType = 'Elected' | 'Appointed' | 'Volunteer' | 'None';
-
+export type FiveIsStage = 'Interview' | 'Introduction' | 'Initiation' | 'Incubation' | 'Induction';
 
 export interface UserProfile {
-    id: string;
+    // Core Fields
+    id: string; // Firebase Auth UID
+    eagleId?: string; // Unique Eagle ID
     email: string;
+    mobileNumber?: string;
     firstName: string;
     lastName: string;
-    membershipNumber?: string;
-    idPhotoUrl?: string;
-    contactInfo?: string;
-    roleId: string;
-    assignedGovernmentPosition?: string;
+
+    // Org Structure
+    councilName?: string;
+    clubName?: string;
+    region?: string;
+    nationalPosition?: string;
+    roleId: string; // App Role: Member, ClubAdmin, CouncilAdmin, SuperAdmin
+
+    // Government Role
+    governmentRole?: string;
     governmentBranch?: string;
+    barangayName?: string;
+    municipalityCity?: string;
+    province?: string;
+    
+    // Status & Timestamps
+    status?: MembershipStatus;
+    joinedDate?: Timestamp;
+    lastUpdatedAt?: Timestamp;
+
+    // Metadata
+    tags?: string[];
+    avatarUrl?: string; // from Cloud Storage
+    idPhotoUrl?: string; // from Cloud Storage
+
+    // Eagles-specific
+    eagleTitle?: 'Kuya' | 'Ate';
+    membershipType?: 'Regular' | 'Bunso/Aspirant' | 'Friend';
+    fiveIsStage?: FiveIsStage;
+
+    // Deprecated / To be refactored from old schema
+    membershipNumber?: string;
+    contactInfo?: string;
+    assignedGovernmentPosition?: string;
     membershipStatus?: MembershipStatus;
     positionType?: PositionType;
 }
@@ -99,4 +131,7 @@ export interface Conversation {
 
 export interface Message {
     id: string;
-    senderId: string
+    senderId: string;
+    text: string;
+    timestamp: Timestamp;
+}

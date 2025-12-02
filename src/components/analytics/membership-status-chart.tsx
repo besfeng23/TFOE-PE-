@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Pie, PieChart, Cell } from 'recharts';
@@ -29,13 +30,17 @@ const chartConfig = {
     label: 'Inactive',
     color: 'hsl(var(--chart-2))',
   },
-  Leadership: {
-    label: 'Leadership',
+  Suspended: {
+    label: 'Suspended',
     color: 'hsl(var(--chart-3))',
+  },
+  Deceased: {
+    label: 'Deceased',
+    color: 'hsl(var(--chart-4))',
   },
   Unknown: {
     label: 'Unknown',
-    color: 'hsl(var(--chart-4))',
+    color: 'hsl(var(--chart-5))',
   },
 } satisfies ChartConfig;
 

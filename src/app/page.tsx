@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Card,
@@ -7,86 +8,26 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
-  Bell,
-  Book,
-  Calendar,
-  ClipboardCheck,
-  FileText,
-  ListTodo,
-  Wallet,
+  Users,
+  ShieldCheck,
+  Building,
+  BarChart3,
+  UserCheck,
+  UserX,
 } from 'lucide-react';
-import Link from 'next/link';
 import {
   useCollection,
   useAuthUser,
   useMemoFirebase,
   useFirestore,
-  updateDocumentNonBlocking,
 } from '@/firebase';
-import { collection, query, where, orderBy, doc, Timestamp } from 'firebase/firestore';
+import { collection, query } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { Notification, Task, Event } from '@/lib/types';
-
-const quickAccessItems = [
-  {
-    title: 'General Documents',
-    description: 'Resolutions, Letters, etc.',
-    icon: FileText,
-    href: '/documents',
-  },
-  {
-    title: 'Financial Records',
-    description: 'Budgets, Expense Reports',
-    icon: Wallet,
-    href: '/documents',
-  },
-  {
-    title: 'Meeting Attendance',
-    description: 'Meeting & Event Attendance',
-    icon: ClipboardCheck,
-    href: '/documents',
-  },
-  {
-    title: 'Financial Ledgers',
-    description: 'Financial Records & Analytics',
-    icon: Book,
-    href: '/analytics',
-  },
-  {
-    title: 'Programs & Events',
-    description: 'Schedules and Details',
-    icon: Calendar,
-    href: '/events',
-  },
-];
-
-function NotificationItem({ notification, onToggleRead }: { notification: Notification, onToggleRead: (id: string, read: boolean) => void }) {
-  return (
-    <div
-      className="flex cursor-pointer items-start gap-4 rounded-md p-2 hover:bg-muted"
-      onClick={() => onToggleRead(notification.id, !notification.read)}
-    >
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
-        <Bell className="h-4 w-4 text-secondary-foreground" />
-      </div>
-      <div className="flex-1">
-        <p
-          className={`font-medium ${
-            notification.read ? 'text-muted-foreground' : 'text-foreground'
-          }`}
-        >
-          {notification.message}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {new Date(notification.timestamp.toDate()).toLocaleString()}
-        </p>
-      </div>
-      {!notification.read && (
-        <div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-accent" />
-      )}
-    </div>
-  );
-}
+import type { UserProfile } from '@/lib/types';
+import MembershipStatusChart from '@/components/analytics/membership-status-chart';
+import MembersByGovtLevelChart from '@/components/analytics/members-by-govt-level-chart';
+import { format } from 'date-fns';
+import React from 'react';
 
 function StatCard({ title, value, description, icon: Icon, isLoading }: { title: string, value: number, description: string, icon: React.ElementType, isLoading: boolean }) {
   return (
@@ -107,51 +48,60 @@ function StatCard({ title, value, description, icon: Icon, isLoading }: { title:
   );
 }
 
-
 export default function DashboardPage() {
-  const { user, profile, isUserLoading, isProfileLoading } = useAuthUser();
+  const { profile, isProfileLoading } = useAuthUser();
   const firestore = useFirestore();
 
-  // Notifications query for all notifications
-  const notificationsQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return query(
-      collection(firestore, `userProfiles/${user.uid}/notifications`),
-      orderBy('timestamp', 'desc')
-    );
-  }, [firestore, user]);
-
-  const { data: notifications, isLoading: areNotificationsLoading } = useCollection<Notification>(notificationsQuery);
-  
-  // Query for unread notifications for the stat card
-  const unreadNotificationsQuery = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
-    return query(collection(firestore, `userProfiles/${user.uid}/notifications`), where('read', '==', false));
-  }, [firestore, user]);
-
-  const { data: unreadNotifications, isLoading: areUnreadNotificationsLoading } = useCollection<Notification>(unreadNotificationsQuery);
-
-
-  const tasksQuery = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
-    return query(collection(firestore, `userProfiles/${user.uid}/tasks`), where('completed', '==', false));
-  }, [firestore, user]);
-  const { data: pendingTasks, isLoading: areTasksLoading } = useCollection<Task>(tasksQuery);
-  
-  const eventsQuery = useMemoFirebase(() => {
+  const profilesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, 'events'), where('startDate', '>=', Timestamp.now()));
+    return query(collection(firestore, 'userProfiles'));
   }, [firestore]);
 
-  const { data: upcomingEvents, isLoading: areEventsLoading } = useCollection<Event>(eventsQuery);
+  const { data: profiles, isLoading: areProfilesLoading } = useCollection<UserProfile>(profilesQuery);
 
-  const handleToggleRead = (id: string, read: boolean) => {
-    if (!firestore || !user) return;
-    const notificationRef = doc(firestore, `userProfiles/${user.uid}/notifications`, id);
-    updateDocumentNonBlocking(notificationRef, { read });
-  };
-  
-  const isLoading = isUserLoading || isProfileLoading;
+  const isLoading = isProfileLoading || areProfilesLoading;
+
+  const stats = React.useMemo(() => {
+    if (!profiles) return { total: 0, active: 0, inactive: 0, inGov: 0, barangay: 0 };
+    return {
+        total: profiles.length,
+        active: profiles.filter(p => p.status === 'Active').length,
+        inactive: profiles.filter(p => p.status === 'Inactive').length,
+        inGov: profiles.filter(p => p.governmentRole && p.governmentRole !== 'None').length,
+        barangay: profiles.filter(p => p.governmentBranch === 'LGU').length,
+    }
+  }, [profiles]);
+
+  const membershipStatusData = React.useMemo(() => {
+    if (!profiles) return [];
+    const statusCounts = profiles.reduce((acc, profile) => {
+        const status = profile.status || 'Unknown';
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(statusCounts).map(([status, count]) => ({
+        status,
+        count,
+        fill: `var(--chart-${Object.keys(statusCounts).indexOf(status) + 1})`
+    }));
+  }, [profiles]);
+
+  const membersByGovtLevelData = React.useMemo(() => {
+    if (!profiles) return [];
+    const branchCounts = profiles.reduce((acc, profile) => {
+        const branch = profile.governmentBranch || 'N/A';
+        if (branch !== 'N/A' && branch.trim() !== '') {
+            acc[branch] = (acc[branch] || 0) + 1;
+        }
+        return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(branchCounts).map(([branch, members]) => ({
+        branch,
+        members,
+    }));
+  }, [profiles]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -164,92 +114,46 @@ export default function DashboardPage() {
         ) : (
           <>
             <h1 className="text-3xl font-bold tracking-tight font-headline">
-              Welcome back, {profile?.firstName || 'User'}!
+              Eagles Member Command Center
             </h1>
             <p className="text-muted-foreground">
-              Here&apos;s a quick overview of your nest.
+              Today is {format(new Date(), 'eeee, MMMM dd, yyyy')}. Welcome, Kuya {profile?.firstName || 'User'}!
             </p>
           </>
         )}
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <StatCard 
-            title="Pending Tasks"
-            value={pendingTasks?.length ?? 0}
-            description="Tasks that require your action"
-            icon={ListTodo}
-            isLoading={areTasksLoading}
-        />
-         <StatCard 
-            title="Upcoming Events"
-            value={upcomingEvents?.length ?? 0}
-            description="Events scheduled in the future"
-            icon={Calendar}
-            isLoading={areEventsLoading}
-        />
-        <StatCard 
-            title="Unread Notifications"
-            value={unreadNotifications?.length ?? 0}
-            description="New messages and alerts"
-            icon={Bell}
-            isLoading={areUnreadNotificationsLoading}
-        />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <StatCard title="Total Members" value={stats.total} description="All registered members" icon={Users} isLoading={isLoading} />
+        <StatCard title="Active Members" value={stats.active} description="Members with active status" icon={UserCheck} isLoading={isLoading} />
+        <StatCard title="Inactive Members" value={stats.inactive} description="Members with inactive status" icon={UserX} isLoading={isLoading} />
+        <StatCard title="Members in Government" value={stats.inGov} description="Officials in any branch" icon={ShieldCheck} isLoading={isLoading} />
+        <StatCard title="Barangay Officials" value={stats.barangay} description="Members serving in LGUs" icon={Building} isLoading={isLoading} />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div className="lg:col-span-1 space-y-4">
-            {quickAccessItems.map((item) => (
-              <Link href={item.href} key={item.title}>
-                <Card className="hover:bg-muted/50 transition-colors h-full flex flex-col justify-center">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      {item.title}
-                    </CardTitle>
-                    <item.icon className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xs text-muted-foreground">
-                      {item.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-        </div>
-
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         <Card className="lg:col-span-2">
+            <CardHeader>
+                <CardTitle className="font-headline flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5"/>
+                    Membership Status
+                </CardTitle>
+                <CardDescription>Distribution of members by their current status.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {isLoading ? <Skeleton className="h-[300px] w-full" /> : <MembershipStatusChart data={membershipStatusData} />}
+            </CardContent>
+        </Card>
+        <Card className="lg:col-span-3">
           <CardHeader>
-            <CardTitle>Notifications</CardTitle>
-            <CardDescription>
-              Recent activities and pending actions. Click to toggle read status.
-            </CardDescription>
+            <CardTitle className="font-headline flex items-center gap-2">
+                <BarChart3 className="h-5 w-5"/>
+                Members by Government Branch
+            </CardTitle>
+            <CardDescription>Breakdown of members serving in various government branches.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-1">
-              {areNotificationsLoading && (
-                <>
-                  <Skeleton className="h-16 w-full" />
-                  <Skeleton className="h-16 w-full" />
-                  <Skeleton className="h-16 w-full" />
-                </>
-              )}
-              {!areNotificationsLoading && notifications && notifications.length > 0 &&
-                notifications.map((notification) => (
-                  <NotificationItem key={notification.id} notification={notification} onToggleRead={handleToggleRead}/>
-                ))}
-              {!areNotificationsLoading && (!notifications || notifications.length === 0) && (
-                <div className="flex flex-col items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/30 bg-muted/50 p-12 text-center">
-                    <div className="rounded-full bg-background p-3">
-                        <Bell className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <h3 className="mt-4 text-lg font-semibold">No new notifications</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        You're all caught up!
-                    </p>
-                </div>
-              )}
-            </div>
+            {isLoading ? <Skeleton className="h-[300px] w-full" /> : <MembersByGovtLevelChart data={membersByGovtLevelData}/>}
           </CardContent>
         </Card>
       </div>
