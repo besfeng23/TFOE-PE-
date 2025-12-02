@@ -45,26 +45,18 @@ export default function ProfilePage() {
     setIsSaving(true);
     const profileRef = doc(firestore, 'userProfiles', user.uid);
     
-    try {
-        await updateDocumentNonBlocking(profileRef, {
-            firstName,
-            lastName,
-            contactInfo,
-        });
-        toast({
-            title: "Profile Updated",
-            description: "Your changes have been saved successfully.",
-        });
-    } catch (error) {
-        console.error("Profile update error:", error);
-        toast({
-            variant: "destructive",
-            title: "Update Failed",
-            description: "Could not save your changes. Please try again.",
-        });
-    } finally {
-        setIsSaving(false);
-    }
+    updateDocumentNonBlocking(profileRef, {
+        firstName,
+        lastName,
+        contactInfo,
+    });
+    
+    toast({
+        title: "Profile Updated",
+        description: "Your changes have been saved successfully.",
+    });
+    
+    setIsSaving(false);
   };
   
   const isLoading = isUserLoading || isProfileLoading;
