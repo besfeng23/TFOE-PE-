@@ -6,6 +6,7 @@ import { FirebaseClientProvider } from '@/firebase';
 import { AuthProvider } from '@/firebase/auth/auth-provider';
 import { Inter } from 'next/font/google';
 import { Roboto_Slab } from 'next/font/google';
+import { ThemeProvider } from '@/hooks/use-theme';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -32,12 +33,19 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${roboto_slab.variable}`}>
       <body className="font-body antialiased">
-        <FirebaseClientProvider>
-          <AuthProvider>
-            <MainLayout>{children}</MainLayout>
-            <Toaster />
-          </AuthProvider>
-        </FirebaseClientProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <FirebaseClientProvider>
+            <AuthProvider>
+              <MainLayout>{children}</MainLayout>
+              <Toaster />
+            </AuthProvider>
+          </FirebaseClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
