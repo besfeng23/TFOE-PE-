@@ -7,14 +7,17 @@ import Link from 'next/link';
 import { Logo } from '../icons/logo';
 import { UserNav } from './user-nav';
 import { useAuthUser } from '@/firebase';
-import { MainNav } from './main-nav';
 import { AiChatbot } from './ai-chatbot';
+import { Button } from '../ui/button';
+import { CommandMenu } from './command-menu';
+import { Search } from 'lucide-react';
 
 const unauthenticatedRoutes = ['/login', '/signup'];
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { isUserLoading } = useAuthUser();
+  const [open, setOpen] = React.useState(false);
 
   const isUnauthenticatedRoute = unauthenticatedRoutes.includes(pathname);
 
@@ -41,20 +44,30 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="sticky top-0 z-40 w-full border-b bg-background">
-        <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
-          <div className="flex gap-6 md:gap-10">
+        <div className="container flex h-16 items-center">
+          <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center space-x-2">
               <Logo className="h-8 w-8 text-primary" />
               <span className="hidden font-bold sm:inline-block font-headline">
                 Eagles Nest
               </span>
             </Link>
-            <MainNav />
           </div>
+
           <div className="flex flex-1 items-center justify-end space-x-4">
-            <nav className="flex items-center space-x-1">
-              <UserNav />
-            </nav>
+             <Button
+              variant="outline"
+              className="w-full justify-start text-sm text-muted-foreground md:w-64"
+              onClick={() => setOpen(true)}
+            >
+              <Search className="mr-2 h-4 w-4" />
+              <span className="hidden lg:inline-flex">Search and navigate...</span>
+              <span className="inline-flex lg:hidden">Navigate...</span>
+              <kbd className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 md:flex">
+                <span className="text-xs">⌘</span>K
+              </kbd>
+            </Button>
+            <UserNav />
           </div>
         </div>
       </header>
@@ -64,6 +77,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
       <AiChatbot />
+      <CommandMenu open={open} setOpen={setOpen} />
     </div>
   );
 }
