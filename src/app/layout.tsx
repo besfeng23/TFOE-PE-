@@ -4,9 +4,23 @@ import { MainLayout } from '@/components/layout/main-layout';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
 import { AuthProvider } from '@/firebase/auth/auth-provider';
+import { Inter } from 'next/font/google';
+import { Roboto_Slab } from 'next/font/google';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-body',
+});
+
+const roboto_slab = Roboto_Slab({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-headline',
+});
 
 export const metadata: Metadata = {
-  title: 'The Fraternal Order of Eagles - Philippine Eagle',
+  title: 'Eagles Member Command Center',
   description: 'Official Portal for The Fraternal Order of Eagles - Philippine Eagle',
 };
 
@@ -16,15 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Source+Sans+Pro:wght@400;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${roboto_slab.variable}`}>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
           <AuthProvider>

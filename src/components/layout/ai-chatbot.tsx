@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -6,10 +7,10 @@ import { MessageCircleQuestion, Send, X, Bot, User, Loader2 } from 'lucide-react
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../ui/card';
 import { Input } from '../ui/input';
 import { askAboutTheEagles } from '@/ai/flows/ask-about-the-eagles';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Avatar, AvatarFallback } from '../ui/avatar';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { generateStream } from 'genkit';
+import { useAuthUser } from '@/firebase';
 
 type ChatMessage = {
   role: 'user' | 'model';
@@ -22,6 +23,7 @@ export function AiChatbot() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { profile } = useAuthUser();
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -85,6 +87,8 @@ export function AiChatbot() {
       setIsLoading(false);
     }
   };
+  
+  const userInitial = profile?.firstName?.charAt(0) || 'U';
 
   return (
     <>
@@ -99,8 +103,8 @@ export function AiChatbot() {
         <Card className="fixed bottom-24 right-6 z-50 w-full max-w-sm shadow-2xl flex flex-col h-[60vh]">
           <CardHeader className="flex flex-row items-center justify-between border-b">
             <div className="flex items-center gap-3">
-              <Avatar>
-                <AvatarFallback>AI</AvatarFallback>
+              <Avatar className="bg-primary text-primary-foreground">
+                <AvatarFallback><Bot className="h-5 w-5"/></AvatarFallback>
               </Avatar>
               <div>
                 <CardTitle className="text-base font-medium">TFOE-PE Assistant</CardTitle>
@@ -122,15 +126,15 @@ export function AiChatbot() {
                         )}
                     >
                         {message.role === 'model' && (
-                        <Avatar className="w-8 h-8 border">
-                            <Bot className="m-1"/>
+                        <Avatar className="w-8 h-8 border bg-primary text-primary-foreground">
+                            <AvatarFallback><Bot className="h-4 w-4"/></AvatarFallback>
                         </Avatar>
                         )}
                         <div
                         className={cn(
                             'p-3 rounded-lg max-w-xs',
                             message.role === 'user'
-                            ? 'bg-primary text-primary-foreground'
+                            ? 'bg-secondary text-secondary-foreground'
                             : 'bg-muted'
                         )}
                         >
@@ -138,15 +142,15 @@ export function AiChatbot() {
                         </div>
                          {message.role === 'user' && (
                         <Avatar className="w-8 h-8 border">
-                            <User className="m-1" />
+                            <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
                         </Avatar>
                         )}
                     </div>
                     ))}
                     {isLoading && (
                         <div className="flex justify-start items-center gap-3">
-                             <Avatar className="w-8 h-8 border">
-                                <Bot className="m-1"/>
+                             <Avatar className="w-8 h-8 border bg-primary text-primary-foreground">
+                                <AvatarFallback><Bot className="h-4 w-4"/></AvatarFallback>
                             </Avatar>
                             <div className="p-3 bg-muted rounded-lg">
                                 <Loader2 className="h-5 w-5 animate-spin"/>

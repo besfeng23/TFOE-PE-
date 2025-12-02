@@ -51,12 +51,17 @@ export function UserNav({ isSidebar = false }: UserNavProps) {
   const triggerContent = (
     <div className="flex items-center gap-3">
       <Avatar className="h-8 w-8">
-        {profile?.idPhotoUrl && (
+        {profile?.idPhotoUrl ? (
           <AvatarImage
             src={profile.idPhotoUrl}
             alt="User avatar"
           />
-        )}
+        ) : profile?.avatarUrl ? (
+          <AvatarImage
+            src={profile.avatarUrl}
+            alt="User avatar"
+          />
+        ) : null}
         <AvatarFallback>{userInitial}{userInitialLast}</AvatarFallback>
       </Avatar>
       <div
@@ -121,12 +126,17 @@ export function UserNav({ isSidebar = false }: UserNavProps) {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-             {profile?.idPhotoUrl && (
+             {profile?.idPhotoUrl ? (
               <AvatarImage
                 src={profile.idPhotoUrl}
                 alt="User avatar"
               />
-            )}
+            ) : profile?.avatarUrl ? (
+              <AvatarImage
+                src={profile.avatarUrl}
+                alt="User avatar"
+              />
+            ) : null}
             <AvatarFallback>{userInitial}{userInitialLast}</AvatarFallback>
           </Avatar>
         </Button>

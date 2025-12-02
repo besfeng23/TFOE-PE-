@@ -19,6 +19,7 @@ import { UserNav } from './user-nav';
 import { useAuthUser } from '@/firebase';
 import { Globe, Mail, MapPin } from 'lucide-react';
 import { Separator } from '../ui/separator';
+import { AiChatbot } from './ai-chatbot';
 
 const unauthenticatedRoutes = ['/login', '/signup'];
 
@@ -35,6 +36,7 @@ const pageTitles: { [key: string]: string } = {
   '/profile': 'My Profile',
   '/fees': 'Membership Fees',
   '/partnerships': 'Partnerships',
+  '/video': 'AI Video Studio',
   '/ai-assistant': 'AI Assistant',
   '/help': 'Help & Support',
   '/settings/roles': 'Role Management',
@@ -144,6 +146,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           </div>
         </footer>
       </SidebarInset>
+      <AiChatbot />
     </SidebarProvider>
   );
 }
