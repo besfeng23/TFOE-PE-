@@ -88,14 +88,14 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         className="border-sidebar-border bg-sidebar text-sidebar-foreground"
       >
         <SidebarHeader className="p-4">
-          <Link href="/" className="flex items-center gap-2">
-            <Logo className="size-8 text-sidebar-primary" />
-            <div className="flex flex-col">
+          <Link href="/" className="flex items-center gap-3">
+            <Logo className="size-8 text-sidebar-primary flex-shrink-0" />
+            <div className="flex flex-col overflow-hidden">
               <h2 className="font-headline text-lg font-semibold tracking-tight text-sidebar-foreground group-data-[collapsible=icon]:hidden">
                 Eagles Nest
               </h2>
-              <p className="text-xs text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden">
-                TFOE-PE
+              <p className="text-xs text-sidebar-foreground/70 truncate group-data-[collapsible=icon]:hidden">
+                TFOE-PE Command Center
               </p>
             </div>
           </Link>
@@ -111,10 +111,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       </Sidebar>
 
       <SidebarInset className="bg-background flex flex-col">
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="md:hidden" />
-            <h1 className="font-headline text-lg font-semibold truncate">
+            <h1 className="font-headline text-xl font-semibold truncate">
               {pageTitle}
             </h1>
           </div>
@@ -123,7 +123,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main className="flex-1 p-4 sm:p-6">{children}</main>
-        <footer className="p-4 sm:p-6 border-t bg-background/80">
+        <footer className="p-4 sm:p-6 border-t bg-muted/50">
           <div className="container mx-auto px-0">
               <div className='grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-muted-foreground'>
                   <div className='flex items-start gap-3'>

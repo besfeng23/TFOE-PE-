@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -50,7 +51,7 @@ export function UserNav({ isSidebar = false }: UserNavProps) {
 
   const triggerContent = (
     <div className="flex items-center gap-3">
-      <Avatar className="h-8 w-8">
+      <Avatar className="h-9 w-9">
         {profile?.idPhotoUrl ? (
           <AvatarImage
             src={profile.idPhotoUrl}
@@ -65,15 +66,15 @@ export function UserNav({ isSidebar = false }: UserNavProps) {
         <AvatarFallback>{userInitial}{userInitialLast}</AvatarFallback>
       </Avatar>
       <div
-        className={`text-left ${
+        className={`text-left overflow-hidden ${
           isSidebar
             ? 'group-data-[collapsible=icon]:hidden'
             : 'hidden md:block'
         }`}
       >
-        <p className="text-sm font-medium leading-none">{profile?.firstName} {profile?.lastName}</p>
-        <p className="text-xs leading-none text-muted-foreground">
-          {user?.email}
+        <p className="text-sm font-medium leading-none truncate">{profile?.firstName} {profile?.lastName}</p>
+        <p className="text-xs leading-none text-muted-foreground truncate">
+          {profile?.roleId || user?.email}
         </p>
       </div>
     </div>
@@ -109,7 +110,7 @@ export function UserNav({ isSidebar = false }: UserNavProps) {
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="h-auto w-full justify-start p-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            className="h-auto w-full justify-start p-2 text-left text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
             {triggerContent}
           </Button>
@@ -124,8 +125,8 @@ export function UserNav({ isSidebar = false }: UserNavProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+          <Avatar className="h-10 w-10">
              {profile?.idPhotoUrl ? (
               <AvatarImage
                 src={profile.idPhotoUrl}
