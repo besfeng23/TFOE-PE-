@@ -7,7 +7,7 @@ export function Logo(props: SVGProps<SVGSVGElement> & { className?: string }) {
   // The 'props' are passed to maintain size and style consistency where the logo is used.
   return (
     <Image
-      src="/images.jpeg"
+      src="/Images.png"
       alt="The Fraternal Order of Eagles - Philippine Eagles Logo"
       width={100} // Default width, can be overridden by className
       height={100} // Default height, can be overridden by className
