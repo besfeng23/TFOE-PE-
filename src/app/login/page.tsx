@@ -135,7 +135,7 @@ export default function LoginPage() {
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>
-        <div className="flex justify-center mb-4">
+        <div className="flex justify-center mb-4 -ml-4">
           <Logo className="h-24 w-24" />
         </div>
         <CardTitle className="text-2xl font-headline text-center">
