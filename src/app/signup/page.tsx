@@ -110,13 +110,13 @@ export default function SignUpPage() {
     <Card className="mx-auto max-w-sm">
       <CardHeader>
         <div className="flex justify-center mb-4">
-          <Logo className="h-16 w-16 text-primary" />
+          <Logo className="h-24 w-24" />
         </div>
         <CardTitle className="text-2xl font-headline text-center">
           Create an Account
         </CardTitle>
         <CardDescription className="text-center">
-          Join the Eagles Nest Online portal
+          Join the Eagles Member Command Center
         </CardDescription>
       </CardHeader>
       <CardContent>

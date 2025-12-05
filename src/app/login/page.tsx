@@ -136,10 +136,10 @@ export default function LoginPage() {
     <Card className="mx-auto max-w-sm">
       <CardHeader>
         <div className="flex justify-center mb-4">
-          <Logo className="h-16 w-16 text-primary" />
+          <Logo className="h-24 w-24" />
         </div>
         <CardTitle className="text-2xl font-headline text-center">
-          Eagles Nest Online
+          Eagles Member Command Center
         </CardTitle>
         <CardDescription className="text-center italic">
           &quot;Service Through Strong Brotherhood&quot;

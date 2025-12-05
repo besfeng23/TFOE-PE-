@@ -25,7 +25,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <Logo className="h-16 w-16 animate-pulse text-primary" />
+          <Logo className="h-24 w-24 animate-pulse" />
           <p className="text-muted-foreground">Loading Portal...</p>
         </div>
       </div>
@@ -47,9 +47,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <div className="container flex h-16 items-center">
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center space-x-2">
-              <Logo className="h-8 w-8 text-primary" />
+              <Logo className="h-10 w-10" />
               <span className="hidden font-bold sm:inline-block font-headline">
-                Eagles Nest
+                Eagles Command Center
               </span>
             </Link>
           </div>
