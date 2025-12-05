@@ -1,3 +1,4 @@
+
 import MembershipForm from "@/components/applications/membership-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 

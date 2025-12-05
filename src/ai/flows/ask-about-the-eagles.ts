@@ -1,8 +1,9 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to answer questions about The Fraternal Order of Eagles.
  *
- * - askAboutTheEagles - A function that streams an answer to a question.
+ * - askAboutTheEagles - a function that streams an answer to a question.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
