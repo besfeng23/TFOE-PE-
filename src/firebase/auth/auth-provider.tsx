@@ -13,10 +13,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const pathname = usePathname();
   const isAuthRoute = AUTH_ROUTES.includes(pathname);
 
-  useAuthUser({
-    redirectTo: isAuthRoute ? '/' : '/login',
-    redirectIfFound: isAuthRoute,
-  });
+  // useAuthUser({
+  //   redirectTo: isAuthRoute ? '/' : '/login',
+  //   redirectIfFound: isAuthRoute,
+  // });
 
   return <>{children}</>;
 }
