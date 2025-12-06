@@ -1,289 +1,135 @@
 
-/**
- * Core Philosophy: This ruleset establishes a hybrid security model. It combines a strict
- * user-ownership model for private data with a role-based access control (RBAC) system for
- * administrative actions.
- *
- * Data Structure: Private user data (Tasks, Notifications) is stored in subcollections under the
- * user's profile document. User profiles are in a top-level collection.
- *
- * Key Security Decisions:
- * - User Profile Management: Normal users can only read and update their OWN profile. Administrators
- *   can create, read, update, and delete ANY user profile, but cannot change their own role.
- * - Private Subcollections: By placing tasks and notifications in subcollections, we can create
- *   rules that allow users to safely list their own data without any risk of exposing others' data.
- * - Public Read-Only Collections: Collections like 'roles', and 'categories' are treated as
- *   public lookup data, readable by any signed-in user but not writable by clients.
- * - Admin-Only Writable Collections: The 'events' and 'partnerships' collections are publicly readable, but only admins can write to them.
- * - Owner-Only Writes for Public Content: The 'documents' collection is publicly readable, but write
- *   operations (create, update, delete) are restricted to the original author.
- * - Admin Role Check: The `isAdmin()` function checks a custom claim on the user's auth token.
- *   This is a performant way to verify admin status. In this ruleset, we fallback to checking
- *   the role in the user's profile document, which is less performant but works for this demo.
- *
- * Denormalization for Authorization: To ensure fast and secure rule evaluation, authorization fields are
- * denormalized directly onto the documents (e.g., 'documents' contain 'uploadedByUserId').
- */
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
     // ----------------------------------------------------------------------
     // Helper Functions
     // ----------------------------------------------------------------------
-
-    /**
-     * Returns true if the user is authenticated.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * Returns true if the authenticated user's UID matches the provided userId.
-     */
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
+    
+    // Get the user's profile data from Firestore
+    function getUserProfile(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data;
+    }
 
-    /**
-     * Checks if the requesting user is an administrator.
-     * In a production app, this would ideally check a custom claim on the auth token.
-     * Here, we fall back to reading the user's profile document.
-     */
+    // Check if the user has a specific role (e.g., 'Admin', 'Governor')
+    function hasRole(role) {
+      return isSignedIn() && getUserProfile(request.auth.uid).roleId == role;
+    }
+    
+    // Check if the user is an Admin
     function isAdmin() {
-      return isSignedIn() && get(/databases/$(database)/documents/userProfiles/$(request.auth.uid)).data.roleId == 'Admin';
+      return hasRole('Admin');
     }
     
-    /**
-     * Checks if the requesting user is a Leader or an Admin.
-     */
-    function isLeaderOrAdmin() {
-        let userRole = get(/databases/$(database)/documents/userProfiles/$(request.auth.uid)).data.roleId;
-        return isSignedIn() && (userRole == 'Admin' || userRole == 'Leader');
-    }
-
-    /**
-     * Returns true if the document exists and the user is the owner.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+    // Check if user is an officer of a specific club (President or Secretary)
+    function isClubOfficer(clubId) {
+        let club = get(/databases/$(database)/documents/clubs/$(clubId)).data;
+        return isSignedIn() && (request.auth.uid == club.presidentId || request.auth.uid == club.secretaryId);
     }
     
-    /**
-     * Validates that the user profile being created has an 'id' field matching the document's UID.
-     */
-    function hasValidUserProfileIdOnCreate(userProfileId) {
-      return request.resource.data.id == userProfileId;
-    }
-
-    /**
-     * Enforces immutability of the user profile's 'id' field during an update.
-     */
-    function hasImmutableUserProfileId() {
-      return request.resource.data.id == resource.data.id;
-    }
-    
-    /**
-     * Validates that the document being created has an 'uploadedByUserId' matching the creator.
-     */
-    function hasValidCreatorIdOnCreate() {
-      return request.resource.data.uploadedByUserId == request.auth.uid;
-    }
-
-    /**
-     * Enforces immutability of the document's 'uploadedByUserId' field.
-     */
-    function hasImmutableCreatorId() {
-      return request.resource.data.uploadedByUserId == resource.data.uploadedByUserId;
-    }
-
-    /**
-     * Validates that the resource being created has a 'userId' matching the creator.
-     */
-    function hasValidOwnerIdOnCreate() {
-      return request.resource.data.userId == request.auth.uid;
-    }
-
-    /**
-     * Enforces immutability of a resource's 'userId' field during an update.
-     */
-    function hasImmutableOwnerId() {
-      return request.resource.data.userId == resource.data.userId;
+    // Check if the user is the governor of a specific region
+    function isRegionGovernor(regionId) {
+        let region = get(/databases/$(database)/documents/regions/$(regionId)).data;
+        return isSignedIn() && request.auth.uid == region.governorId;
     }
 
     // ----------------------------------------------------------------------
     // Collection Rules
     // ----------------------------------------------------------------------
 
-    /**
-     * @description Users can read their own profile. Admins and Leaders can list all profiles.
-     * @path /userProfiles/{userProfileId}
-     * @allow (get) Any signed-in user can read any profile.
-     * @allow (list) Any signed-in user can list profiles for the directory.
-     * @allow (create) An admin can create a new user profile.
-     * @allow (update) A user can update their own profile, or an admin can update any profile.
-     * @allow (delete) An admin can delete any user profile.
-     */
-    match /userProfiles/{userProfileId} {
-      allow read: if true;
-      allow create: if isAdmin();
-      allow update: if isOwner(userProfileId) || isAdmin();
-      allow delete: if isAdmin();
-
-      /**
-       * @description Users can manage their own tasks within their profile.
-       * @path /userProfiles/{userProfileId}/tasks/{taskId}
-       * @principle Secures a user-owned subcollection, allowing safe list and get operations.
-       */
-      match /tasks/{taskId} {
-        allow read, write: if isOwner(userProfileId);
-      }
-
-      /**
-       * @description Users can manage their own notifications within their profile.
-       * @path /userProfiles/{userProfileId}/notifications/{notificationId}
-       * @principle Secures a user-owned subcollection for private data.
-       */
-      match /notifications/{notificationId} {
-        allow read, write: if isOwner(userProfileId);
-      }
+    match /users/{userId} {
+      // A user can read their own profile.
+      // An Admin can read any profile.
+      // A club officer can read profiles of members in their own club.
+      // A regional governor can read profiles of members in their own region.
+      allow read: if isSignedIn() && (
+                    isOwner(userId) ||
+                    isAdmin() ||
+                    isClubOfficer(resource.data.clubId) ||
+                    isRegionGovernor(resource.data.regionId)
+                  );
+                  
+      // A user can update their own profile (limited fields). Admins can update any profile.
+      allow update: if (isOwner(userId) && request.resource.data.keys().hasOnly(['firstName', 'lastName', 'contactInfo', 'avatarUrl', 'idPhotoUrl'])) ||
+                     isAdmin();
+                     
+      // Only Admins can create or delete users.
+      allow create, delete: if isAdmin();
+    }
+    
+    match /regions/{regionId} {
+      // All signed-in users can read region data.
+      allow read: if isSignedIn();
+      // Only Admins can create, update, or delete regions.
+      allow write: if isAdmin();
+    }
+    
+    match /clubs/{clubId} {
+       // Members of the region can read club data.
+       // Admins can read any club.
+      allow read: if isSignedIn() && (
+                    getUserProfile(request.auth.uid).regionId == resource.data.regionId ||
+                    isAdmin()
+                  );
+      // Only Regional Governors and Admins can create or update clubs.
+      allow write: if isSignedIn() && (isRegionGovernor(resource.data.regionId) || isAdmin());
     }
 
-    /**
-     * @description Roles are public, read-only data for all signed-in users.
-     * @path /roles/{roleId}
-     * @principle Secures lookup data by making it read-only for clients.
-     */
-    match /roles/{roleId} {
-      allow read: if true;
+    match /transactions/{transactionId} {
+      // Users can read their own transactions.
+      allow get: if isSignedIn() && isOwner(resource.data.userId);
+      // Only Admins can list all transactions.
+      allow list: if isAdmin();
+      // No client-side writes. All transactions must be created by the backend.
       allow write: if false;
     }
 
-    /**
-     * @description Documents are public to read, but only the original uploader can modify or delete them.
-     * @path /documents/{documentId}
-     * @principle Implements "Public Read with Owner-Only Writes" pattern.
-     */
+    match /governance/{ruleId} {
+        // All clients can read the governance rules.
+        allow read: if true;
+        // Nobody can write to governance rules from the client.
+        allow write: if false;
+    }
+
+    // Default deny for other collections to ensure security
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    // Re-apply rules for existing collections that need to be accessible
     match /documents/{documentId} {
-      allow read: if true;
-      allow create: if isSignedIn() && hasValidCreatorIdOnCreate();
-      allow update: if isExistingOwner(resource.data.uploadedByUserId) && hasImmutableCreatorId();
-      allow delete: if isExistingOwner(resource.data.uploadedByUserId);
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.uploadedByUserId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.uploadedByUserId == request.auth.uid;
     }
-
-    /**
-     * @description Categories are public, read-only data for all signed-in users.
-     * @path /categories/{categoryId}
-     * @principle Secures lookup data by making it read-only for clients.
-     */
-    match /categories/{categoryId} {
-      allow read: if true;
-      allow write: if false;
-    }
-
-    /**
-     * @description Events are public to read, but only admins can create, update or delete them.
-     * @path /events/{eventId}
-     * @principle Secures public data by making it admin-only for writes.
-     */
+    
     match /events/{eventId} {
-      allow read: if true;
-      allow create: if isAdmin();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+        allow read: if isSignedIn();
+        allow write: if hasRole('Secretary') || hasRole('President') || isAdmin();
     }
-    
-    /**
-     * @description Partnerships are public to read, but only admins can manage them.
-     * @path /partnerships/{partnershipId}
-     * @principle Secures public data by making it admin-only for writes.
-     */
+
     match /partnerships/{partnershipId} {
-      allow read: if true;
-      allow create: if isAdmin();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+        allow read: if isSignedIn();
+        allow write: if isAdmin();
     }
-    
-    /**
-     * @description Endorsement letters are admin-only.
-     * @path /endorsements/{endorsementId}
-     * @principle Restricts access to sensitive generated documents.
-     */
+
     match /endorsements/{endorsementId} {
         allow read, write: if isAdmin();
     }
-
-
-    /**
-     * @description Users can manage their own attendance records. Admins can list all for analytics.
-     * @path /attendance/{attendanceId}
-     * @principle Enforces document ownership for writes and reads. Listing is restricted to admins.
-     */
-    match /attendance/{attendanceId} {
-      allow get: if isOwner(resource.data.userId);
-      allow list: if isLeaderOrAdmin(); // Allow admin and leaders to list for analytics
-      allow create: if isSignedIn() && hasValidOwnerIdOnCreate();
-      allow update: if isExistingOwner(resource.data.userId) && hasImmutableOwnerId();
-      allow delete: if isExistingOwner(resource.data.userId);
-    }
-
-    /**
-     * @description Users can only access their own payment receipts. Listing is denied for privacy.
-     * @path /receipts/{receiptId}
-     * @principle Enforces document ownership for reads and writes. Listing is denied to prevent data leakage.
-     */
-    match /receipts/{receiptId} {
-      allow get: if isOwner(resource.data.userId);
-      allow list: if false; // Denied to prevent leaking all users' receipt data.
-      allow create: if isSignedIn() && hasValidOwnerIdOnCreate();
-      allow update: if isExistingOwner(resource.data.userId) && hasImmutableOwnerId();
-      allow delete: if isExistingOwner(resource.data.userId);
-    }
     
-    /**
-     * @description AI-generated summaries are public, read-only data for all signed-in users.
-     * @path /automatedSummaries/{automatedSummaryId}
-     * @principle Secures machine-generated data by making it read-only for clients.
-     */
-    match /automatedSummaries/{automatedSummaryId} {
-      allow read: if true;
-      allow write: if false;
-    }
-
-    /**
-     * @description Rules for real-time messaging.
-     * @path /conversations/{conversationId}
-     * @principle Participants can read/write to conversations they are part of.
-     */
     match /conversations/{conversationId} {
-      // A user can read a conversation document if their UID is in the `participants` array.
-      // This rule works for both `get` and `list` queries, as long as the list query
-      // is constrained with `where('participants', 'array-contains', request.auth.uid)`.
-      allow read: if isSignedIn() && request.auth.uid in resource.data.participants;
+      allow read, write: if isSignedIn() && request.auth.uid in resource.data.participants;
       
-      // A user can create a conversation if their UID is in the participants list of the new document.
-      allow create: if isSignedIn() && request.auth.uid in request.resource.data.participants;
-      
-      // A user can update or delete a conversation (e.g., the lastMessage field) if they are a participant.
-      allow update, delete: if isSignedIn() && request.auth.uid in resource.data.participants;
-      
-      /**
-       * @description Rules for messages within a conversation.
-       * @path /conversations/{conversationId}/messages/{messageId}
-       * @principle Inherits parent rule; only conversation participants can read/write messages.
-       */
       match /messages/{messageId} {
-        // A user can read messages if they are part of the parent conversation.
-        // This rule uses `get()` to check the parent document's `participants` array.
-        allow read: if isSignedIn() && get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants.hasAny([request.auth.uid]);
-
-        // A user can create a message if they are part of the conversation and are the sender.
-        allow create: if isSignedIn() && get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants.hasAny([request.auth.uid])
-                       && request.resource.data.senderId == request.auth.uid;
-
-        // No one can update or delete a message.
+        allow read, create: if isSignedIn() && get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants.hasAny([request.auth.uid]);
         allow update, delete: if false;
       }
     }

@@ -1,54 +1,75 @@
 
 import type { Timestamp } from "firebase/firestore";
 
-export type MembershipStatus = 'Active' | 'Inactive' | 'Suspended' | 'Deceased';
+export type MembershipStatus = 'APPLICANT' | 'INCUBATING' | 'INDOCTRINATING' | 'INDUCTED' | 'SUSPENDED' | 'EXPELLED';
+export type DuesStatus = 'Paid' | 'Pending' | 'Overdue';
+export type AppRole = 'Member' | 'Secretary' | 'President' | 'Governor' | 'Admin';
 export type PositionType = 'Elected' | 'Appointed' | 'Volunteer' | 'None';
-export type FiveIsStage = 'Interview' | 'Introduction' | 'Initiation' | 'Incubation' | 'Induction';
 
 export interface UserProfile {
-    // Core Fields
+    // Core Identity
     id: string; // Firebase Auth UID
-    eagleId?: string; // Unique Eagle ID
     email: string;
-    mobileNumber?: string;
     firstName: string;
     lastName: string;
 
-    // Org Structure
-    councilName?: string;
-    clubName?: string;
-    region?: string;
-    nationalPosition?: string;
-    roleId: string; // App Role: Member, ClubAdmin, CouncilAdmin, SuperAdmin
+    // Membership & Status
+    status: MembershipStatus;
+    roleId: AppRole;
+    points?: number;
+    dues_status?: DuesStatus;
+    magna_carta_version?: string;
 
-    // Government Role
-    governmentRole?: string;
-    governmentBranch?: string;
-    barangayName?: string;
-    municipalityCity?: string;
-    province?: string;
+    // Organizational Hierarchy
+    clubId: string;
+    regionId: string;
+
+    // Financial
+    damayan_wallet_balance?: number;
+
+    // Security & Identity
+    last_known_counter?: number; // For NTAG424 DNA card
+    idPhotoUrl?: string;
     
-    // Status & Timestamps
-    status?: MembershipStatus;
-    joinedDate?: Timestamp;
-    lastUpdatedAt?: Timestamp;
-
-    // Metadata
-    tags?: string[];
-    avatarUrl?: string; // from Cloud Storage
-    idPhotoUrl?: string; // from Cloud Storage
-
-    // Eagles-specific
-    eagleTitle?: 'Kuya' | 'Ate';
-    membershipType?: 'Regular' | 'Bunso/Aspirant' | 'Friend';
-    fiveIsStage?: FiveIsStage;
-
-    // Deprecated / To be refactored from old schema
-    membershipNumber?: string;
+    // Optional / Legacy Fields
     contactInfo?: string;
+    membershipNumber?: string;
     assignedGovernmentPosition?: string;
-    membershipStatus?: MembershipStatus;
+    governmentBranch?: string;
+    membershipStatus?: 'Active' | 'Inactive' | 'Leadership';
     positionType?: PositionType;
+    avatarUrl?: string;
+}
+
+export interface Region {
+    id: string;
+    name: string;
+    governorId: string;
+}
+
+export interface Club {
+    id: string;
+    name: string;
+    regionId: string;
+    presidentId: string;
+    secretaryId: string;
+    xendit_sub_account_id: string;
+}
+
+export interface Transaction {
+    id: string;
+    userId: string;
+    type: 'Dues' | 'Donation' | 'AlalayangAgilaDebit' | 'AlalayangAgilaPayout';
+    amount: number;
+    timestamp: Timestamp;
+    xendit_invoice_id?: string;
+    related_entity_id?: string;
+}
+
+export interface Governance {
+    id: string;
+    min_points_for_induction: number;
+    alalayang_agila_levy_amount: number;
 }
 
 export interface Task {
@@ -73,7 +94,7 @@ export interface Document {
     uploadDate: Timestamp;
     version: number;
     uploadedByUserId: string;
-    content?: string; // For summarization demo
+    content?: string;
 }
 
 export interface Attendance {

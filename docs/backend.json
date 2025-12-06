@@ -4,757 +4,144 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "Represents a user profile within the TFOE-PE application.",
+      "description": "Represents a user profile within the TFOE-PE application, aligned with the Digital Magna Carta.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the UserProfile entity."
-        },
-        "email": {
-          "type": "string",
-          "description": "User's email address.",
-          "format": "email"
-        },
-        "firstName": {
-          "type": "string",
-          "description": "User's first name."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "User's last name."
-        },
-        "membershipNumber": {
-          "type": "string",
-          "description": "User's membership number."
-        },
-        "idPhotoUrl": {
-          "type": "string",
-          "description": "URL to the user's ID photo.",
-          "format": "uri"
-        },
-        "contactInfo": {
-          "type": "string",
-          "description": "User's contact information (e.g., phone number)."
-        },
-        "roleId": {
-          "type": "string",
-          "description": "Reference to Role. (Relationship: Role 1:N UserProfile)"
-        },
-        "assignedGovernmentPosition": {
-          "type": "string",
-          "description": "The member's assigned position in government, if any."
-        },
-        "governmentBranch": {
-          "type": "string",
-          "description": "The government branch or agency the member is affiliated with (e.g., Barangay, City Hall)."
-        },
-        "membershipStatus": {
-          "type": "string",
-          "description": "The member's current status in the organization.",
-          "enum": ["Active", "Inactive", "Leadership"]
-        },
-        "positionType": {
-            "type": "string",
-            "description": "The type of government position held by the member.",
-            "enum": ["Elected", "Appointed", "Volunteer", "None"]
-        }
+        "id": { "type": "string", "description": "Firebase Auth UID. Primary key for the user." },
+        "status": { "type": "string", "description": "Current stage in the membership lifecycle.", "enum": ["APPLICANT", "INCUBATING", "INDOCTRINATING", "INDUCTED", "SUSPENDED", "EXPELLED"] },
+        "firstName": { "type": "string", "description": "User's first name." },
+        "lastName": { "type": "string", "description": "User's last name." },
+        "email": { "type": "string", "description": "User's email address.", "format": "email" },
+        "clubId": { "type": "string", "description": "The ID of the club the user belongs to." },
+        "regionId": { "type": "string", "description": "The ID of the region the user's club belongs to." },
+        "roleId": { "type": "string", "description": "The user's role within the application.", "enum": ["Member", "Secretary", "President", "Governor", "Admin"] },
+        "points": { "type": "number", "description": "Points accrued during the incubation period." },
+        "dues_status": { "type": "string", "description": "Current status of dues payment.", "enum": ["Paid", "Pending", "Overdue"] },
+        "damayan_wallet_balance": { "type": "number", "description": "Balance for the 'Alalayang Agila' mutual aid fund." },
+        "idPhotoUrl": { "type": "string", "description": "URL to the user's ID photo.", "format": "uri" },
+        "magna_carta_version": { "type": "string", "description": "Version of the Magna Carta the user has agreed to." },
+        "last_known_counter": { "type": "number", "description": "Last known counter from the NTAG424 DNA ID card for anti-replay attacks." },
+        "contactInfo": { "type": "string" },
+        "membershipNumber": { "type": "string" },
+        "assignedGovernmentPosition": { "type": "string" },
+        "governmentBranch": { "type": "string" },
+        "membershipStatus": { "type": "string", "enum": ["Active", "Inactive", "Leadership"] },
+        "positionType": { "type": "string", "enum": ["Elected", "Appointed", "Volunteer", "None"] }
       },
-      "required": [
-        "id",
-        "email",
-        "firstName",
-        "lastName",
-        "roleId"
-      ]
+      "required": ["id", "email", "firstName", "lastName", "clubId", "regionId", "roleId", "status"]
     },
-    "Role": {
+    "Region": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Role",
+      "title": "Region",
       "type": "object",
-      "description": "Represents a user role (e.g., Secretary, Member, Admin).",
+      "description": "Represents a geographical region in the TFOE-PE hierarchy.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Role entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the role (e.g., Secretary, Member, Admin)."
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the role and its permissions."
-        }
+        "id": { "type": "string", "description": "Unique identifier for the Region." },
+        "name": { "type": "string", "description": "Name of the region (e.g., 'National Capital Region')." },
+        "governorId": { "type": "string", "description": "The UID of the user who is the Regional Governor." }
       },
-      "required": [
-        "id",
-        "name"
-      ]
+      "required": ["id", "name"]
     },
-    "Document": {
+    "Club": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Document",
+      "title": "Club",
       "type": "object",
-      "description": "Represents a document uploaded to the system.",
+      "description": "Represents a local club within a region.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Document entity."
-        },
-        "title": {
-          "type": "string",
-          "description": "Title of the document."
-        },
-        "fileUrl": {
-          "type": "string",
-          "description": "URL to the document file.",
-          "format": "uri"
-        },
-        "categoryId": {
-          "type": "string",
-          "description": "Reference to Category. (Relationship: Category 1:N Document)"
-        },
-        "uploadDate": {
-          "type": "string",
-          "description": "Date and time when the document was uploaded.",
-          "format": "date-time"
-        },
-        "version": {
-          "type": "number",
-          "description": "Version number of the document."
-        },
-        "uploadedByUserId": {
-          "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Document). The user who uploaded the document."
-        }
+        "id": { "type": "string", "description": "Unique identifier for the Club." },
+        "name": { "type": "string", "description": "Name of the club." },
+        "regionId": { "type": "string", "description": "The ID of the region this club belongs to." },
+        "presidentId": { "type": "string", "description": "The UID of the user who is the Club President." },
+        "secretaryId": { "type": "string", "description": "The UID of the user who is the Club Secretary." },
+        "xendit_sub_account_id": { "type": "string", "description": "The sub-account ID for this club in Xendit." }
       },
-      "required": [
-        "id",
-        "title",
-        "fileUrl",
-        "categoryId",
-        "uploadDate",
-        "version",
-        "uploadedByUserId"
-      ]
+      "required": ["id", "name", "regionId"]
     },
-    "Category": {
+    "Transaction": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Category",
+      "title": "Transaction",
       "type": "object",
-      "description": "Represents a document category (e.g., Forms, Resolutions, Financials).",
+      "description": "Represents an immutable financial record.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Category entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the category."
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the category."
-        }
+        "id": { "type": "string" },
+        "userId": { "type": "string", "description": "The user involved in the transaction." },
+        "type": { "type": "string", "enum": ["Dues", "Donation", "AlalayangAgilaDebit", "AlalayangAgilaPayout"] },
+        "amount": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "xendit_invoice_id": { "type": "string" },
+        "related_entity_id": { "type": "string", "description": "ID of related entity (e.g., deceased member for Alalayang Agila)." }
       },
-      "required": [
-        "id",
-        "name"
-      ]
+      "required": ["id", "userId", "type", "amount", "timestamp"]
     },
-    "Event": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Event",
-      "type": "object",
-      "description": "Represents an event or program.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Event entity."
+    "Governance": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Governance",
+        "type": "object",
+        "description": "Stores global configuration rules based on the Magna Carta.",
+        "properties": {
+          "id": { "type": "string" },
+          "min_points_for_induction": { "type": "number", "default": 11000 },
+          "alalayang_agila_levy_amount": { "type": "number", "default": 50 }
         },
-        "title": {
-          "type": "string",
-          "description": "Title of the event."
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the event."
-        },
-        "startDate": {
-          "type": "string",
-          "description": "Start date and time of the event.",
-          "format": "date-time"
-        },
-        "endDate": {
-          "type": "string",
-          "description": "End date and time of the event.",
-          "format": "date-time"
-        },
-        "location": {
-          "type": "string",
-          "description": "Location of the event."
-        },
-        "meetingId": {
-            "type": "string",
-            "description": "The meeting ID for virtual events (e.g., Zoom)."
-        },
-        "passcode": {
-            "type": "string",
-            "description": "The passcode for virtual events."
-        }
-      },
-      "required": [
-        "id",
-        "title",
-        "description",
-        "startDate",
-        "endDate",
-        "location"
-      ]
+        "required": ["id"]
     },
-    "Attendance": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Attendance",
-      "type": "object",
-      "description": "Represents the attendance of a user at an event.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Attendance entity."
-        },
-        "eventId": {
-          "type": "string",
-          "description": "Reference to Event. (Relationship: Event 1:N Attendance)"
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Attendance)"
-        },
-        "attended": {
-          "type": "boolean",
-          "description": "Indicates whether the user attended the event."
-        }
-      },
-      "required": [
-        "id",
-        "eventId",
-        "userId",
-        "attended"
-      ]
-    },
-    "Receipt": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Receipt",
-      "type": "object",
-      "description": "Represents a receipt generated for a payment.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Receipt entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Receipt). The user who made the payment."
-        },
-        "paymentDate": {
-          "type": "string",
-          "description": "Date and time of the payment.",
-          "format": "date-time"
-        },
-        "amount": {
-          "type": "number",
-          "description": "Amount paid."
-        },
-        "paymentMethod": {
-          "type": "string",
-          "description": "Payment method used (e.g., GCash, bank transfer, cash)."
-        }
-      },
-      "required": [
-        "id",
-        "userId",
-        "paymentDate",
-        "amount",
-        "paymentMethod"
-      ]
-    },
-    "Notification": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Notification",
-      "type": "object",
-      "description": "Represents a notification sent to a user.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Notification entity."
-        },
-        "message": {
-          "type": "string",
-          "description": "Message of the notification."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "Timestamp of when the notification was created",
-          "format": "date-time"
-        },
-        "read": {
-          "type": "boolean",
-          "description": "Has the notification been read?"
-        }
-      },
-      "required": [
-        "id",
-        "message",
-        "timestamp",
-        "read"
-      ]
-    },
-    "AutomatedSummary": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "AutomatedSummary",
-      "type": "object",
-      "description": "Represents a summary generated by the AI-powered summarization tool.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the AutomatedSummary entity."
-        },
-        "documentId": {
-          "type": "string",
-          "description": "Reference to Document. (Relationship: Document 1:N AutomatedSummary). The document that was summarized."
-        },
-        "summaryText": {
-          "type": "string",
-          "description": "The summarized text."
-        },
-        "parameters": {
-          "type": "string",
-          "description": "Parameters used for summarization (e.g., length, focus areas)."
-        },
-        "generatedDate": {
-          "type": "string",
-          "description": "Date and time when the summary was generated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "documentId",
-        "summaryText",
-        "parameters",
-        "generatedDate"
-      ]
-    },
-    "Task": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Task",
-      "type": "object",
-      "description": "Represents a to-do item for a user.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Task entity."
-        },
-        "title": {
-          "type": "string",
-          "description": "The main description of the task."
-        },
-        "completed": {
-          "type": "boolean",
-          "description": "Indicates whether the task has been completed."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "The date and time when the task was created.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "title",
-        "completed",
-        "createdAt"
-      ]
-    },
-    "Partnership": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Partnership",
-      "type": "object",
-      "description": "Represents a partnership with a corporation or private entity.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Partnership entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the partner organization."
-        },
-        "contactPerson": {
-          "type": "string",
-          "description": "Primary contact person at the partner organization."
-        },
-        "email": {
-          "type": "string",
-          "description": "Contact email for the partner.",
-          "format": "email"
-        },
-        "phone": {
-          "type": "string",
-          "description": "Contact phone number for the partner."
-        },
-        "address": {
-          "type": "string",
-          "description": "Physical address of the partner."
-        },
-        "partnershipType": {
-          "type": "string",
-          "description": "Type of partnership.",
-          "enum": ["Corporate", "NGO", "Private"]
-        },
-        "status": {
-          "type": "string",
-          "description": "Current status of the partnership.",
-          "enum": ["Active", "Inactive"]
-        }
-      },
-      "required": ["id", "name", "contactPerson", "email", "partnershipType", "status"]
-    },
-    "Endorsement": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Endorsement",
-      "type": "object",
-      "description": "Represents an endorsement letter generated for a partner.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Endorsement entity."
-        },
-        "partnershipId": {
-          "type": "string",
-          "description": "Reference to Partnership. The partner being endorsed."
-        },
-        "subject": {
-          "type": "string",
-          "description": "The subject line of the endorsement letter."
-        },
-        "body": {
-          "type": "string",
-          "description": "The full text content of the endorsement letter."
-        },
-        "generatedDate": {
-          "type": "string",
-          "description": "Date and time when the letter was generated.",
-          "format": "date-time"
-        },
-        "generatedByUserId": {
-          "type": "string",
-          "description": "Reference to UserProfile. The user who generated the letter."
-        }
-      },
-      "required": ["id", "partnershipId", "subject", "body", "generatedDate", "generatedByUserId"]
-    },
-    "Conversation": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Conversation",
-      "type": "object",
-      "description": "Represents a chat conversation between two or more users.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Conversation entity."
-        },
-        "participants": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "An array of UserProfile IDs for all participants in the conversation."
-        },
-        "participantDetails": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "userId": { "type": "string" },
-              "name": { "type": "string" },
-              "photoUrl": { "type": "string", "format": "uri" }
-            },
-            "required": ["userId", "name"]
-          },
-          "description": "Denormalized participant data for easy display in conversation lists."
-        },
-        "lastMessage": {
-          "type": "object",
-          "properties": {
-            "text": { "type": "string" },
-            "timestamp": { "type": "string", "format": "date-time" },
-            "senderId": { "type": "string" }
-          },
-          "description": "The most recent message sent in the conversation."
-        }
-      },
-      "required": ["id", "participants", "participantDetails"]
-    },
-    "Message": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Message",
-      "type": "object",
-      "description": "Represents a single message within a conversation.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Message entity."
-        },
-        "senderId": {
-          "type": "string",
-          "description": "The UserProfile ID of the user who sent the message."
-        },
-        "text": {
-          "type": "string",
-          "description": "The text content of the message."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "The date and time when the message was sent.",
-          "format": "date-time"
-        }
-      },
-      "required": ["id", "senderId", "text", "timestamp"]
-    }
+    "Event": { "$ref": "#/entities/Event" },
+    "Document": { "$ref": "#/entities/Document" },
+    "Partnership": { "$ref": "#/entities/Partnership" },
+    "Endorsement": { "$ref": "#/entities/Endorsement" },
+    "Conversation": { "$ref": "#/entities/Conversation" },
+    "Message": { "$ref": "#/entities/Message" },
+    "Task": { "$ref": "#/entities/Task" },
+    "Notification": { "$ref": "#/entities/Notification" }
   },
-  "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
-  },
+  "auth": { "providers": ["password", "anonymous"] },
   "firestore": {
     "structure": [
       {
-        "path": "userProfiles/{userProfileId}",
+        "path": "users/{userId}",
         "definition": {
           "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores user profile data. Document ID is equal to the user's Firebase Auth UID, for easy association. Includes denormalized roleId.",
-          "params": [
-            {
-              "name": "userProfileId",
-              "description": "The Firebase Auth UID of the user."
-            }
-          ]
+          "schema": { "$ref": "#/entities/UserProfile" },
+          "description": "Stores core user profile data. Document ID is the Firebase Auth UID."
         }
       },
       {
-        "path": "userProfiles/{userProfileId}/tasks/{taskId}",
+        "path": "regions/{regionId}",
         "definition": {
-          "entityName": "Task",
-          "schema": {
-            "$ref": "#/backend/entities/Task"
-          },
-          "description": "Stores individual to-do items for a user. Stored as a subcollection for secure querying.",
-          "params": [
-            {
-              "name": "userProfileId",
-              "description": "The UID of the user who owns the task."
-            },
-            {
-              "name": "taskId",
-              "description": "Unique identifier for the task."
-            }
-          ]
+          "entityName": "Region",
+          "schema": { "$ref": "#/entities/Region" },
+          "description": "Stores regional data, including the governor's UID."
         }
       },
       {
-        "path": "userProfiles/{userProfileId}/notifications/{notificationId}",
+        "path": "clubs/{clubId}",
         "definition": {
-          "entityName": "Notification",
-          "schema": {
-            "$ref": "#/backend/entities/Notification"
-          },
-          "description": "Stores notifications for a specific user as a subcollection.",
-          "params": [
-            {
-              "name": "userProfileId",
-              "description": "The UID of the user who owns the notification."
-            },
-            {
-              "name": "notificationId",
-              "description": "Unique identifier for the notification."
-            }
-          ]
+          "entityName": "Club",
+          "schema": { "$ref": "#/entities/Club" },
+          "description": "Stores club-specific data, including officer UIDs and payment account IDs."
         }
       },
       {
-        "path": "roles/{roleId}",
+        "path": "transactions/{transactionId}",
         "definition": {
-          "entityName": "Role",
-          "schema": {
-            "$ref": "#/backend/entities/Role"
-          },
-          "description": "Stores role definitions.",
-          "params": [
-            {
-              "name": "roleId",
-              "description": "Unique identifier for the role."
-            }
-          ]
+          "entityName": "Transaction",
+          "schema": { "$ref": "#/entities/Transaction" },
+          "description": "Append-only ledger of all financial transactions. Writable only by backend functions."
         }
       },
       {
-        "path": "documents/{documentId}",
+        "path": "governance/{ruleId}",
         "definition": {
-          "entityName": "Document",
-          "schema": {
-            "$ref": "#/backend/entities/Document"
-          },
-          "description": "Stores document metadata. Includes denormalized 'uploadedByUserId' for authorization independence.",
-          "params": [
-            {
-              "name": "documentId",
-              "description": "Unique identifier for the document."
-            }
-          ]
+            "entityName": "Governance",
+            "schema": { "$ref": "#/entities/Governance" },
+            "description": "Configuration document for Magna Carta rules. Read-only for clients."
         }
       },
-      {
-        "path": "categories/{categoryId}",
-        "definition": {
-          "entityName": "Category",
-          "schema": {
-            "$ref": "#/backend/entities/Category"
-          },
-          "description": "Stores document categories.",
-          "params": [
-            {
-              "name": "categoryId",
-              "description": "Unique identifier for the category."
-            }
-          ]
-        }
-      },
-      {
-        "path": "events/{eventId}",
-        "definition": {
-          "entityName": "Event",
-          "schema": {
-            "$ref": "#/backend/entities/Event"
-          },
-          "description": "Stores event information.",
-          "params": [
-            {
-              "name": "eventId",
-              "description": "Unique identifier for the event."
-            }
-          ]
-        }
-      },
-      {
-        "path": "attendance/{attendanceId}",
-        "definition": {
-          "entityName": "Attendance",
-          "schema": {
-            "$ref": "#/backend/entities/Attendance"
-          },
-          "description": "Stores attendance records for events.",
-          "params": [
-            {
-              "name": "attendanceId",
-              "description": "Unique identifier for the attendance record."
-            }
-          ]
-        }
-      },
-      {
-        "path": "receipts/{receiptId}",
-        "definition": {
-          "entityName": "Receipt",
-          "schema": {
-            "$ref": "#/backend/entities/Receipt"
-          },
-          "description": "Stores payment receipt information.",
-          "params": [
-            {
-              "name": "receiptId",
-              "description": "Unique identifier for the receipt."
-            }
-          ]
-        }
-      },
-      {
-        "path": "automatedSummaries/{automatedSummaryId}",
-        "definition": {
-          "entityName": "AutomatedSummary",
-          "schema": {
-            "$ref": "#/backend/entities/AutomatedSummary"
-          },
-          "description": "Stores summaries generated by the AI-powered summarization tool.",
-          "params": [
-            {
-              "name": "automatedSummaryId",
-              "description": "Unique identifier for the automated summary."
-            }
-          ]
-        }
-      },
-      {
-        "path": "partnerships/{partnershipId}",
-        "definition": {
-          "entityName": "Partnership",
-          "schema": {
-            "$ref": "#/backend/entities/Partnership"
-          },
-          "description": "Stores information about corporate and private partners.",
-          "params": [
-            {
-              "name": "partnershipId",
-              "description": "Unique identifier for the partnership."
-            }
-          ]
-        }
-      },
-      {
-        "path": "endorsements/{endorsementId}",
-        "definition": {
-          "entityName": "Endorsement",
-          "schema": {
-            "$ref": "#/backend/entities/Endorsement"
-          },
-          "description": "Stores generated endorsement letters for partners.",
-          "params": [
-            {
-              "name": "endorsementId",
-              "description": "Unique identifier for the endorsement letter."
-            }
-          ]
-        }
-      },
-       {
-        "path": "conversations/{conversationId}",
-        "definition": {
-          "entityName": "Conversation",
-          "schema": { "$ref": "#/backend/entities/Conversation" },
-          "description": "Stores metadata about a chat conversation, including participants.",
-          "params": [
-            { "name": "conversationId", "description": "Unique identifier for the conversation." }
-          ]
-        }
-      },
-      {
-        "path": "conversations/{conversationId}/messages/{messageId}",
-        "definition": {
-          "entityName": "Message",
-          "schema": { "$ref": "#/backend/entities/Message" },
-          "description": "Stores the individual messages for a specific conversation.",
-          "params": [
-            { "name": "conversationId", "description": "The ID of the parent conversation." },
-            { "name": "messageId", "description": "Unique identifier for the message." }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The Firestore data structure is designed to adhere to the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. It leverages denormalization and structural segregation to optimize security rule implementation and data access patterns.  \n\n*   **User Profiles:** User profiles are stored in a collection named `userProfiles` with the document ID matching the user's Firebase Auth UID. This enables path-based ownership for user-specific data, simplifying security rules.\n*   **Tasks & Notifications:** Tasks and Notifications are stored in subcollections under each `userProfiles` document. This allows for secure, scalable querying of a user's own data without exposing it to others, following best practices for user-private data.\n*   **Roles:** Roles are stored in a `roles` collection, enabling easy management of roles within the application. User profiles store a `roleId` to reference the user's role.\n*   **Documents:** Documents are stored in a `documents` collection. The `uploadedByUserId` field in each document denormalizes ownership, enabling secure listing and filtering of documents based on the uploader.\n*   **Categories:** Categories are stored in a `categories` collection, providing a simple lookup for document categorization.\n*   **Events:** Events are stored in an `events` collection, allowing for easy retrieval and display of event information.\n*   **Attendance:** Attendance records are stored in an `attendance` collection. Each document records the user (`userId`) and event (`eventId`).\n*   **Receipts:** Receipts are stored in a `receipts` collection and are associated with a `userId` to identify the user who made the payment.\n*   **Automated Summaries:** Automated Summaries are stored in the `automatedSummaries` collection, with a `documentId` pointing to the source document.\n*   **Partnerships & Endorsements**: New collections for `partnerships` and `endorsements` are added at the root level. This allows for clear, admin-gated access to manage external partnerships and related documents, separating them from user-specific or public content.\n\n**Authorization Independence (Denormalization):**\nThe structure avoids `get()` calls in security rules by denormalizing authorization context. The `documents` collection contains the `uploadedByUserId` field, eliminating the need to fetch the user profile to determine ownership. Other entities like `attendance` and `receipts` are stored in root collections with associated `userId` or `eventId` fields, allowing direct rule application without requiring parent document reads.  This approach ensures that operations remain atomic and security rules are straightforward.\n\n**QAPs (Rules are not Filters):**\nThe structure enables secure `list` operations by segregating data based on ownership and purpose. Private user data (e.g., notifications, receipts) are now stored in user-specific subcollections, ensuring that only the owner can query them. Documents are secured by the `uploadedByUserId` field, allowing filtering of documents that the user has uploaded. The structure supports different security postures by utilizing different collections for data with varying security needs (e.g., public events vs. private user receipts).\n\nBy adhering to these principles and strategies, the Firestore structure provides a secure, scalable, and debuggable solution for the application's data storage needs."
+      { "path": "documents/{documentId}", "definition": { "entityName": "Document", "schema": { "$ref": "#/entities/Document" } } },
+      { "path": "events/{eventId}", "definition": { "entityName": "Event", "schema": { "$ref": "#/entities/Event" } } },
+      { "path": "partnerships/{partnershipId}", "definition": { "entityName": "Partnership", "schema": { "$ref": "#/entities/Partnership" } } },
+      { "path": "endorsements/{endorsementId}", "definition": { "entityName": "Endorsement", "schema": { "$ref": "#/entities/Endorsement" } } },
+      { "path": "conversations/{conversationId}", "definition": { "entityName": "Conversation", "schema": { "$ref": "#/entities/Conversation" } } },
+      { "path": "conversations/{conversationId}/messages/{messageId}", "definition": { "entityName": "Message", "schema": { "$ref": "#/entities/Message" } } }
+    ]
   }
 }
-
-    
