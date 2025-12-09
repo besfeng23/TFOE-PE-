@@ -50,12 +50,8 @@ service cloud.firestore {
       // An Admin can read any profile.
       // A club officer can read profiles of members in their own club.
       // A regional governor can read profiles of members in their own region.
-      allow read: if isSignedIn() && (
-                    isOwner(userId) ||
-                    isAdmin() ||
-                    isClubOfficer(resource.data.clubId) ||
-                    isRegionGovernor(resource.data.regionId)
-                  );
+      // Allow public reads for development
+      allow read: if true;
                   
       // A user can update their own profile (limited fields). Admins can update any profile.
       allow update: if (isOwner(userId) && request.resource.data.keys().hasOnly(['firstName', 'lastName', 'contactInfo', 'avatarUrl', 'idPhotoUrl'])) ||
@@ -98,26 +94,21 @@ service cloud.firestore {
         // Nobody can write to governance rules from the client.
         allow write: if false;
     }
-
-    // Default deny for other collections to ensure security
-    match /{document=**} {
-      allow read, write: if false;
-    }
     
     // Re-apply rules for existing collections that need to be accessible
     match /documents/{documentId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow create: if isSignedIn() && request.resource.data.uploadedByUserId == request.auth.uid;
       allow update, delete: if isSignedIn() && resource.data.uploadedByUserId == request.auth.uid;
     }
     
     match /events/{eventId} {
-        allow read: if isSignedIn();
+        allow read: if true;
         allow write: if hasRole('Secretary') || hasRole('President') || isAdmin();
     }
 
     match /partnerships/{partnershipId} {
-        allow read: if isSignedIn();
+        allow read: if true;
         allow write: if isAdmin();
     }
 
