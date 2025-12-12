@@ -50,8 +50,8 @@ service cloud.firestore {
       // An Admin can read any profile.
       // A club officer can read profiles of members in their own club.
       // A regional governor can read profiles of members in their own region.
-      // Allow public reads for development
-      allow read: if true;
+      // Allow public reads and lists for development
+      allow read, list: if true;
                   
       // A user can update their own profile (limited fields). Admins can update any profile.
       allow update: if (isOwner(userId) && request.resource.data.keys().hasOnly(['firstName', 'lastName', 'contactInfo', 'avatarUrl', 'idPhotoUrl'])) ||
