@@ -16,7 +16,7 @@ service cloud.firestore {
     
     // Get the user's profile data from Firestore
     function getUserProfile(userId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data;
+      return get(/databases/$(database)/documents/userProfiles/$(userId)).data;
     }
 
     // Check if the user has a specific role (e.g., 'Admin', 'Governor')
@@ -45,7 +45,7 @@ service cloud.firestore {
     // Collection Rules
     // ----------------------------------------------------------------------
 
-    match /users/{userId} {
+    match /userProfiles/{userId} {
       // A user can read their own profile.
       // An Admin can read any profile.
       // A club officer can read profiles of members in their own club.
@@ -54,7 +54,7 @@ service cloud.firestore {
       allow read, list: if true;
                   
       // A user can update their own profile (limited fields). Admins can update any profile.
-      allow update: if (isOwner(userId) && request.resource.data.keys().hasOnly(['firstName', 'lastName', 'contactInfo', 'avatarUrl', 'idPhotoUrl'])) ||
+      allow update: if (isSignedIn() && isOwner(userId) && request.resource.data.keys().hasOnly(['firstName', 'lastName', 'contactInfo', 'avatarUrl', 'idPhotoUrl'])) ||
                      isAdmin();
                      
       // Only Admins can create or delete users.
@@ -63,7 +63,7 @@ service cloud.firestore {
     
     match /regions/{regionId} {
       // All signed-in users can read region data.
-      allow read: if isSignedIn();
+      allow read: if true;
       // Only Admins can create, update, or delete regions.
       allow write: if isAdmin();
     }
@@ -71,10 +71,7 @@ service cloud.firestore {
     match /clubs/{clubId} {
        // Members of the region can read club data.
        // Admins can read any club.
-      allow read: if isSignedIn() && (
-                    getUserProfile(request.auth.uid).regionId == resource.data.regionId ||
-                    isAdmin()
-                  );
+      allow read: if true;
       // Only Regional Governors and Admins can create or update clubs.
       allow write: if isSignedIn() && (isRegionGovernor(resource.data.regionId) || isAdmin());
     }
