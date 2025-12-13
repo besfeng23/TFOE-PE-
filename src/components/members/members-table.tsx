@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useMemo, useState } from 'react';
@@ -13,84 +11,85 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal } from 'lucide-react';
-import { useFirestore, useAuthUser, deleteDocumentNonBlocking } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import type { UserProfile } from '@/lib/types';
+import { useCollection, useFirestore, useMemoFirebase, useAuthUser } from '@/firebase';
+import { collection, query, orderBy, where } from 'firebase/firestore';
+import type { Member } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
-import { MemberFormDialog } from './member-form-dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
-import { toast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 interface MembersTableProps {
   searchTerm: string;
-  profiles: UserProfile[] | null;
-  isLoading: boolean;
 }
 
-export default function MembersTable({ searchTerm, profiles, isLoading }: MembersTableProps) {
+export default function MembersTable({ searchTerm }: MembersTableProps) {
   const firestore = useFirestore();
-  const { profile: currentUserProfile } = useAuthUser();
-  const isAdmin = currentUserProfile?.roleId === 'Admin';
+  const { profile: currentUserProfile, isUserLoading } = useAuthUser();
+  const isAdmin = currentUserProfile?.roleId === 'SuperAdmin';
   
-  const [selectedMember, setSelectedMember] = useState<UserProfile | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
-  const filteredProfiles = useMemo(() => {
-    if (!profiles) return [];
-    if (!searchTerm) return profiles;
+  const membersQuery = useMemoFirebase(() => {
+    if (!firestore || !currentUserProfile) return null;
+    
+    let q = collection(firestore, 'members');
+    
+    // Scoping queries based on role
+    if (currentUserProfile.roleId === 'RegionAdmin' && currentUserProfile.regionId) {
+        return query(q, where('region', '==', currentUserProfile.regionId));
+    }
+    if (currentUserProfile.roleId === 'CouncilAdmin' && currentUserProfile.councilName) {
+        return query(q, where('councilName', '==', currentUserProfile.councilName));
+    }
+    if (currentUserProfile.roleId === 'ClubAdmin' && currentUserProfile.clubName) {
+        return query(q, where('clubName', '==', currentUserProfile.clubName));
+    }
+    if (currentUserProfile.roleId === 'Member') {
+        // Members see others in their club
+        return query(q, where('clubName', '==', currentUserProfile.clubName));
+    }
+
+    // SuperAdmin sees all
+    return query(q, orderBy('fullName', 'asc'));
+
+  }, [firestore, currentUserProfile]);
+
+  const { data: members, isLoading: membersLoading } = useCollection<Member>(membersQuery);
+  
+  const isLoading = isUserLoading || membersLoading;
+
+  const filteredMembers = useMemo(() => {
+    if (!members) return [];
+    if (!searchTerm) return members;
     
     const lowercasedTerm = searchTerm.toLowerCase();
 
-    return profiles.filter(profile => 
-        (profile.firstName && profile.firstName.toLowerCase().includes(lowercasedTerm)) ||
-        (profile.lastName && profile.lastName.toLowerCase().includes(lowercasedTerm)) ||
-        (profile.email && profile.email.toLowerCase().includes(lowercasedTerm)) ||
-        (profile.roleId && profile.roleId.toLowerCase().includes(lowercasedTerm))
+    return members.filter(member => 
+        (member.fullName && member.fullName.toLowerCase().includes(lowercasedTerm)) ||
+        (member.eagleId && member.eagleId.toLowerCase().includes(lowercasedTerm)) ||
+        (member.email && member.email.toLowerCase().includes(lowercasedTerm)) ||
+        (member.mobileNumber && member.mobileNumber.toLowerCase().includes(lowercasedTerm))
     );
 
-  }, [profiles, searchTerm])
+  }, [members, searchTerm])
 
-  const handleEdit = (member: UserProfile) => {
-    setSelectedMember(member);
-    setIsFormOpen(true);
-  }
-
-  const handleDelete = (member: UserProfile) => {
-    setSelectedMember(member);
-    setIsDeleteDialogOpen(true);
-  }
-  
-  const confirmDelete = () => {
-    if (!selectedMember || !firestore) return;
-
-    const memberRef = doc(firestore, 'userProfiles', selectedMember.id);
-    deleteDocumentNonBlocking(memberRef);
-
-    toast({
-        title: "Member Deleted",
-        description: `${selectedMember.firstName} ${selectedMember.lastName} has been removed.`,
-    });
-
-    setIsDeleteDialogOpen(false);
-    setSelectedMember(null);
-  }
-  
-  const closeForm = () => {
-    setIsFormOpen(false);
-    setSelectedMember(null);
-  }
 
   const getStatusBadgeVariant = (status?: string) => {
     switch (status) {
         case 'Active': return 'default';
-        case 'Leadership': return 'secondary';
-        case 'Inactive': return 'destructive';
+        case 'Inactive': return 'outline';
+        case 'Suspended': return 'destructive';
+        case 'Expelled': return 'destructive';
+        case 'Deceased': return 'secondary';
         default: return 'outline';
     }
+  }
+
+  const handleViewProfile = (memberId: string) => {
+    // In a real app, you would navigate to the member's profile page
+    console.log(`Navigating to /members/${memberId}`);
   }
 
 
@@ -101,15 +100,17 @@ export default function MembersTable({ searchTerm, profiles, isLoading }: Member
                 <TableHeader>
                     <TableRow>
                         <TableHead>Name</TableHead>
-                        <TableHead className="hidden sm:table-cell">Email</TableHead>
-                        <TableHead className="hidden md:table-cell">Status</TableHead>
-                        <TableHead className="hidden lg:table-cell">Role</TableHead>
-                        <TableHead className="hidden lg:table-cell">Affiliation</TableHead>
-                        {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+                        <TableHead>Org Placement</TableHead>
+                        <TableHead>Roles</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Joined</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {[...Array(5)].map((_, i) => (
+                    {[...Array(10)].map((_, i) => (
                         <TableRow key={i}>
                             <TableCell>
                                 <div className='flex items-center gap-3'>
@@ -120,13 +121,15 @@ export default function MembersTable({ searchTerm, profiles, isLoading }: Member
                                     </div>
                                 </div>
                             </TableCell>
-                            <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-40" /></TableCell>
-                            <TableCell className="hidden md:table-cell"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
-                            <TableCell className="hidden lg:table-cell"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
-                            <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-28" /></TableCell>
-                             {isAdmin && <TableCell className="text-right">
+                            <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                            <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                            <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                            <TableCell className="text-right">
                                 <Skeleton className="h-8 w-8 rounded-md ml-auto" />
-                            </TableCell>}
+                            </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
@@ -141,87 +144,90 @@ export default function MembersTable({ searchTerm, profiles, isLoading }: Member
             <Table>
             <TableHeader>
                 <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead className="hidden sm:table-cell">Email</TableHead>
-                <TableHead className="hidden md:table-cell">Status</TableHead>
-                <TableHead className="hidden lg:table-cell">Role</TableHead>
-                <TableHead className="hidden lg:table-cell">Affiliation</TableHead>
-                {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+                    <TableHead>Name</TableHead>
+                    <TableHead>Org Placement</TableHead>
+                    <TableHead>Roles</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Joined</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {filteredProfiles && filteredProfiles.map((profile) => (
-                <TableRow key={profile.id}>
-                    <TableCell className="font-medium">
+                {filteredMembers && filteredMembers.map((member) => (
+                <TableRow key={member.id}>
+                    <TableCell>
                         <div className="flex items-center gap-3">
                             <Avatar>
-                                <AvatarImage src={profile.idPhotoUrl} />
-                                <AvatarFallback>{profile.firstName?.charAt(0)}{profile.lastName?.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={member.avatarUrl} />
+                                <AvatarFallback>{member.fullName?.charAt(0)}</AvatarFallback>
                             </Avatar>
-                            <div className="flex flex-col">
-                                <span>{profile.firstName} {profile.lastName}</span>
-                                <span className="sm:hidden text-xs text-muted-foreground">{profile.email}</span>
+                            <div>
+                                <div className="font-medium">{member.fullName}</div>
+                                <div className="text-xs text-muted-foreground">ID: {member.eagleId}</div>
                             </div>
                         </div>
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                    {profile.email}
+                    <TableCell>
+                        <div className="truncate w-40" title={`${member.region} • ${member.councilName} • ${member.clubName}`}>
+                          {member.region} • {member.councilName} • {member.clubName}
+                        </div>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                        <Badge variant={getStatusBadgeVariant(profile.membershipStatus)}>{profile.membershipStatus || 'N/A'}</Badge>
+                     <TableCell>
+                        <div className="flex flex-col gap-1">
+                            <Badge variant="secondary" className="w-fit">{member.orgRole}</Badge>
+                            {member.governmentRole && <Badge variant="outline" className="w-fit">{member.governmentRole}</Badge>}
+                        </div>
                     </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                    <Badge variant={profile.roleId === 'Admin' ? 'destructive' : 'outline'}>{profile.roleId}</Badge>
+                     <TableCell>
+                        <div className="truncate w-48" title={`Brgy ${member.barangayName}, ${member.municipalityCity}, ${member.province}`}>
+                          Brgy {member.barangayName}, {member.municipalityCity}, {member.province}
+                        </div>
                     </TableCell>
-                     <TableCell className="hidden lg:table-cell">
-                        {profile.governmentBranch || 'N/A'}
+                    <TableCell>
+                        <Badge variant={getStatusBadgeVariant(member.status)}>{member.status}</Badge>
                     </TableCell>
-                    {isAdmin && (
-                        <TableCell className="text-right">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                    <span className="sr-only">Open menu</span>
-                                    <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                    <DropdownMenuItem onClick={() => handleEdit(profile)}>Edit Member</DropdownMenuItem>
+                    <TableCell>
+                      <div>{format(member.joinedDate.toDate(), 'yyyy-MM-dd')}</div>
+                      <div className="text-xs text-muted-foreground">{member.membershipType}</div>
+                    </TableCell>
+                     <TableCell>
+                        <div>{member.mobileNumber}</div>
+                        <div className="text-xs text-muted-foreground truncate w-32">{member.email}</div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => handleViewProfile(member.id)}>View Profile</DropdownMenuItem>
+                                {isAdmin && (
+                                  <>
+                                    <DropdownMenuItem>Edit Member</DropdownMenuItem>
+                                    <DropdownMenuItem>Change Status</DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem className='text-destructive focus:bg-destructive/10 focus:text-destructive' onClick={() => handleDelete(profile)}>Delete Member</DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </TableCell>
-                    )}
+                                    <DropdownMenuItem className='text-destructive focus:bg-destructive/10 focus:text-destructive'>Delete Member</DropdownMenuItem>
+                                  </>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </TableCell>
                 </TableRow>
                 ))}
             </TableBody>
             </Table>
-            {filteredProfiles && filteredProfiles.length === 0 && (
+            {filteredMembers && filteredMembers.length === 0 && (
                 <div className="text-center p-8 text-muted-foreground">
-                    {searchTerm ? `No members found for "${searchTerm}"` : "No members found."}
+                    {searchTerm ? `No members found for "${searchTerm}"` : "No members in your scope."}
                 </div>
             )}
         </div>
-
-        {isAdmin && <MemberFormDialog isOpen={isFormOpen} onClose={closeForm} member={selectedMember} />}
-        
-        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the member account
-                    and remove their data from our servers.
-                </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setSelectedMember(null)}>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
       </>
   );
 }

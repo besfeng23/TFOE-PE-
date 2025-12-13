@@ -13,7 +13,7 @@
         "email": { "type": "string", "description": "User's email address.", "format": "email" },
         "clubId": { "type": "string", "description": "The ID of the club the user belongs to." },
         "regionId": { "type": "string", "description": "The ID of the region the user's club belongs to." },
-        "roleId": { "type": "string", "description": "The user's role within the application.", "enum": ["Member", "Secretary", "President", "Governor", "Admin"] },
+        "roleId": { "type": "string", "description": "The user's role within the application.", "enum": ["SuperAdmin", "RegionAdmin", "CouncilAdmin", "ClubAdmin", "Member", "Guest"] },
         "points": { "type": "number", "description": "Points accrued during the incubation period." },
         "dues_status": { "type": "string", "description": "Current status of dues payment.", "enum": ["Paid", "Pending", "Overdue"] },
         "damayan_wallet_balance": { "type": "number", "description": "Balance for the 'Alalayang Agila' mutual aid fund." },
@@ -25,9 +25,41 @@
         "assignedGovernmentPosition": { "type": "string" },
         "governmentBranch": { "type": "string" },
         "membershipStatus": { "type": "string", "enum": ["Active", "Inactive", "Leadership"] },
-        "positionType": { "type": "string", "enum": ["Elected", "Appointed", "Volunteer", "None"] }
+        "positionType": { "type": "string", "enum": ["Elected", "Appointed", "Volunteer", "None"] },
+        "councilName": { "type": "string" },
+        "clubName": { "type": "string" }
       },
       "required": ["id", "email", "firstName", "lastName", "clubId", "regionId", "roleId", "status"]
+    },
+    "Member": {
+      "title": "Member",
+      "description": "Represents a member in the TFOE-PE directory.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "fullName": { "type": "string" },
+        "eagleId": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "mobileNumber": { "type": "string" },
+        "region": { "type": "string" },
+        "councilName": { "type": "string" },
+        "clubName": { "type": "string" },
+        "orgRole": { "type": "string" },
+        "governmentRole": { "type": "string" },
+        "governmentBranch": { "type": "string" },
+        "barangayName": { "type": "string" },
+        "municipalityCity": { "type": "string" },
+        "province": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Inactive", "Suspended", "Expelled", "Deceased"] },
+        "joinedDate": { "type": "string", "format": "date-time" },
+        "membershipType": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "fiveIsStage": { "type": "string" },
+        "avatarUrl": { "type": "string", "format": "uri" },
+        "lastUpdatedAt": { "type": "string", "format": "date-time" },
+        "searchKeywords": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["fullName", "eagleId", "email", "region", "clubName", "status"]
     },
     "Region": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -102,6 +134,14 @@
           "entityName": "UserProfile",
           "schema": { "$ref": "#/entities/UserProfile" },
           "description": "Stores core user profile data. Document ID is the Firebase Auth UID."
+        }
+      },
+      {
+        "path": "members/{memberId}",
+        "definition": {
+          "entityName": "Member",
+          "schema": { "$ref": "#/entities/Member" },
+          "description": "Stores detailed member directory data."
         }
       },
       {

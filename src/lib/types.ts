@@ -1,10 +1,10 @@
-
 import type { Timestamp } from "firebase/firestore";
 
 export type MembershipStatus = 'APPLICANT' | 'INCUBATING' | 'INDOCTRINATING' | 'INDUCTED' | 'SUSPENDED' | 'EXPELLED';
 export type DuesStatus = 'Paid' | 'Pending' | 'Overdue';
-export type AppRole = 'Member' | 'Secretary' | 'President' | 'Governor' | 'Admin';
+export type AppRole = 'SuperAdmin' | 'RegionAdmin' | 'CouncilAdmin' | 'ClubAdmin' | 'Member' | 'Guest';
 export type PositionType = 'Elected' | 'Appointed' | 'Volunteer' | 'None';
+export type MemberStatus = "Active" | "Inactive" | "Suspended" | "Expelled" | "Deceased";
 
 export interface UserProfile {
     // Core Identity
@@ -23,6 +23,8 @@ export interface UserProfile {
     // Organizational Hierarchy
     clubId: string;
     regionId: string;
+    councilName?: string;
+    clubName?: string;
 
     // Financial
     damayan_wallet_balance?: number;
@@ -39,6 +41,31 @@ export interface UserProfile {
     membershipStatus?: 'Active' | 'Inactive' | 'Leadership';
     positionType?: PositionType;
     avatarUrl?: string;
+}
+
+export interface Member {
+    id: string;
+    fullName: string;
+    eagleId: string;
+    email: string;
+    mobileNumber: string;
+    region: string;
+    councilName: string;
+    clubName: string;
+    orgRole: string;
+    governmentRole: string;
+    governmentBranch: string;
+    barangayName: string;
+    municipalityCity: string;
+    province: string;
+    status: MemberStatus;
+    joinedDate: Timestamp;
+    membershipType: string;
+    tags: string[];
+    fiveIsStage: string;
+    avatarUrl: string;
+    lastUpdatedAt: Timestamp;
+    searchKeywords: string[];
 }
 
 export interface Region {

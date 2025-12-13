@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -68,7 +67,7 @@ export function CommandMenu({ open, setOpen }: CommandMenuProps) {
           </CommandItem>
           <CommandItem onSelect={() => navigate('/members')}>
             <Users className="mr-2 h-4 w-4" />
-            <span>Members Directory</span>
+            <span>Members</span>
           </CommandItem>
            <CommandItem onSelect={() => navigate('/partnerships')}>
             <Handshake className="mr-2 h-4 w-4" />
