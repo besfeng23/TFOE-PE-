@@ -25,11 +25,11 @@ export function useAuthUser(options: { redirectTo?: string, redirectIfFound?: bo
     const hasProfile = !!profile || user?.isAnonymous;
 
     if (options.redirectIfFound && hasUser && hasProfile) {
-      router.push(options.redirectTo || '/');
+      // router.push(options.redirectTo || '/');
     }
 
     if (!options.redirectIfFound && (!hasUser || userError)) {
-        router.push(options.redirectTo || '/login');
+        // router.push(options.redirectTo || '/login');
     }
     
   }, [user, profile, isUserLoading, isProfileLoading, userError, router, options.redirectIfFound, options.redirectTo]);
