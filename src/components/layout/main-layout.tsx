@@ -12,31 +12,18 @@ import { Button } from '../ui/button';
 import { CommandMenu } from './command-menu';
 import { Search } from 'lucide-react';
 
-const unauthenticatedRoutes = ['/login', '/signup'];
-
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { isUserLoading } = useAuthUser();
   const [open, setOpen] = React.useState(false);
 
-  const isUnauthenticatedRoute = unauthenticatedRoutes.includes(pathname);
-
-  if (isUserLoading && !isUnauthenticatedRoute) {
+  if (isUserLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <Logo className="h-24 w-24 animate-pulse" />
           <p className="text-muted-foreground">Loading Portal...</p>
         </div>
-      </div>
-    );
-  }
-
-  if (isUnauthenticatedRoute) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-secondary p-4">
-        {children}
-        <AiChatbot />
       </div>
     );
   }
