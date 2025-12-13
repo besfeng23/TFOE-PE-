@@ -69,6 +69,10 @@ export function CommandMenu({ open, setOpen }: CommandMenuProps) {
             <Users className="mr-2 h-4 w-4" />
             <span>Members</span>
           </CommandItem>
+           <CommandItem onSelect={() => navigate('/applications')}>
+            <ClipboardPenLine className="mr-2 h-4 w-4" />
+            <span>5 I's &amp; Applications</span>
+          </CommandItem>
            <CommandItem onSelect={() => navigate('/partnerships')}>
             <Handshake className="mr-2 h-4 w-4" />
             <span>Partnerships</span>
@@ -79,7 +83,7 @@ export function CommandMenu({ open, setOpen }: CommandMenuProps) {
           </CommandItem>
           <CommandItem onSelect={() => navigate('/events')}>
             <Calendar className="mr-2 h-4 w-4" />
-            <span>Events & Programs</span>
+            <span>Events &amp; Programs</span>
           </CommandItem>
            <CommandItem onSelect={() => navigate('/tasks')}>
             <ListTodo className="mr-2 h-4 w-4" />
@@ -88,10 +92,6 @@ export function CommandMenu({ open, setOpen }: CommandMenuProps) {
            <CommandItem onSelect={() => navigate('/video')}>
             <Video className="mr-2 h-4 w-4" />
             <span>Video Studio</span>
-          </CommandItem>
-           <CommandItem onSelect={() => navigate('/applications')}>
-            <ClipboardPenLine className="mr-2 h-4 w-4" />
-            <span>Applications</span>
           </CommandItem>
            <CommandItem onSelect={() => navigate('/fees')}>
             <CreditCard className="mr-2 h-4 w-4" />

@@ -26,7 +26,7 @@ service cloud.firestore {
     
     // Check if the user is an Admin
     function isAdmin() {
-      return hasRole('Admin');
+      return hasRole('SuperAdmin');
     }
     
     // Check if user is an officer of a specific club (President or Secretary)
@@ -76,6 +76,16 @@ service cloud.firestore {
       allow write: if isSignedIn() && (isRegionGovernor(resource.data.regionId) || isAdmin());
     }
 
+    match /members/{memberId} {
+        allow read, list: if isSignedIn();
+        allow write: if hasRole('SuperAdmin') || hasRole('RegionAdmin') || hasRole('CouncilAdmin') || hasRole('ClubAdmin');
+    }
+
+    match /applications/{applicationId} {
+        allow read, list, create: if hasRole('SuperAdmin') || hasRole('RegionAdmin') || hasRole('CouncilAdmin') || hasRole('ClubAdmin');
+        allow update: if hasRole('SuperAdmin') || hasRole('RegionAdmin') || hasRole('CouncilAdmin');
+    }
+
     match /transactions/{transactionId} {
       // Users can read their own transactions.
       allow get: if isSignedIn() && isOwner(resource.data.userId);
@@ -101,7 +111,7 @@ service cloud.firestore {
     
     match /events/{eventId} {
         allow read: if true;
-        allow write: if hasRole('Secretary') || hasRole('President') || isAdmin();
+        allow write: if hasRole('Secretary') || hasRole('President') || isAdmin() || hasRole('SuperAdmin');
     }
 
     match /partnerships/{partnershipId} {

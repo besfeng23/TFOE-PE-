@@ -61,6 +61,63 @@
       },
       "required": ["fullName", "eagleId", "email", "region", "clubName", "status"]
     },
+    "Application": {
+      "title": "Application",
+      "description": "Represents a member application in the 5 I's pipeline.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "applicantFullName": { "type": "string" },
+        "applicantEmail": { "type": "string", "format": "email" },
+        "applicantMobileNumber": { "type": "string" },
+        "applicantAddress": { "type": "string" },
+        "barangayName": { "type": "string" },
+        "municipalityCity": { "type": "string" },
+        "province": { "type": "string" },
+        "sponsoringClubId": { "type": "string" },
+        "sponsoringClubName": { "type": "string" },
+        "sponsorMemberId": { "type": "string" },
+        "sponsorName": { "type": "string" },
+        "fiveIsStage": { "type": "string", "enum": ["Applicant", "Interview", "Indoctrination", "Initiation", "Induction", "Completed"] },
+        "status": { "type": "string", "enum": ["In Progress", "On Hold", "Returned", "Rejected", "Approved", "ConvertedToMember"] },
+        "stageDates": {
+          "type": "object",
+          "properties": {
+            "applicant": { "type": "string", "format": "date-time" },
+            "interview": { "type": "string", "format": "date-time" },
+            "indoctrination": { "type": "string", "format": "date-time" },
+            "initiation": { "type": "string", "format": "date-time" },
+            "induction": { "type": "string", "format": "date-time" },
+            "completed": { "type": "string", "format": "date-time" }
+          }
+        },
+        "region": { "type": "string" },
+        "councilName": { "type": "string" },
+        "clubName": { "type": "string" },
+        "clearances": {
+          "type": "object",
+          "additionalProperties": { "type": "boolean" }
+        },
+        "documents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "url": { "type": "string", "format": "uri" },
+              "uploadedAt": { "type": "string", "format": "date-time" },
+              "uploadedBy": { "type": "string" }
+            }
+          }
+        },
+        "linkedMemberId": { "type": "string" },
+        "currentHandlerLevel": { "type": "string", "enum": ["Club", "Region", "National"] },
+        "createdByUserId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["applicantFullName", "applicantEmail", "sponsoringClubId", "fiveIsStage", "status", "region", "clubName"]
+    },
     "Region": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Region",
@@ -142,6 +199,14 @@
           "entityName": "Member",
           "schema": { "$ref": "#/entities/Member" },
           "description": "Stores detailed member directory data."
+        }
+      },
+      {
+        "path": "applications/{applicationId}",
+        "definition": {
+          "entityName": "Application",
+          "schema": { "$ref": "#/entities/Application" },
+          "description": "Stores data for the 5 I's member application pipeline."
         }
       },
       {

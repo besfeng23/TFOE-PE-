@@ -68,6 +68,43 @@ export interface Member {
     searchKeywords: string[];
 }
 
+export type ApplicationFiveIsStage = "Applicant" | "Interview" | "Indoctrination" | "Initiation" | "Induction" | "Completed";
+export type ApplicationStatus = "In Progress" | "On Hold" | "Returned" | "Rejected" | "Approved" | "ConvertedToMember";
+
+export interface Application {
+    id: string;
+    applicantFullName: string;
+    applicantEmail: string;
+    applicantMobileNumber: string;
+    applicantAddress: string;
+    barangayName: string;
+    municipalityCity: string;
+    province: string;
+    sponsoringClubId: string;
+    sponsoringClubName: string;
+    sponsorMemberId: string;
+    sponsorName: string;
+    fiveIsStage: ApplicationFiveIsStage;
+    status: ApplicationStatus;
+    stageDates: { [key: string]: Timestamp };
+    region: string;
+    councilName: string;
+    clubName: string;
+    clearances: { [key: string]: boolean };
+    documents: {
+        type: string;
+        url: string;
+        uploadedAt: Timestamp;
+        uploadedBy: string;
+    }[];
+    linkedMemberId: string | null;
+    currentHandlerLevel: "Club" | "Region" | "National";
+    createdByUserId: string;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+}
+
+
 export interface Region {
     id: string;
     name: string;
