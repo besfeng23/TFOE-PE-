@@ -10,7 +10,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, ChevronDown } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, useAuthUser } from '@/firebase';
 import { collection, query, orderBy, where } from 'firebase/firestore';
 import type { Member } from '@/lib/types';
@@ -19,9 +19,90 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { format } from 'date-fns';
+import { Card, CardContent } from '../ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 
 interface MembersTableProps {
   searchTerm: string;
+}
+
+const getStatusBadgeVariant = (status?: string) => {
+    switch (status) {
+        case 'Active': return 'default';
+        case 'Inactive': return 'outline';
+        case 'Suspended': return 'destructive';
+        case 'Expelled': return 'destructive';
+        case 'Deceased': return 'secondary';
+        default: return 'outline';
+    }
+}
+
+const MemberCard = ({ member, isAdmin }: { member: Member, isAdmin: boolean }) => {
+    const handleViewProfile = (memberId: string) => {
+        // In a real app, you would navigate to the member's profile page
+        console.log(`Navigating to /members/${memberId}`);
+    }
+
+    return (
+        <Card>
+            <CardContent className="p-4">
+                <Collapsible>
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-4">
+                            <Avatar>
+                                <AvatarImage src={member.avatarUrl} />
+                                <AvatarFallback>{member.fullName?.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="font-semibold">{member.fullName}</p>
+                                <p className="text-xs text-muted-foreground">ID: {member.eagleId}</p>
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                             {isAdmin && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                        <span className="sr-only">Open menu</span>
+                                        <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                        <DropdownMenuItem onClick={() => handleViewProfile(member.id)}>View Profile</DropdownMenuItem>
+                                        <DropdownMenuItem>Edit Member</DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem className='text-destructive focus:bg-destructive/10 focus:text-destructive'>Delete Member</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
+                            <CollapsibleTrigger asChild>
+                               <Button variant="ghost" size="sm" className="w-full justify-center text-xs">
+                                    More
+                                    <ChevronDown className="h-4 w-4 ml-1" />
+                                </Button>
+                            </CollapsibleTrigger>
+                        </div>
+                    </div>
+                    <div className="mt-4 space-y-2">
+                         <div className="flex items-center gap-2">
+                             <Badge variant={getStatusBadgeVariant(member.status)}>{member.status}</Badge>
+                             <Badge variant="secondary">{member.membershipType}</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{member.clubName}, {member.region}</p>
+                        {member.governmentRole && <p className="text-sm font-medium">{member.governmentRole}</p>}
+                    </div>
+
+                    <CollapsibleContent className="mt-4 space-y-2 text-sm">
+                        <p><strong>Org Role:</strong> {member.orgRole}</p>
+                        <p><strong>Location:</strong> Brgy {member.barangayName}, {member.municipalityCity}, {member.province}</p>
+                        <p><strong>Joined:</strong> {format(member.joinedDate.toDate(), 'yyyy-MM-dd')}</p>
+                        <p><strong>Contact:</strong> {member.mobileNumber} / {member.email}</p>
+                    </CollapsibleContent>
+                </Collapsible>
+            </CardContent>
+        </Card>
+    )
 }
 
 export default function MembersTable({ searchTerm }: MembersTableProps) {
@@ -36,7 +117,6 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
     
     let q = collection(firestore, 'members');
     
-    // Scoping queries based on role
     if (currentUserProfile.roleId === 'RegionAdmin' && currentUserProfile.regionId) {
         return query(q, where('region', '==', currentUserProfile.regionId));
     }
@@ -47,11 +127,9 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
         return query(q, where('clubName', '==', currentUserProfile.clubName));
     }
     if (currentUserProfile.roleId === 'Member') {
-        // Members see others in their club
         return query(q, where('clubName', '==', currentUserProfile.clubName));
     }
 
-    // SuperAdmin sees all
     return query(q, orderBy('fullName', 'asc'));
 
   }, [firestore, currentUserProfile]);
@@ -75,72 +153,38 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
 
   }, [members, searchTerm])
 
-
-  const getStatusBadgeVariant = (status?: string) => {
-    switch (status) {
-        case 'Active': return 'default';
-        case 'Inactive': return 'outline';
-        case 'Suspended': return 'destructive';
-        case 'Expelled': return 'destructive';
-        case 'Deceased': return 'secondary';
-        default: return 'outline';
-    }
-  }
-
   const handleViewProfile = (memberId: string) => {
-    // In a real app, you would navigate to the member's profile page
     console.log(`Navigating to /members/${memberId}`);
   }
 
 
   if (isLoading) {
     return (
-        <div className="rounded-lg border overflow-x-auto">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Org Placement</TableHead>
-                        <TableHead>Roles</TableHead>
-                        <TableHead>Location</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Joined</TableHead>
-                        <TableHead>Contact</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {[...Array(10)].map((_, i) => (
-                        <TableRow key={i}>
-                            <TableCell>
-                                <div className='flex items-center gap-3'>
-                                    <Skeleton className="h-10 w-10 rounded-full" />
-                                    <div className="space-y-1">
-                                        <Skeleton className="h-4 w-24" />
-                                        <Skeleton className="h-3 w-32" />
-                                    </div>
+        <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+                <Card key={i}>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Skeleton className="h-10 w-10 rounded-full" />
+                                <div className="space-y-1">
+                                    <Skeleton className="h-4 w-24" />
+                                    <Skeleton className="h-3 w-32" />
                                 </div>
-                            </TableCell>
-                            <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                            <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-                            <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                            <TableCell className="text-right">
-                                <Skeleton className="h-8 w-8 rounded-md ml-auto" />
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                            </div>
+                            <Skeleton className="h-8 w-8 rounded-md" />
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
         </div>
     )
   }
 
   return (
       <>
-        <div className="rounded-lg border overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block rounded-lg border overflow-x-auto">
             <Table>
             <TableHeader>
                 <TableRow>
@@ -223,6 +267,18 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
             </TableBody>
             </Table>
             {filteredMembers && filteredMembers.length === 0 && (
+                <div className="text-center p-8 text-muted-foreground">
+                    {searchTerm ? `No members found for "${searchTerm}"` : "No members in your scope."}
+                </div>
+            )}
+        </div>
+        
+        {/* Mobile Card View */}
+        <div className="md:hidden space-y-4">
+            {filteredMembers && filteredMembers.map(member => (
+                <MemberCard key={member.id} member={member} isAdmin={!!isAdmin} />
+            ))}
+             {filteredMembers && filteredMembers.length === 0 && (
                 <div className="text-center p-8 text-muted-foreground">
                     {searchTerm ? `No members found for "${searchTerm}"` : "No members in your scope."}
                 </div>
