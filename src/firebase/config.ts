@@ -1,8 +1,9 @@
 export const firebaseConfig = {
-  "projectId": "tfoe-pe-membership",
-  "appId": "1:678045416702:web:96597678802f19042cb9af",
-  "apiKey": "AIzaSyCG0-VRD83KgcriAE1hmAPkj23SI220XSI",
-  "authDomain": "tfoe-pe-membership.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "678045416702"
+  apiKey: "AIzaSyCH5sTa1ycLl6PHrOfBpAL3xfgSqYvvUGE",
+  authDomain: "tfoe-pe-membership.firebaseapp.com",
+  projectId: "tfoe-pe-membership",
+  storageBucket: "tfoe-pe-membership.appspot.com",
+  messagingSenderId: "997462894528",
+  appId: "1:997462894528:web:adb55da162809545330a25",
+  measurementId: "G-SVSBX463QC"
 };
