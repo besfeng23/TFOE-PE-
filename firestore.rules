@@ -50,8 +50,7 @@ service cloud.firestore {
       // An Admin can read any profile.
       // A club officer can read profiles of members in their own club.
       // A regional governor can read profiles of members in their own region.
-      // Allow public reads and lists for development
-      allow read, list: if true;
+      allow read, list: if isSignedIn();
                   
       // A user can update their own profile (limited fields). Admins can update any profile.
       allow update: if (isSignedIn() && isOwner(userId) && request.resource.data.keys().hasOnly(['firstName', 'lastName', 'contactInfo', 'avatarUrl', 'idPhotoUrl'])) ||
@@ -63,7 +62,7 @@ service cloud.firestore {
     
     match /regions/{regionId} {
       // All signed-in users can read region data.
-      allow read: if true;
+      allow read: if isSignedIn();
       // Only Admins can create, update, or delete regions.
       allow write: if isAdmin();
     }
@@ -71,7 +70,7 @@ service cloud.firestore {
     match /clubs/{clubId} {
        // Members of the region can read club data.
        // Admins can read any club.
-      allow read: if true;
+      allow read: if isSignedIn();
       // Only Regional Governors and Admins can create or update clubs.
       allow write: if isSignedIn() && (isRegionGovernor(resource.data.regionId) || isAdmin());
     }
