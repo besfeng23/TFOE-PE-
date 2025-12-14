@@ -186,7 +186,7 @@
   "firestore": {
     "structure": [
       {
-        "path": "users/{userId}",
+        "path": "userProfiles/{userId}",
         "definition": {
           "entityName": "UserProfile",
           "schema": { "$ref": "#/entities/UserProfile" },

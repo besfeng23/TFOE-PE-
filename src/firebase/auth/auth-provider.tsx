@@ -3,7 +3,7 @@
 import { useAuthUser } from '@/firebase/auth/use-auth-user';
 import { usePathname } from 'next/navigation';
 
-const AUTH_ROUTES = ['/login', '/signup'];
+const AUTH_ROUTES: string[] = [];
 
 interface AuthProviderProps {
   children: React.ReactNode;
