@@ -22,7 +22,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <Logo className="h-24 w-24 animate-pulse" />
-          <p className="text-muted-foreground">Loading Portal...</p>
         </div>
       </div>
     );
