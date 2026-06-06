@@ -5,7 +5,7 @@ import PartnershipsTable from "@/components/partnerships/partnerships-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useAuthUser } from "@/firebase";
+import { useAuth } from "@/hooks/use-auth";
 import { PartnershipFormDialog } from "@/components/partnerships/partnership-form-dialog";
 import { Plus, Search } from "lucide-react";
 import { useState } from "react";
@@ -13,7 +13,7 @@ import { useState } from "react";
 export default function PartnershipsPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const { profile } = useAuthUser();
+    const { profile } = useAuth();
     const isAdmin = profile?.roleId === 'Admin';
 
     return (

@@ -3,13 +3,13 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, FileText, CalendarCheck, ShieldAlert } from "lucide-react";
-import { useAuthUser, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query } from "firebase/firestore";
-import type { Document, UserProfile, Attendance } from "@/lib/types";
+import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import MembershipStatusChart from "@/components/analytics/membership-status-chart";
 import MembersByGovtLevelChart from "@/components/analytics/members-by-govt-level-chart";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import type { Document, UserProfile, Attendance } from "@/lib/types";
 
 function AnalyticsCard({ title, icon: Icon, value, description, isLoading, error }: { title: string, icon: React.ElementType, value: string | number, description: string, isLoading: boolean, error?: any }) {
   return (
@@ -34,28 +34,56 @@ function AnalyticsCard({ title, icon: Icon, value, description, isLoading, error
 
 
 export default function AnalyticsPage() {
-  const { profile, isProfileLoading } = useAuthUser();
-  const firestore = useFirestore();
+  const { user, profile, loading: isProfileLoading } = useAuth();
+  const supabase = createClient();
   const isAdmin = profile?.roleId === 'Admin';
 
-  const profilesQuery = useMemoFirebase(() => {
-    if (!firestore || !isAdmin) return null;
-    return query(collection(firestore, 'userProfiles'));
-  }, [firestore, isAdmin]);
-  const { data: profiles, isLoading: profilesLoading, error: profilesError } = useCollection<UserProfile>(profilesQuery);
+  const [profiles, setProfiles] = useState<UserProfile[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [attendance, setAttendance] = useState<Attendance[]>([]);
 
-  const documentsQuery = useMemoFirebase(() => {
-    if (!firestore || !isAdmin) return null;
-    return query(collection(firestore, 'documents'));
-  }, [firestore, isAdmin]);
-  const { data: documents, isLoading: documentsLoading, error: documentsError } = useCollection<Document>(documentsQuery);
-  
-  const attendanceQuery = useMemoFirebase(() => {
-    if (!firestore || !isAdmin) return null;
-    return query(collection(firestore, 'attendance'));
-  }, [firestore, isAdmin]);
-  const { data: attendance, isLoading: attendanceLoading, error: attendanceError } = useCollection<Attendance>(attendanceQuery);
+  const [profilesLoading, setProfilesLoading] = useState(true);
+  const [documentsLoading, setDocumentsLoading] = useState(true);
+  const [attendanceLoading, setAttendanceLoading] = useState(true);
 
+  const [profilesError, setProfilesError] = useState<any>(null);
+  const [documentsError, setDocumentsError] = useState<any>(null);
+  const [attendanceError, setAttendanceError] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchAnalyticsData = async () => {
+      if (!isAdmin) return;
+
+      try {
+        const { data: profilesData, error: profilesError } = await supabase.from('userProfiles').select('*');
+        if (profilesError) throw profilesError;
+        setProfiles(profilesData || []);
+      } catch (error) {
+        setProfilesError(error);
+      }
+      setProfilesLoading(false);
+
+      try {
+        const { data: documentsData, error: documentsError } = await supabase.from('documents').select('*');
+        if (documentsError) throw documentsError;
+        setDocuments(documentsData || []);
+      } catch (error) {
+        setDocumentsError(error);
+      }
+      setDocumentsLoading(false);
+
+      try {
+        const { data: attendanceData, error: attendanceError } = await supabase.from('attendance').select('*');
+        if (attendanceError) throw attendanceError;
+        setAttendance(attendanceData || []);
+      } catch (error) {
+        setAttendanceError(error);
+      }
+      setAttendanceLoading(false);
+    };
+
+    fetchAnalyticsData();
+  }, [isAdmin, supabase]);
 
   const membershipStatusData = React.useMemo(() => {
     if (!profiles) return [];

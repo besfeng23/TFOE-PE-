@@ -31,10 +31,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
-import { useFirestore, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import type { Partnership } from '@/lib/types';
+import { createClient } from '@/lib/supabase/client';
 
 interface PartnershipFormDialogProps {
   isOpen: boolean;
@@ -56,7 +55,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export function PartnershipFormDialog({ isOpen, onClose, partner }: PartnershipFormDialogProps) {
   const [isSaving, setIsSaving] = useState(false);
-  const firestore = useFirestore();
+  const supabase = createClient();
   const isEditing = !!partner;
 
   const form = useForm<FormValues>({
@@ -96,20 +95,18 @@ export function PartnershipFormDialog({ isOpen, onClose, partner }: PartnershipF
   };
 
   const onSubmit = async (data: FormValues) => {
-    if (!firestore) return;
-    
     setIsSaving(true);
     try {
-        const docRef = isEditing
-            ? doc(firestore, 'partnerships', partner.id)
-            : doc(collection(firestore, 'partnerships'));
-
-        const partnerData: Partnership = {
-            ...data,
-            id: isEditing ? partner.id : docRef.id,
-        };
-
-        setDocumentNonBlocking(docRef, partnerData, { merge: true });
+        if (isEditing) {
+            const { error } = await supabase
+                .from('partnerships')
+                .update(data)
+                .eq('id', partner.id);
+            if (error) throw error;
+        } else {
+            const { error } = await supabase.from('partnerships').insert([data]);
+            if (error) throw error;
+        }
         
         toast({
             title: isEditing ? 'Partner Updated' : 'Partner Added',

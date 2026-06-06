@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuthUser } from "@/firebase";
+import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 
 export default function AccountSettings() {
-    const { user } = useAuthUser();
+    const { user } = useAuth();
     const router = useRouter();
 
     return (
@@ -25,7 +25,7 @@ export default function AccountSettings() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" defaultValue={user?.displayName || 'User'} disabled />
+              <Input id="name" defaultValue={user?.user_metadata?.full_name || 'User'} disabled />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>

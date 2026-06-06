@@ -1,29 +1,41 @@
 
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import ConversationList from "@/components/messages/conversation-list";
 import ChatWindow from "@/components/messages/chat-window";
 import { MessageCircle, Pencil } from "lucide-react";
 import type { Conversation, UserProfile } from "@/lib/types";
-import { useAuthUser, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query } from "firebase/firestore";
+import { useAuth } from "@/hooks/use-auth";
 import NewConversationDialog from "@/components/messages/new-conversation-dialog";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
 
 export default function MessagesPage() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [isNewConvoDialogOpen, setIsNewConvoDialogOpen] = useState(false);
-  const firestore = useFirestore();
-  const { user } = useAuthUser();
+  const { user } = useAuth();
+  const supabase = createClient();
 
-  const usersQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return query(collection(firestore, 'userProfiles'));
-  }, [firestore, user]);
+  const [profiles, setProfiles] = useState<UserProfile[]>([]);
+  const [profilesLoading, setProfilesLoading] = useState(true);
 
-  const { data: profiles, isLoading: profilesLoading } = useCollection<UserProfile>(usersQuery);
+  useEffect(() => {
+    const fetchProfiles = async () => {
+        if (!user) return;
+        try {
+            const { data, error } = await supabase.from('userProfiles').select('*');
+            if (error) throw error;
+            setProfiles(data || []);
+        } catch (error) {
+            console.error("Error fetching profiles:", error);
+        } finally {
+            setProfilesLoading(false);
+        }
+    };
+    fetchProfiles();
+  }, [supabase, user]);
 
   const handleSelectConversation = (conversation: Conversation) => {
     setSelectedConversation(conversation);

@@ -30,9 +30,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
-import { useAuthUser, useFirebase } from '@/firebase';
-import { uploadDocumentAndCreateRecord } from '@/firebase/storage/documents';
+import { useAuth } from '@/hooks/use-auth';
 import { Loader2 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 interface UploadDocumentDialogProps {
   isOpen: boolean;
@@ -51,8 +51,8 @@ type FormValues = z.infer<typeof formSchema>;
 
 export function UploadDocumentDialog({ isOpen, onClose }: UploadDocumentDialogProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const { user } = useAuthUser();
-  const { firestore, firebaseApp } = useFirebase();
+  const { user } = useAuth();
+  const supabase = createClient();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -79,11 +79,21 @@ export function UploadDocumentDialog({ isOpen, onClose }: UploadDocumentDialogPr
     setIsUploading(true);
     try {
         const file = data.file[0];
-        await uploadDocumentAndCreateRecord(firebaseApp, firestore, user.uid, {
+        const filePath = `documents/${user.id}/${Date.now()}_${file.name}`;
+
+        const { error: uploadError } = await supabase.storage.from('prod').upload(filePath, file);
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage.from('prod').getPublicUrl(filePath);
+
+        const { error: dbError } = await supabase.from('documents').insert([{
             title: data.title,
             categoryId: data.category,
-            file
-        });
+            fileUrl: publicUrlData.publicUrl,
+            uploaderId: user.id,
+            uploadDate: new Date().toISOString(),
+        }]);
+        if (dbError) throw dbError;
         
         toast({
             title: 'Upload Successful',

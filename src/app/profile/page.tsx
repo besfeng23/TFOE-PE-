@@ -7,23 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuthUser, useFirestore, updateDocumentNonBlocking } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useAuth } from '@/hooks/use-auth';
+import { createClient } from '@/lib/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 export default function ProfilePage() {
-  const { user, profile, isUserLoading, isProfileLoading } = useAuthUser();
-  const firestore = useFirestore();
+  const { user, profile, isLoading } = useAuth();
+  const supabase = createClient();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [contactInfo, setContactInfo] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   
-  const isAnonymousUser = user?.isAnonymous;
+  const isAnonymousUser = user?.is_anonymous;
 
   useEffect(() => {
     if (profile) {
@@ -34,7 +34,7 @@ export default function ProfilePage() {
   }, [profile]);
   
   const handleSaveChanges = async () => {
-    if (!user || !firestore || isAnonymousUser) {
+    if (!user || !supabase || isAnonymousUser) {
         toast({
             variant: "destructive",
             title: "Action Not Allowed",
@@ -44,24 +44,28 @@ export default function ProfilePage() {
     };
 
     setIsSaving(true);
-    const profileRef = doc(firestore, 'userProfiles', user.uid);
+    const { error } = await supabase
+        .from('members')
+        .update({ firstName, lastName, contactInfo })
+        .eq('id', user.id);
     
-    updateDocumentNonBlocking(profileRef, {
-        firstName,
-        lastName,
-        contactInfo,
-    });
-    
-    toast({
-        title: "Profile Updated",
-        description: "Your changes have been saved successfully.",
-    });
+    if (error) {
+        console.error('Error updating profile:', error);
+        toast({
+            variant: "destructive",
+            title: "Update Failed",
+            description: "An error occurred while updating your profile.",
+        });
+    } else {
+        toast({
+            title: "Profile Updated",
+            description: "Your changes have been saved successfully.",
+        });
+    }
     
     setIsSaving(false);
   };
   
-  const isLoading = isUserLoading || isProfileLoading;
-
   const renderLoadingSkeletons = () => (
     <>
         <div className="flex items-center gap-4">

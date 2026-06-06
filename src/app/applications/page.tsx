@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuthUser } from "@/firebase";
+import { useAuth } from "@/hooks/use-auth";
 import { FileText, GanttChartSquare, Plus, Search } from "lucide-react";
 import React from 'react';
 
@@ -19,7 +19,7 @@ const StatCard = ({ title, value, isLoading }: { title: string, value: number, i
 );
 
 export default function ApplicationsPage() {
-    const { profile, isProfileLoading } = useAuthUser();
+    const { profile, loading: isProfileLoading } = useAuth();
     const canCreate = profile?.roleId && ['ClubAdmin', 'CouncilAdmin', 'RegionAdmin', 'SuperAdmin'].includes(profile.roleId);
     const canExport = profile?.roleId && ['CouncilAdmin', 'RegionAdmin', 'SuperAdmin'].includes(profile.roleId);
 

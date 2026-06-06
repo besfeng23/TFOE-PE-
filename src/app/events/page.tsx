@@ -1,34 +1,51 @@
 
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { useAuthUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { useAuth } from '@/hooks/use-auth';
 import type { Event } from '@/lib/types';
 import EventCalendar from '@/components/events/event-calendar';
 import EventList from '@/components/events/event-list';
 import EventDetails from '@/components/events/event-details';
 import { EventFormDialog } from '@/components/events/event-form-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { createClient } from '@/lib/supabase/client';
 
 export default function EventsPage() {
-  const { profile, isProfileLoading } = useAuthUser();
-  const firestore = useFirestore();
+  const { profile, loading: isProfileLoading } = useAuth();
+  const supabase = createClient();
   const isAdmin = profile?.roleId === 'Admin';
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [eventForForm, setEventForForm] = useState<Event | null>(null);
   const [selectedEventDetails, setSelectedEventDetails] = useState<Event | null>(null);
+  
+  const [events, setEvents] = useState<Event[]>([]);
+  const [areEventsLoading, setAreEventsLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
 
-  const eventsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'events'), orderBy('startDate', 'asc'));
-  }, [firestore]);
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('events')
+          .select('*')
+          .order('startDate', { ascending: true });
 
-  const { data: events, isLoading: areEventsLoading, error } = useCollection<Event>(eventsQuery);
+        if (error) throw error;
+        setEvents(data || []);
+      } catch (error) {
+        setError(error);
+      } finally {
+        setAreEventsLoading(false);
+      }
+    };
+    fetchEvents();
+  }, [supabase]);
+
 
   const handleEdit = (event: Event) => {
     setEventForForm(event);
@@ -46,6 +63,12 @@ export default function EventsPage() {
   };
 
   const isLoading = isProfileLoading || areEventsLoading;
+  
+  const formattedEvents = events.map(event => ({
+      ...event,
+      startDate: new Date(event.startDate),
+      endDate: event.endDate ? new Date(event.endDate) : undefined
+  }));
 
   return (
     <>
@@ -58,8 +81,8 @@ export default function EventsPage() {
                   <Skeleton className="w-full h-[300px]" />
                 </div>
               ) : (
-                <EventCalendar events={events || []} onDateSelect={(date) => {
-                    const eventOnDate = events?.find(e => e.startDate.toDate().toDateString() === date.toDateString());
+                <EventCalendar events={formattedEvents} onDateSelect={(date) => {
+                    const eventOnDate = formattedEvents.find(e => e.startDate.toDateString() === date.toDateString());
                     if (eventOnDate) {
                         setSelectedEventDetails(eventOnDate);
                     }
@@ -95,7 +118,7 @@ export default function EventsPage() {
                 <EventList 
                     isLoading={isLoading} 
                     error={error} 
-                    events={events} 
+                    events={formattedEvents} 
                     isAdmin={isAdmin}
                     onEdit={handleEdit}
                     onSelectEvent={setSelectedEventDetails}

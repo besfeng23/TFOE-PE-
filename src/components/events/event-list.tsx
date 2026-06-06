@@ -9,8 +9,7 @@ import { MoreHorizontal, FileWarning } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem, DropdownMenuSeparator } from '../ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
-import { useFirestore, deleteDocumentNonBlocking } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { createClient } from '@/lib/supabase/client';
 
 
 interface EventListProps {
@@ -25,22 +24,29 @@ interface EventListProps {
 
 export default function EventList({ isLoading, error, events, isAdmin, onEdit, onSelectEvent, selectedEvent }: EventListProps) {
     const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
-    const firestore = useFirestore();
+    const supabase = createClient();
 
     const handleDelete = (event: Event) => {
         setEventToDelete(event);
     };
 
-    const confirmDelete = () => {
-        if (!eventToDelete || !firestore) return;
+    const confirmDelete = async () => {
+        if (!eventToDelete) return;
 
-        const eventRef = doc(firestore, 'events', eventToDelete.id);
-        deleteDocumentNonBlocking(eventRef);
+        const { error } = await supabase.from('events').delete().eq('id', eventToDelete.id);
 
-        toast({
-            title: "Event Deleted",
-            description: `"${eventToDelete.title}" has been removed.`,
-        });
+        if (error) {
+            toast({
+                title: "Error Deleting Event",
+                description: error.message,
+                variant: "destructive",
+            });
+        } else {
+            toast({
+                title: "Event Deleted",
+                description: `"${eventToDelete.title}" has been removed.`,
+            });
+        }
 
         setEventToDelete(null);
     };
@@ -88,7 +94,7 @@ export default function EventList({ isLoading, error, events, isAdmin, onEdit, o
                     <div className="flex-1">
                         <p className="font-semibold">{event.title}</p>
                         <p className="text-sm text-muted-foreground">
-                            {event.startDate.toDate().toLocaleDateString()}
+                            {new Date(event.startDate).toLocaleDateString()}
                         </p>
                     </div>
                     {isAdmin && (

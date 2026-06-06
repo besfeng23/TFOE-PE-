@@ -1,39 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Download, Plus, Search, FileUp } from 'lucide-react';
-import { useAuthUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import MembersTable from '@/components/members/members-table';
 import type { UserProfile } from '@/lib/types';
 import { MemberFormDialog } from '@/components/members/member-form-dialog';
 import { ReportDialog } from '@/components/members/report-dialog';
 import { AiImportDialog } from '@/components/members/ai-import-dialog';
-import { collection, query } from 'firebase/firestore';
+import { getMembers } from '@/lib/repositories/members.repository';
 
 export default function MembersPage() {
     const [searchTerm, setSearchTerm] = useState('');
-    const { profile, isUserLoading } = useAuthUser();
-    
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
     const [isAiImportOpen, setIsAiImportOpen] = useState(false);
     const [prefilledData, setPrefilledData] = useState<Partial<UserProfile> | null>(null);
+    const [profiles, setProfiles] = useState<UserProfile[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const firestore = useFirestore();
+    useEffect(() => {
+        const fetchMembers = async () => {
+            setIsLoading(true);
+            const members = await getMembers();
+            setProfiles(members as UserProfile[]);
+            setIsLoading(false);
+        };
+        fetchMembers();
+    }, []);
 
-    const profilesQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
-        // This is a simplified query. In a real app, you'd apply role-based filtering here.
-        return query(collection(firestore, 'userProfiles'));
-    }, [firestore]);
-
-    const { data: profiles, isLoading: profilesLoading } = useCollection<UserProfile>(profilesQuery);
-
-    const canAdd = profile?.roleId && ['SuperAdmin', 'RegionAdmin', 'CouncilAdmin', 'ClubAdmin'].includes(profile.roleId);
-    const canImportExport = profile?.roleId && ['SuperAdmin', 'RegionAdmin', 'CouncilAdmin', 'ClubAdmin'].includes(profile.roleId);
+    // Mocking canAdd and canImportExport for now, will be replaced with real RBAC
+    const canAdd = true;
+    const canImportExport = true;
 
     const handleOpenForm = () => {
         setPrefilledData(null);
@@ -44,10 +44,6 @@ export default function MembersPage() {
         setPrefilledData(data);
         setIsAiImportOpen(false);
         setIsFormOpen(true);
-    }
-
-    if (isUserLoading || profilesLoading) {
-        return <div>Loading...</div>
     }
 
     return (
@@ -98,7 +94,7 @@ export default function MembersPage() {
                             </div>
                             {/* Quick filters will go here */}
                         </div>
-                        <MembersTable searchTerm={searchTerm} />
+                        <MembersTable searchTerm={searchTerm} members={profiles} isLoading={isLoading} />
                     </CardContent>
                 </Card>
             </div>

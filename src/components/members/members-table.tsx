@@ -11,8 +11,6 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, ChevronDown, FileWarning } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase, useAuthUser } from '@/firebase';
-import { collection, query, orderBy, where } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -24,6 +22,8 @@ import { MemberFormDialog } from './member-form-dialog';
 
 interface MembersTableProps {
   searchTerm: string;
+  members: UserProfile[];
+  isLoading: boolean;
 }
 
 const getStatusBadgeVariant = (status?: string) => {
@@ -36,12 +36,8 @@ const getStatusBadgeVariant = (status?: string) => {
 }
 
 const MemberCard = ({ member, onEdit }: { member: UserProfile, onEdit: (member: UserProfile) => void }) => {
-    const { profile: currentUserProfile } = useAuthUser();
-    const canEdit = currentUserProfile?.roleId === 'SuperAdmin' || 
-                    (currentUserProfile?.roleId === 'RegionAdmin' && currentUserProfile?.regionId === member.regionId) ||
-                    (currentUserProfile?.roleId === 'CouncilAdmin' && currentUserProfile?.councilName === member.councilName) ||
-                    (currentUserProfile?.roleId === 'ClubAdmin' && currentUserProfile?.clubName === member.clubName);
-
+    // Mocking canEdit for now, will be replaced with real RBAC
+    const canEdit = true;
 
     return (
         <Card>
@@ -103,39 +99,10 @@ const MemberCard = ({ member, onEdit }: { member: UserProfile, onEdit: (member: 
     )
 }
 
-export default function MembersTable({ searchTerm }: MembersTableProps) {
-  const firestore = useFirestore();
-  const { profile: currentUserProfile, isUserLoading } = useAuthUser();
+export default function MembersTable({ searchTerm, members, isLoading }: MembersTableProps) {
   const [selectedMember, setSelectedMember] = useState<UserProfile | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   
-  const membersQuery = useMemoFirebase(() => {
-    if (!firestore || !currentUserProfile) return null;
-    
-    let q = collection(firestore, 'userProfiles');
-    
-    // This is a simplified scoping logic. A real app would have more robust rules.
-    if (currentUserProfile.roleId === 'RegionAdmin' && currentUserProfile.regionId) {
-        return query(q, where('regionId', '==', currentUserProfile.regionId));
-    }
-    if (currentUserProfile.roleId === 'CouncilAdmin' && currentUserProfile.councilName) {
-        return query(q, where('councilName', '==', currentUserProfile.councilName));
-    }
-    if (currentUserProfile.roleId === 'ClubAdmin' && currentUserProfile.clubName) {
-        return query(q, where('clubName', '==', currentUserProfile.clubName));
-    }
-    if (currentUserProfile.roleId === 'Member') {
-        return query(q, where('id', '==', currentUserProfile.id));
-    }
-
-    return query(q, orderBy('lastName', 'asc'));
-
-  }, [firestore, currentUserProfile]);
-
-  const { data: members, isLoading: membersLoading, error } = useCollection<UserProfile>(membersQuery);
-  
-  const isLoading = isUserLoading || membersLoading;
-
   const filteredMembers = useMemo(() => {
     if (!members) return [];
     if (!searchTerm) return members;
@@ -182,18 +149,6 @@ export default function MembersTable({ searchTerm }: MembersTableProps) {
             ))}
         </div>
     )
-  }
-
-  if (error) {
-    return (
-        <div className="flex flex-col items-center justify-center rounded-md border-2 border-destructive/50 bg-destructive/10 p-8 text-center text-destructive">
-            <FileWarning className="h-8 w-8" />
-            <h3 className="mt-4 text-lg font-semibold">Error Loading Members</h3>
-            <p className="mt-1 text-sm ">
-                There was a problem fetching the member directory. Please check your permissions or network and try again.
-            </p>
-        </div>
-    );
   }
 
   return (

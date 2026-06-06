@@ -6,7 +6,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Logo } from '../icons/logo';
 import { UserNav } from './user-nav';
-import { useAuthUser } from '@/firebase';
+import { useAuth } from '@/hooks/use-auth';
 import { AiChatbot } from './ai-chatbot';
 import { Button } from '../ui/button';
 import { CommandMenu } from './command-menu';
@@ -14,10 +14,10 @@ import { Search } from 'lucide-react';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isUserLoading } = useAuthUser();
+  const { isLoading } = useAuth();
   const [open, setOpen] = React.useState(false);
 
-  if (isUserLoading) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">

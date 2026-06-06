@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Table,
   TableHeader,
@@ -13,10 +13,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Download, Eye, Sparkles } from 'lucide-react';
 import { SummarizeDialog } from './summarize-dialog';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
 import type { Document } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
+import { createClient } from '@/lib/supabase/client';
 
 const documentCategories: { [key: string]: string } = {
     'resolution': 'Resolution',
@@ -29,14 +28,30 @@ const documentCategories: { [key: string]: string } = {
 
 export default function DocumentTable() {
   const [selectedDocument, setSelectedDocument] = React.useState<Document | null>(null);
-  const firestore = useFirestore();
+  const supabase = createClient();
 
-  const documentsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'documents'), orderBy('uploadDate', 'desc'));
-  }, [firestore]);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
 
-  const { data: documents, isLoading, error } = useCollection<Document>(documentsQuery);
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('documents')
+          .select('*')
+          .order('uploadDate', { ascending: false });
+        if (error) throw error;
+        setDocuments(data || []);
+      } catch (error) {
+        setError(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchDocuments();
+  }, [supabase]);
+
 
   const getCategoryName = (categoryId: string) => {
     return documentCategories[categoryId] || documentCategories.default;
@@ -108,7 +123,7 @@ export default function DocumentTable() {
                 <TableCell className="hidden sm:table-cell">
                   <Badge variant="secondary">{getCategoryName(doc.categoryId)}</Badge>
                 </TableCell>
-                <TableCell className="hidden md:table-cell">{doc.uploadDate.toDate().toLocaleDateString()}</TableCell>
+                <TableCell className="hidden md:table-cell">{new Date(doc.uploadDate).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
                     <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setSelectedDocument(doc)}>

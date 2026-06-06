@@ -25,8 +25,6 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
-import { useFirestore, setDocumentNonBlocking } from '@/firebase';
-import { collection, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import type { Event } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
@@ -34,6 +32,7 @@ import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Calendar } from '../ui/calendar';
+import { createClient } from '@/lib/supabase/client';
 
 interface EventFormDialogProps {
   isOpen: boolean;
@@ -65,7 +64,7 @@ const defaultFormValues = {
 
 export function EventFormDialog({ isOpen, onClose, event }: EventFormDialogProps) {
   const [isSaving, setIsSaving] = useState(false);
-  const firestore = useFirestore();
+  const supabase = createClient();
   const isEditing = !!event;
 
   const form = useForm<FormValues>({
@@ -85,8 +84,8 @@ export function EventFormDialog({ isOpen, onClose, event }: EventFormDialogProps
       if (isOpen && event) {
           form.reset({
               ...event,
-              startDate: event.startDate.toDate(),
-              endDate: event.endDate.toDate(),
+              startDate: new Date(event.startDate),
+              endDate: event.endDate ? new Date(event.endDate) : undefined,
           });
       } else if (isOpen && !event) {
           form.reset(defaultFormValues);
@@ -101,22 +100,24 @@ export function EventFormDialog({ isOpen, onClose, event }: EventFormDialogProps
   };
 
   const onSubmit = async (data: FormValues) => {
-    if (!firestore) return;
-    
     setIsSaving(true);
     try {
-        const docRef = isEditing
-            ? doc(firestore, 'events', event.id)
-            : doc(collection(firestore, 'events'));
-
         const eventData = {
             ...data,
-            id: isEditing ? event.id : docRef.id,
-            startDate: Timestamp.fromDate(data.startDate),
-            endDate: Timestamp.fromDate(data.endDate),
+            startDate: data.startDate.toISOString(),
+            endDate: data.endDate.toISOString(),
         };
 
-        await setDocumentNonBlocking(docRef, eventData, { merge: true });
+        if (isEditing) {
+            const { error } = await supabase
+                .from('events')
+                .update(eventData)
+                .eq('id', event.id);
+            if (error) throw error;
+        } else {
+            const { error } = await supabase.from('events').insert([eventData]);
+            if (error) throw error;
+        }
         
         toast({
             title: isEditing ? 'Event Updated' : 'Event Added',

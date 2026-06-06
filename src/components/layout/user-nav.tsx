@@ -13,21 +13,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
-import { useAuthUser, useAuth } from '@/firebase';
+import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { signOut } from 'firebase/auth';
+import { createClient } from '@/lib/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Settings, User } from 'lucide-react';
 
-
 export function UserNav() {
-  const { user, profile } = useAuthUser();
-  const auth = useAuth();
+  const { user, profile } = useAuth();
+  const supabase = createClient();
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      await supabase.auth.signOut();
       toast({
         title: 'Logged Out',
         description: 'You have been successfully logged out.',

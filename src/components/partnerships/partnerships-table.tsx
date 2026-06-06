@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Table,
   TableHeader,
@@ -12,8 +12,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase, useAuthUser, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, query, orderBy, doc } from 'firebase/firestore';
+import { createClient } from '@/lib/supabase/client';
 import type { Partnership } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { Badge } from '../ui/badge';
@@ -22,29 +21,45 @@ import { PartnershipFormDialog } from './partnership-form-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
 import { EndorsementLetterDialog } from './endorsement-letter-dialog';
+import { useAuth } from '@/hooks/use-auth';
 
 interface PartnershipsTableProps {
   searchTerm: string;
 }
 
 export default function PartnershipsTable({ searchTerm }: PartnershipsTableProps) {
-  const firestore = useFirestore();
-  const { profile: currentUserProfile } = useAuthUser();
+  const supabase = createClient();
+  const { profile: currentUserProfile } = useAuth();
   const isAdmin = currentUserProfile?.roleId === 'Admin';
   
+  const [partnerships, setPartnerships] = useState<Partnership[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
+
   const [selectedPartner, setSelectedPartner] = useState<Partnership | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEndorsementDialogOpen, setIsEndorsementDialogOpen] = useState(false);
 
+  useEffect(() => {
+    const fetchPartnerships = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('partnerships')
+          .select('*')
+          .order('name', { ascending: true });
+        if (error) throw error;
+        setPartnerships(data || []);
+      } catch (error) {
+        setError(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPartnerships();
+  }, [supabase]);
 
-  const partnersQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'partnerships'), orderBy('name', 'asc'));
-  }, [firestore]);
 
-  const { data: partnerships, isLoading, error } = useCollection<Partnership>(partnersQuery);
-  
   const filteredPartnerships = useMemo(() => {
     if (!partnerships) return [];
     if (!searchTerm) return partnerships;
@@ -57,7 +72,7 @@ export default function PartnershipsTable({ searchTerm }: PartnershipsTableProps
         (partner.partnershipType && partner.partnershipType.toLowerCase().includes(lowercasedTerm))
     );
 
-  }, [partnerships, searchTerm])
+  }, [partnerships, searchTerm]);
 
   const handleEdit = (partner: Partnership) => {
     setSelectedPartner(partner);
@@ -74,16 +89,24 @@ export default function PartnershipsTable({ searchTerm }: PartnershipsTableProps
     setIsEndorsementDialogOpen(true);
   }
   
-  const confirmDelete = () => {
-    if (!selectedPartner || !firestore) return;
+  const confirmDelete = async () => {
+    if (!selectedPartner) return;
 
-    const partnerRef = doc(firestore, 'partnerships', selectedPartner.id);
-    deleteDocumentNonBlocking(partnerRef);
-
-    toast({
-        title: "Partner Deleted",
-        description: `${selectedPartner.name} has been removed.`,
-    });
+    const { error } = await supabase.from('partnerships').delete().eq('id', selectedPartner.id);
+    
+    if (error) {
+      toast({
+        title: 'Error Deleting Partner',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+          title: "Partner Deleted",
+          description: `${selectedPartner.name} has been removed.`,
+      });
+      setPartnerships(partnerships.filter(p => p.id !== selectedPartner.id));
+    }
 
     setIsDeleteDialogOpen(false);
     setSelectedPartner(null);
@@ -194,7 +217,7 @@ export default function PartnershipsTable({ searchTerm }: PartnershipsTableProps
             </Table>
             {filteredPartnerships && filteredPartnerships.length === 0 && (
                 <div className="text-center p-8 text-muted-foreground">
-                    {searchTerm ? `No partners found for "${searchTerm}"` : "No partners found."}
+                    {searchTerm ? `No partners found for \"${searchTerm}\"` : "No partners found."}
                 </div>
             )}
         </div>
