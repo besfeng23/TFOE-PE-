@@ -1,12 +1,13 @@
+
 import type {NextConfig} from 'next';
 
 const contentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://fonts.googleapis.com;
-  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-  img-src 'self' data: https://images.unsplash.com https://picsum.photos;
-  font-src 'self' https://fonts.gstatic.com;
-  connect-src 'self' https://firestore.googleapis.com wss://firestore.googleapis.com;
+  script-src 'self' 'unsafe-eval' 'unsafe-inline';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data: https://images.unsplash.com https://picsum.photos https://ilphzaydpectappekhti.supabase.co;
+  font-src 'self';
+  connect-src 'self' https://ilphzaydpectappekhti.supabase.co wss://ilphzaydpectappekhti.supabase.co;
   frame-src 'self';
   object-src 'none';
   base-uri 'self';
@@ -41,6 +42,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'ilphzaydpectappekhti.supabase.co',
+        port: '',
+        pathname: '/**',
+      }
     ],
   },
   async headers() {

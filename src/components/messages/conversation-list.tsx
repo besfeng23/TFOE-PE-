@@ -1,30 +1,44 @@
 
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Conversation, UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Skeleton } from "../ui/skeleton";
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from "@/lib/utils";
+import { getConversations } from '@/lib/repositories/conversations.repository';
+import { useAuth } from '@/hooks/use-auth';
 
 interface ConversationListProps {
     onSelectConversation: (conversation: Conversation) => void;
     selectedConversationId?: string | null;
-    conversations: Conversation[];
-    isLoading: boolean;
-    error: any;
-    currentUser: UserProfile;
 }
 
 export default function ConversationList({ 
     onSelectConversation, 
     selectedConversationId, 
-    conversations, 
-    isLoading, 
-    error,
-    currentUser
 }: ConversationListProps) {
+
+    const { user } = useAuth();
+    const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<any>(null);
+
+    useEffect(() => {
+        if (!user) return;
+        const fetchConversations = async () => {
+            try {
+                const data = await getConversations(user.id);
+                setConversations(data || []);
+            } catch (error) {
+                setError(error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchConversations();
+    }, [user]);
 
     // Sort conversations on the client-side after fetching
     const sortedConversations = React.useMemo(() => {
@@ -66,7 +80,7 @@ export default function ConversationList({
     return (
         <div className="space-y-1">
             {sortedConversations.map(convo => {
-                const otherParticipant = convo.participantDetails.find(p => p.userId !== currentUser?.id);
+                const otherParticipant = convo.participantDetails.find(p => p.userId !== user?.id);
                 if (!otherParticipant) return null; // Should not happen in 1-on-1 chats
 
                 return (

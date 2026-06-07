@@ -8,23 +8,53 @@ import type { UserProfile, Conversation } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { createConversation } from "@/lib/repositories/conversations.repository";
+import { addParticipant } from "@/lib/repositories/conversation_participants.repository";
 
 interface NewConversationDialogProps {
     isOpen: boolean;
     onClose: () => void;
     profiles: UserProfile[];
-    isLoading: boolean;
     onConversationStarted: (conversation: Conversation) => void;
-    currentUser: UserProfile | null;
 }
 
-export default function NewConversationDialog({ isOpen, onClose, profiles, isLoading, onConversationStarted, currentUser }: NewConversationDialogProps) {
+export default function NewConversationDialog({ isOpen, onClose, profiles, onConversationStarted }: NewConversationDialogProps) {
     const [isCreating, setIsCreating] = useState(false);
+    const { user } = useAuth();
 
     const handleSelectUser = async (selectedProfile: UserProfile) => {
-        if (!currentUser) return;
-        // TODO: Connect to Supabase to check for existing conversation and create a new one if needed.
-        console.log({selectedProfile, currentUser})
+        if (!user) return;
+        setIsCreating(true);
+
+        try {
+            const newConvo = await createConversation();
+            if (!newConvo) throw new Error('Failed to create conversation');
+
+            const participant1 = { conversationId: newConvo.id, userId: user.id };
+            const participant2 = { conversationId: newConvo.id, userId: selectedProfile.id };
+
+            await addParticipant(participant1);
+            await addParticipant(participant2);
+
+            // This is a bit of a hack. We should be returning the full conversation object from the server.
+            const newConvoWithDetails: Conversation = {
+                ...newConvo,
+                participantDetails: [selectedProfile, user],
+            };
+
+            onConversationStarted(newConvoWithDetails);
+
+        } catch (error) {
+            console.error('Error starting new conversation:', error);
+            toast({
+                title: "Error",
+                description: "Failed to start a new conversation. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsCreating(false);
+        }
     };
 
     return (
@@ -37,7 +67,7 @@ export default function NewConversationDialog({ isOpen, onClose, profiles, isLoa
                 <Command>
                     <CommandInput placeholder="Search for a member..." />
                     <CommandList>
-                        {isLoading || isCreating ? (
+                        {profiles.length === 0 || isCreating ? (
                             <div className="flex items-center justify-center p-4">
                                 <Loader2 className="h-6 w-6 animate-spin" />
                             </div>
@@ -46,12 +76,12 @@ export default function NewConversationDialog({ isOpen, onClose, profiles, isLoa
                                 <CommandEmpty>No members found.</CommandEmpty>
                                 <CommandGroup>
                                     {profiles
-                                        .filter(p => p.id !== currentUser?.id) // Exclude current user
+                                        .filter(p => p.id !== user?.id) // Exclude current user
                                         .map(p => (
                                         <CommandItem key={p.id} onSelect={() => handleSelectUser(p)} value={`${p.firstName} ${p.lastName} ${p.email}`}>
                                             <div className="flex items-center gap-3">
                                                 <Avatar className="h-8 w-8">
-                                                    {p.idPhotoUrl && <AvatarImage src={p.idPhotoUrl} />}
+                                                    {p.idPhotoUrl && <AvatarImage src={p.idPhotoEtag} />}
                                                     <AvatarFallback>{p.firstName?.charAt(0)}{p.lastName?.charAt(0)}</AvatarFallback>
                                                 </Avatar>
                                                 <span>{p.firstName} {p.lastName}</span>

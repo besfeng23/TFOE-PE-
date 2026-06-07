@@ -12,11 +12,10 @@ import EventList from '@/components/events/event-list';
 import EventDetails from '@/components/events/event-details';
 import { EventFormDialog } from '@/components/events/event-form-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { createClient } from '@/lib/supabase/client';
+import { getEvents } from '@/lib/repositories/events.repository';
 
 export default function EventsPage() {
   const { profile, loading: isProfileLoading } = useAuth();
-  const supabase = createClient();
   const isAdmin = profile?.roleId === 'Admin';
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -30,13 +29,9 @@ export default function EventsPage() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const { data, error } = await supabase
-          .from('events')
-          .select('*')
-          .order('startDate', { ascending: true });
-
-        if (error) throw error;
-        setEvents(data || []);
+        const data = await getEvents();
+        const sortedData = data.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+        setEvents(sortedData || []);
       } catch (error) {
         setError(error);
       } finally {
@@ -44,7 +39,7 @@ export default function EventsPage() {
       }
     };
     fetchEvents();
-  }, [supabase]);
+  }, []);
 
 
   const handleEdit = (event: Event) => {

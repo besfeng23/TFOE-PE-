@@ -15,7 +15,7 @@ import { Download, Eye, Sparkles } from 'lucide-react';
 import { SummarizeDialog } from './summarize-dialog';
 import type { Document } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
-import { createClient } from '@/lib/supabase/client';
+import { getDocuments } from '@/lib/repositories/documents.repository';
 
 const documentCategories: { [key: string]: string } = {
     'resolution': 'Resolution',
@@ -28,7 +28,6 @@ const documentCategories: { [key: string]: string } = {
 
 export default function DocumentTable() {
   const [selectedDocument, setSelectedDocument] = React.useState<Document | null>(null);
-  const supabase = createClient();
 
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,11 +36,7 @@ export default function DocumentTable() {
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const { data, error } = await supabase
-          .from('documents')
-          .select('*')
-          .order('uploadDate', { ascending: false });
-        if (error) throw error;
+        const data = await getDocuments();
         setDocuments(data || []);
       } catch (error) {
         setError(error);
@@ -50,7 +45,7 @@ export default function DocumentTable() {
       }
     };
     fetchDocuments();
-  }, [supabase]);
+  }, []);
 
 
   const getCategoryName = (categoryId: string) => {

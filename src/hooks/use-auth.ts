@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { type User } from '@supabase/supabase-js';
 import { type UserProfile } from '@/lib/types';
 import { useRouter } from 'next/navigation';
+import { getMember } from '@/lib/repositories/members.repository';
 
 export function useAuth(options: { redirectTo?: string, redirectIfFound?: boolean } = {}) {
   const [user, setUser] = useState<User | null>(null);
@@ -31,16 +32,8 @@ export function useAuth(options: { redirectTo?: string, redirectIfFound?: boolea
                     email: 'guest@example.com'
                 });
             } else {
-                const { data, error } = await supabase
-                    .from('members')
-                    .select('*')
-                    .eq('id', sessionUser.id)
-                    .single();
-
-                if (error) {
-                    throw error;
-                }
-                setProfile(data as UserProfile);
+                const userProfile = await getMember(sessionUser.id);
+                setProfile(userProfile);
             }
         } else {
           setProfile(null);
@@ -70,16 +63,8 @@ export function useAuth(options: { redirectTo?: string, redirectIfFound?: boolea
                         email: 'guest@example.com'
                     });
                 } else {
-                    const { data, error } = await supabase
-                        .from('members')
-                        .select('*')
-                        .eq('id', sessionUser.id)
-                        .single();
-
-                    if (error) {
-                        throw error;
-                    }
-                    setProfile(data as UserProfile);
+                    const userProfile = await getMember(sessionUser.id);
+                    setProfile(userProfile);
                 }
             } else {
                 setProfile(null);

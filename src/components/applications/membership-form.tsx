@@ -22,11 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { intelligentFormCompletion } from '@/ai/flows/intelligent-form-completion';
 import { Loader2, Sparkles } from 'lucide-react';
 import React from 'react';
-import { useAuthUser } from '@/firebase';
+import { useAuth } from '@/hooks/use-auth';
 
 const formSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters.'),
@@ -42,7 +42,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function MembershipForm() {
   const [isAutofilling, setIsAutofilling] = React.useState(false);
-  const { profile } = useAuthUser();
+  const { profile } = useAuth();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

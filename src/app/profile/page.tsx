@@ -8,15 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from '@/hooks/use-auth';
-import { createClient } from '@/lib/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { updateMember } from '@/lib/repositories/members.repository';
 
 export default function ProfilePage() {
   const { user, profile, isLoading } = useAuth();
-  const supabase = createClient();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -34,7 +33,7 @@ export default function ProfilePage() {
   }, [profile]);
   
   const handleSaveChanges = async () => {
-    if (!user || !supabase || isAnonymousUser) {
+    if (!user || isAnonymousUser) {
         toast({
             variant: "destructive",
             title: "Action Not Allowed",
@@ -44,13 +43,9 @@ export default function ProfilePage() {
     };
 
     setIsSaving(true);
-    const { error } = await supabase
-        .from('members')
-        .update({ firstName, lastName, contactInfo })
-        .eq('id', user.id);
+    const updatedMember = await updateMember(user.id, { firstName, lastName, contactInfo });
     
-    if (error) {
-        console.error('Error updating profile:', error);
+    if (!updatedMember) {
         toast({
             variant: "destructive",
             title: "Update Failed",
@@ -105,7 +100,7 @@ export default function ProfilePage() {
                 ) : (
                    <AvatarImage src="https://picsum.photos/seed/1/200/200" alt="User avatar" data-ai-hint="person portrait"/>
                 )}
-                <AvatarFallback>{profile?.firstName?.charAt(0)}{profile?.lastName?.charAt(0)}</AvatarFallback>
+                <AvatarFallback>{profile?.firstName?.charAt(0)}{profile?.lastName?.charA(0)}</AvatarFallback>
               </Avatar>
               <div>
                 <h3 className="text-lg font-semibold">{profile?.firstName} {profile?.lastName}</h3>

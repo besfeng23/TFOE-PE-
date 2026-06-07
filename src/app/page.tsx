@@ -22,7 +22,7 @@ import MembershipStatusChart from '@/components/analytics/membership-status-char
 import MembersByGovtLevelChart from '@/components/analytics/members-by-govt-level-chart';
 import { format } from 'date-fns';
 import React, { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { getProfiles } from '@/lib/repositories/members.repository';
 
 function StatCard({ title, value, description, icon: Icon, isLoading }: { title: string, value: number, description: string, icon: React.ElementType, isLoading: boolean }) {
   return (
@@ -45,7 +45,6 @@ function StatCard({ title, value, description, icon: Icon, isLoading }: { title:
 
 export default function DashboardPage() {
   const { profile, loading: isProfileLoading } = useAuth();
-  const supabase = createClient();
 
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [areProfilesLoading, setAreProfilesLoading] = useState(true);
@@ -53,8 +52,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
-        const { data, error } = await supabase.from('userProfiles').select('*');
-        if (error) throw error;
+        const data = await getProfiles();
         setProfiles(data || []);
       } catch (error) {
         console.error("Error fetching profiles:", error);
@@ -63,7 +61,7 @@ export default function DashboardPage() {
       }
     };
     fetchProfiles();
-  }, [supabase]);
+  }, []);
 
   const isLoading = isProfileLoading || areProfilesLoading;
 
