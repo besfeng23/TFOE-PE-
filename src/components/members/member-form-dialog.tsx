@@ -31,8 +31,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
-import { useFirestore, setDocumentNonBlocking } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import type { UserProfile } from '@/lib/types';
 import { Separator } from '../ui/separator';
@@ -72,7 +70,6 @@ const defaultValues: FormValues = {
 
 export function MemberFormDialog({ isOpen, onClose, member, prefilledData }: MemberFormDialogProps) {
   const [isSaving, setIsSaving] = useState(false);
-  const firestore = useFirestore();
   const isEditing = !!member;
 
   const form = useForm<FormValues>({
@@ -108,43 +105,7 @@ export function MemberFormDialog({ isOpen, onClose, member, prefilledData }: Mem
   };
 
   const onSubmit = async (data: FormValues) => {
-    if (!firestore) return;
-    
-    setIsSaving(true);
-    try {
-        const docRef = isEditing
-            ? doc(firestore, 'userProfiles', member.id)
-            : doc(collection(firestore, 'userProfiles'));
-
-        const profileData: Partial<UserProfile> = {
-            ...data,
-            id: isEditing ? member.id : docRef.id,
-        };
-        
-        if (!isEditing) {
-            // Note: In a real app, you would likely call a serverless function here
-            // to create the Firebase Auth user and then create the profile.
-        }
-
-        setDocumentNonBlocking(docRef, profileData, { merge: true });
-        
-        toast({
-            title: isEditing ? 'Member Updated' : 'Member Added',
-            description: `${data.firstName} ${data.lastName}'s profile has been saved.`,
-        });
-        onClose();
-        form.reset();
-
-    } catch (error: any) {
-        console.error('Save failed:', error);
-        toast({
-            variant: 'destructive',
-            title: 'Save Failed',
-            description: error.message || 'An unexpected error occurred.',
-        });
-    } finally {
-        setIsSaving(false);
-    }
+    // TODO: Connect to Supabase
   };
 
   return (

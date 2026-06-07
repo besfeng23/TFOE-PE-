@@ -10,7 +10,6 @@ import { askAboutTheEagles } from '@/ai/flows/ask-about-the-eagles';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { useAuthUser } from '@/firebase';
 
 type ChatMessage = {
   role: 'user' | 'model';
@@ -23,7 +22,6 @@ export function AiChatbot() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const { profile } = useAuthUser();
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -88,8 +86,6 @@ export function AiChatbot() {
     }
   };
   
-  const userInitial = profile?.firstName?.charAt(0) || 'U';
-
   return (
     <>
       <div className="fixed bottom-6 right-6 z-50">

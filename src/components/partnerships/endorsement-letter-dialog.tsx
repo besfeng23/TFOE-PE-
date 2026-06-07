@@ -13,8 +13,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Loader2, Sparkles, Clipboard, Check } from 'lucide-react';
 import { generateEndorsementLetter } from '@/ai/flows/generate-endorsement-letter';
-import { addDocumentNonBlocking, useAuthUser, useFirestore } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import type { Partnership } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
@@ -39,8 +37,6 @@ export function EndorsementLetterDialog({
   const [isGenerated, setIsGenerated] = useState(false);
   const [copiedField, setCopiedField] = useState<'subject' | 'body' | null>(null);
   
-  const firestore = useFirestore();
-  const { user } = useAuthUser();
 
   const handleGenerateLetter = async () => {
     setIsLoading(true);
@@ -64,18 +60,7 @@ export function EndorsementLetterDialog({
         description: "The endorsement letter has been created successfully.",
       });
       
-      // Save the endorsement to Firestore
-      if (firestore && user) {
-        const endorsementData = {
-          partnershipId: partner.id,
-          subject: result.subject,
-          body: result.body,
-          generatedDate: new Date(),
-          generatedByUserId: user.uid,
-        };
-        const docRef = doc(collection(firestore, 'endorsements'));
-        addDocumentNonBlocking(collection(firestore, 'endorsements'), {...endorsementData, id: docRef.id});
-      }
+      // TODO: Connect to Supabase to save endorsement
 
     } catch (e) {
       console.error(e);

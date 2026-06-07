@@ -2,9 +2,7 @@
 'use client';
 
 import React from 'react';
-import { useAuthUser, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy } from 'firebase/firestore';
-import type { Conversation } from '@/lib/types';
+import type { Conversation, UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Skeleton } from "../ui/skeleton";
 import { formatDistanceToNow } from 'date-fns';
@@ -13,27 +11,28 @@ import { cn } from "@/lib/utils";
 interface ConversationListProps {
     onSelectConversation: (conversation: Conversation) => void;
     selectedConversationId?: string | null;
+    conversations: Conversation[];
+    isLoading: boolean;
+    error: any;
+    currentUser: UserProfile;
 }
 
-export default function ConversationList({ onSelectConversation, selectedConversationId }: ConversationListProps) {
-    const { user } = useAuthUser();
-    const firestore = useFirestore();
+export default function ConversationList({ 
+    onSelectConversation, 
+    selectedConversationId, 
+    conversations, 
+    isLoading, 
+    error,
+    currentUser
+}: ConversationListProps) {
 
-    const conversationsQuery = useMemoFirebase(() => {
-        if (!firestore || !user) return null;
-        return query(
-            collection(firestore, 'conversations'),
-            where('participants', 'array-contains', user.uid)
-        );
-    }, [firestore, user]);
-
-    const { data: conversations, isLoading, error } = useCollection<Conversation>(conversationsQuery);
-    
     // Sort conversations on the client-side after fetching
     const sortedConversations = React.useMemo(() => {
         if (!conversations) return [];
         return [...conversations].sort((a, b) => {
+            // @ts-ignore
             const aTimestamp = a.lastMessage?.timestamp?.toDate() || new Date(0);
+            // @ts-ignore
             const bTimestamp = b.lastMessage?.timestamp?.toDate() || new Date(0);
             return bTimestamp.getTime() - aTimestamp.getTime();
         });
@@ -67,7 +66,7 @@ export default function ConversationList({ onSelectConversation, selectedConvers
     return (
         <div className="space-y-1">
             {sortedConversations.map(convo => {
-                const otherParticipant = convo.participantDetails.find(p => p.userId !== user?.uid);
+                const otherParticipant = convo.participantDetails.find(p => p.userId !== currentUser?.id);
                 if (!otherParticipant) return null; // Should not happen in 1-on-1 chats
 
                 return (
@@ -88,6 +87,7 @@ export default function ConversationList({ onSelectConversation, selectedConvers
                                 <p className="font-medium truncate">{otherParticipant.name}</p>
                                 {convo.lastMessage?.timestamp && (
                                      <p className="text-xs text-muted-foreground whitespace-nowrap">
+                                        {/* @ts-ignore */}
                                         {formatDistanceToNow(convo.lastMessage.timestamp.toDate(), { addSuffix: true })}
                                      </p>
                                 )}

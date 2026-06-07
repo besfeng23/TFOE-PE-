@@ -1,22 +1,6 @@
 
 'use client';
 import { useState } from 'react';
-import {
-  useAuthUser,
-  useFirestore,
-  useCollection,
-  useMemoFirebase,
-  addDocumentNonBlocking,
-  updateDocumentNonBlocking,
-  deleteDocumentNonBlocking,
-} from '@/firebase';
-import {
-  collection,
-  doc,
-  serverTimestamp,
-  query,
-  orderBy,
-} from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -26,48 +10,34 @@ import type { Task } from '@/lib/types';
 
 
 export default function TaskList() {
-  const { user, isUserLoading } = useAuthUser();
-  const firestore = useFirestore();
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // TODO: Replace with Supabase user
+  const user = { uid: '123'};
+  const isUserLoading = false;
 
-  const tasksCollectionRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return collection(firestore, `userProfiles/${user.uid}/tasks`);
-  }, [firestore, user]);
-
-  const tasksQuery = useMemoFirebase(() => {
-    if (!tasksCollectionRef) return null;
-    return query(tasksCollectionRef, orderBy('createdAt', 'desc'));
-  }, [tasksCollectionRef]);
-
-  const {
-    data: tasks,
-    isLoading: areTasksLoading,
-    error,
-  } = useCollection<Task>(tasksQuery);
-
+  // TODO: Connect to Supabase
   const handleAddTask = () => {
-    if (!tasksCollectionRef || !newTaskTitle.trim() || !user) return;
-    const docRef = doc(tasksCollectionRef);
-    addDocumentNonBlocking(tasksCollectionRef, {
-      id: docRef.id,
-      title: newTaskTitle.trim(),
-      completed: false,
-      createdAt: serverTimestamp(),
-    });
+    if (!newTaskTitle.trim() || !user) return;
+    const newTask = {
+        id: new Date().toISOString(),
+        title: newTaskTitle.trim(),
+        completed: false,
+        createdAt: new Date(),
+    }
+    setTasks(prev => [newTask, ...prev]);
     setNewTaskTitle('');
   };
 
   const handleToggleTask = (task: Task) => {
-    if (!firestore || !user) return;
-    const taskDocRef = doc(firestore, `userProfiles/${user.uid}/tasks`, task.id);
-    updateDocumentNonBlocking(taskDocRef, { completed: !task.completed });
+     setTasks(prev => prev.map(t => t.id === task.id ? { ...t, completed: !t.completed } : t));
   };
 
   const handleDeleteTask = (taskId: string) => {
-    if (!firestore || !user) return;
-    const taskDocRef = doc(firestore, `userProfiles/${user.uid}/tasks`, taskId);
-    deleteDocumentNonBlocking(taskDocRef);
+    setTasks(prev => prev.filter(t => t.id !== taskId));
   };
 
   const renderLoadingState = () => (
@@ -111,8 +81,6 @@ export default function TaskList() {
         </p>
     </div>
   )
-
-  const isLoading = isUserLoading || areTasksLoading;
 
   return (
     <div className="space-y-6">

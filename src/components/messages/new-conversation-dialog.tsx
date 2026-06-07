@@ -4,8 +4,6 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { useAuthUser, useFirestore, addDocumentNonBlocking } from "@/firebase";
-import { collection, query, where, getDocs, serverTimestamp, doc } from 'firebase/firestore';
 import type { UserProfile, Conversation } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { toast } from "@/hooks/use-toast";
@@ -17,59 +15,16 @@ interface NewConversationDialogProps {
     profiles: UserProfile[];
     isLoading: boolean;
     onConversationStarted: (conversation: Conversation) => void;
+    currentUser: UserProfile | null;
 }
 
-export default function NewConversationDialog({ isOpen, onClose, profiles, isLoading, onConversationStarted }: NewConversationDialogProps) {
-    const { user, profile: currentUserProfile } = useAuthUser();
-    const firestore = useFirestore();
+export default function NewConversationDialog({ isOpen, onClose, profiles, isLoading, onConversationStarted, currentUser }: NewConversationDialogProps) {
     const [isCreating, setIsCreating] = useState(false);
 
     const handleSelectUser = async (selectedProfile: UserProfile) => {
-        if (!user || !firestore || !currentUserProfile) return;
-
-        setIsCreating(true);
-
-        try {
-            // Check if a conversation already exists
-            const conversationsRef = collection(firestore, 'conversations');
-            const sortedParticipants = [user.uid, selectedProfile.id].sort();
-            const q = query(conversationsRef, where('participants', '==', sortedParticipants));
-            
-            const existingConvos = await getDocs(q);
-
-            if (!existingConvos.empty) {
-                // Conversation already exists, just navigate to it
-                const existingConvo = { ...existingConvos.docs[0].data(), id: existingConvos.docs[0].id } as Conversation;
-                toast({ title: "Conversation already exists." });
-                onConversationStarted(existingConvo);
-            } else {
-                // Create a new conversation
-                const newConversationRef = doc(collection(firestore, 'conversations'));
-                const newConversationData: Conversation = {
-                    id: newConversationRef.id,
-                    participants: sortedParticipants,
-                    participantDetails: [
-                        { userId: user.uid, name: `${currentUserProfile.firstName} ${currentUserProfile.lastName}`, photoUrl: currentUserProfile.idPhotoUrl || '' },
-                        { userId: selectedProfile.id, name: `${selectedProfile.firstName} ${selectedProfile.lastName}`, photoUrl: selectedProfile.idPhotoUrl || '' }
-                    ],
-                    lastMessage: {
-                        text: 'Conversation started.',
-                        senderId: user.uid,
-                        timestamp: serverTimestamp() as any
-                    }
-                };
-
-                await setDoc(newConversationRef, newConversationData);
-                onConversationStarted(newConversationData);
-                toast({ title: `Started conversation with ${selectedProfile.firstName}.` });
-            }
-        } catch (error: any) {
-            console.error("Failed to start conversation", error);
-            toast({ variant: 'destructive', title: "Error", description: error.message });
-        } finally {
-            setIsCreating(false);
-            onClose();
-        }
+        if (!currentUser) return;
+        // TODO: Connect to Supabase to check for existing conversation and create a new one if needed.
+        console.log({selectedProfile, currentUser})
     };
 
     return (
@@ -91,7 +46,7 @@ export default function NewConversationDialog({ isOpen, onClose, profiles, isLoa
                                 <CommandEmpty>No members found.</CommandEmpty>
                                 <CommandGroup>
                                     {profiles
-                                        .filter(p => p.id !== user?.uid) // Exclude current user
+                                        .filter(p => p.id !== currentUser?.id) // Exclude current user
                                         .map(p => (
                                         <CommandItem key={p.id} onSelect={() => handleSelectUser(p)} value={`${p.firstName} ${p.lastName} ${p.email}`}>
                                             <div className="flex items-center gap-3">
