@@ -1,5 +1,5 @@
 
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/server';
 import { Club } from '@/lib/types';
 
 const supabase = createClient();

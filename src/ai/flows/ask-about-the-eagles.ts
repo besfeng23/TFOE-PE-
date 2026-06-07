@@ -1,5 +1,5 @@
 import {ai} from '@/ai/genkit';
-import {defineFlow} from 'genkit/flow';
+import {defineFlow} from '@genkit-ai/core';
 import {z} from 'zod';
 
 export const askAboutTheEagles = defineFlow(

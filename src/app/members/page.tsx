@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,26 +11,18 @@ import type { UserProfile } from '@/lib/types';
 import { MemberFormDialog } from '@/components/members/member-form-dialog';
 import { ReportDialog } from '@/components/members/report-dialog';
 import { AiImportDialog } from '@/components/members/ai-import-dialog';
-import { getMembers } from '@/lib/repositories/members.repository';
+import { getMembersAction } from '@/app/members/actions';
 
-export default function MembersPage() {
+interface MembersPageProps {
+    members: UserProfile[];
+}
+
+function MembersPage({ members }: MembersPageProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
     const [isAiImportOpen, setIsAiImportOpen] = useState(false);
     const [prefilledData, setPrefilledData] = useState<Partial<UserProfile> | null>(null);
-    const [profiles, setProfiles] = useState<UserProfile[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchMembers = async () => {
-            setIsLoading(true);
-            const members = await getMembers();
-            setProfiles(members as UserProfile[]);
-            setIsLoading(false);
-        };
-        fetchMembers();
-    }, []);
 
     // Mocking canAdd and canImportExport for now, will be replaced with real RBAC
     const canAdd = true;
@@ -94,7 +87,7 @@ export default function MembersPage() {
                             </div>
                             {/* Quick filters will go here */}
                         </div>
-                        <MembersTable searchTerm={searchTerm} members={profiles} isLoading={isLoading} />
+                        <MembersTable searchTerm={searchTerm} members={members} />
                     </CardContent>
                 </Card>
             </div>
@@ -109,7 +102,7 @@ export default function MembersPage() {
                  <ReportDialog
                     isOpen={isReportOpen}
                     onClose={() => setIsReportOpen(false)}
-                    profiles={profiles || []}
+                    profiles={members || []}
                 />
             )}
              {canImportExport && (
@@ -121,4 +114,9 @@ export default function MembersPage() {
             )}
         </>
     )
+}
+
+export default async function MembersPageWrapper() {
+    const members = await getMembersAction();
+    return <MembersPage members={members} />;
 }

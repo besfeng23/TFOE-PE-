@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { FileText, GanttChartSquare, Plus, Search } from "lucide-react";
-import React, { useEffect, useState } from 'react';
-import { getApplications } from '@/lib/repositories/applications.repository';
+import React from 'react';
 import type { Application } from '@/lib/types';
+import { getApplicationsAction } from "./actions";
 
 const StatCard = ({ title, value, isLoading }: { title: string, value: number, isLoading: boolean }) => (
     <Card>
@@ -20,29 +20,20 @@ const StatCard = ({ title, value, isLoading }: { title: string, value: number, i
     </Card>
 );
 
-export default function ApplicationsPage() {
+interface ApplicationsPageProps {
+    applications: Application[];
+}
+
+function ApplicationsPage({ applications }: ApplicationsPageProps) {
     const { profile, isLoading: isProfileLoading } = useAuth();
-    const [applications, setApplications] = useState<Application[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
     const canCreate = profile?.roleId && ['ClubAdmin', 'CouncilAdmin', 'RegionAdmin', 'SuperAdmin'].includes(profile.roleId);
     const canExport = profile?.roleId && ['CouncilAdmin', 'RegionAdmin', 'SuperAdmin'].includes(profile.roleId);
-
-    useEffect(() => {
-        const fetchApplications = async () => {
-            setIsLoading(true);
-            const apps = await getApplications();
-            setApplications(apps as Application[]);
-            setIsLoading(false);
-        };
-        fetchApplications();
-    }, []);
 
     const totalApplications = applications.length;
     const inInterview = applications.filter(a => a.status === 'Interview').length;
     const forRegionalReview = applications.filter(a => a.status === 'Regional Review').length;
     const forNationalApproval = applications.filter(a => a.status === 'National Approval').length;
     const approvedLast30Days = applications.filter(a => a.status === 'Approved' && new Date(a.approvedDate) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length;
-
 
     return (
         <div className="space-y-6">
@@ -63,11 +54,11 @@ export default function ApplicationsPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-                <StatCard title="Total Active Applications" value={totalApplications} isLoading={isProfileLoading || isLoading} />
-                <StatCard title="In Interview" value={inInterview} isLoading={isProfileLoading || isLoading} />
-                <StatCard title="For Regional Review" value={forRegionalReview} isLoading={isProfileLoading || isLoading} />
-                <StatCard title="For National Approval" value={forNationalApproval} isLoading={isProfileLoading || isLoading} />
-                <StatCard title="Approved (last 30 days)" value={approvedLast30Days} isLoading={isProfileLoading || isLoading} />
+                <StatCard title="Total Active Applications" value={totalApplications} isLoading={isProfileLoading} />
+                <StatCard title="In Interview" value={inInterview} isLoading={isProfileLoading} />
+                <StatCard title="For Regional Review" value={forRegionalReview} isLoading={isProfileLoading} />
+                <StatCard title="For National Approval" value={forNationalApproval} isLoading={isProfileLoading} />
+                <StatCard title="Approved (last 30 days)" value={approvedLast30Days} isLoading={isProfileLoading} />
             </div>
 
             <div className="flex items-center gap-4">
@@ -124,4 +115,9 @@ export default function ApplicationsPage() {
             </Tabs>
         </div>
     );
+}
+
+export default async function ApplicationsPageWrapper() {
+    const applications = await getApplicationsAction();
+    return <ApplicationsPage applications={applications} />;
 }

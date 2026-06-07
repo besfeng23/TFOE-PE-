@@ -1,5 +1,5 @@
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/client'
 import { type Document } from '@/lib/types'
 
 const supabase = createClient()
