@@ -12,6 +12,6 @@ export const askAboutTheEagles = ai.defineFlow(
     const llmResponse = await ai.generate({
       prompt: `You are a Philadelphia Eagles fan. Answer the following query about the Eagles in a passionate, but not overly aggressive, way: ${query}`,
     });
-    return llmResponse.text();
+    return llmResponse.text;
   }
 );

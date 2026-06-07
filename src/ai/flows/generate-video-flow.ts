@@ -6,6 +6,7 @@
 import { ai } from '@/ai/genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
+import { getOperation } from '@genkit-ai/core';
 
 const GenerateVideoInputSchema = z.object({
   prompt: z.string().describe('The text prompt to generate the video from.'),
@@ -46,7 +47,7 @@ export async function generateVideo(input: z.infer<typeof GenerateVideoInputSche
 
 
 export async function checkVideoOperation(input: z.infer<typeof CheckVideoOperationInputSchema>) {
-    let operation = await ai.checkOperation({ name: input.operationName });
+    let operation = await getOperation(input.operationName);
 
     if (operation.done && !operation.error) {
         const videoPart = operation.output?.message?.content.find((p) => !!p.media);

@@ -1,4 +1,3 @@
-import type { Timestamp } from "firebase/firestore";
 
 export type MembershipStatus = 'APPLICANT' | 'INCUBATING' | 'INDOCTRINATING' | 'INDUCTED' | 'SUSPENDED' | 'EXPELLED';
 export type DuesStatus = 'Paid' | 'Pending' | 'Overdue';
@@ -59,12 +58,12 @@ export interface Member {
     municipalityCity: string;
     province: string;
     status: MemberStatus;
-    joinedDate: Timestamp;
+    joinedDate: Date;
     membershipType: string;
     tags: string[];
     fiveIsStage: string;
     avatarUrl: string;
-    lastUpdatedAt: Timestamp;
+    lastUpdatedAt: Date;
     searchKeywords: string[];
 }
 
@@ -86,7 +85,7 @@ export interface Application {
     sponsorName: string;
     fiveIsStage: ApplicationFiveIsStage;
     status: ApplicationStatus;
-    stageDates: { [key: string]: Timestamp };
+    stageDates: { [key: string]: Date };
     region: string;
     councilName: string;
     clubName: string;
@@ -94,14 +93,14 @@ export interface Application {
     documents: {
         type: string;
         url: string;
-        uploadedAt: Timestamp;
+        uploadedAt: Date;
         uploadedBy: string;
     }[];
     linkedMemberId: string | null;
     currentHandlerLevel: "Club" | "Region" | "National";
     createdByUserId: string;
-    createdAt: Timestamp;
-    updatedAt: Timestamp;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 
@@ -125,7 +124,7 @@ export interface Transaction {
     userId: string;
     type: 'Dues' | 'Donation' | 'AlalayangAgilaDebit' | 'AlalayangAgilaPayout';
     amount: number;
-    timestamp: Timestamp;
+    timestamp: Date;
     xendit_invoice_id?: string;
     related_entity_id?: string;
 }
@@ -140,13 +139,13 @@ export interface Task {
   id: string;
   title: string;
   completed: boolean;
-  createdAt: Timestamp;
+  createdAt: Date;
 }
 
 export interface Notification {
   id: string;
   message: string;
-  timestamp: Timestamp;
+  timestamp: Date;
   read: boolean;
 }
 
@@ -155,7 +154,7 @@ export interface Document {
     title: string;
     fileUrl: string;
     categoryId: string;
-    uploadDate: Timestamp;
+    uploadDate: Date;
     version: number;
     uploadedByUserId: string;
     content?: string;
@@ -172,8 +171,8 @@ export interface Event {
     id: string;
     title: string;
     description: string;
-    startDate: Timestamp;
-    endDate: Timestamp;
+    startDate: Date;
+    endDate: Date;
     location: string;
     meetingId?: string;
     passcode?: string;
@@ -195,7 +194,7 @@ export interface Endorsement {
     partnershipId: string;
     subject: string;
     body: string;
-    generatedDate: Timestamp;
+    generatedDate: Date;
     generatedByUserId: string;
 }
 
@@ -209,7 +208,7 @@ export interface Conversation {
     }[];
     lastMessage?: {
         text: string;
-        timestamp: Timestamp;
+        timestamp: Date;
         senderId: string;
     };
 }
@@ -218,5 +217,5 @@ export interface Message {
     id: string;
     senderId: string;
     text: string;
-    timestamp: Timestamp;
+    timestamp: Date;
 }
