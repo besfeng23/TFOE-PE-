@@ -1,31 +1,21 @@
-import { createClient } from '@/lib/supabase/server';
-import { type UserProfile } from '@/lib/types';
 
-const supabase = createClient();
+import {createClient} from '@/lib/supabase/server';
+import {supabaseAdmin} from '@/lib/supabase/admin';
 
-export const getMember = async (id: string): Promise<UserProfile | null> => {
-    const { data, error } = await supabase.from('members').select('*').eq('id', id).single();
-    if (error) {
-        console.error('Error fetching member:', error);
-        return null;
-    }
-    return data as UserProfile;
+const db = createClient();
+
+export async function getMembers() {
+  return await db.from('members').select('*');
 }
 
-export const getProfiles = async (): Promise<UserProfile[]> => {
-    const { data, error } = await supabase.from('members').select('*');
-    if (error) {
-        console.error('Error fetching profiles:', error);
-        return [];
-    }
-    return data as UserProfile[];
+export async function getMember(id: string) {
+  return await db.from('members').select('*').eq('id', id).single();
 }
 
-export const updateMember = async (id: string, updates: Partial<UserProfile>): Promise<UserProfile | null> => {
-    const { data, error } = await supabase.from('members').update(updates).eq('id', id).single();
-    if (error) {
-        console.error('Error updating member:', error);
-        return null;
-    }
-    return data as UserProfile;
+export async function updateMember(id: string, data: any) {
+  return await db.from('members').update(data).eq('id', id);
+}
+
+export async function deleteMember(id: string) {
+  return await supabaseAdmin.auth.admin.deleteUser(id);
 }
