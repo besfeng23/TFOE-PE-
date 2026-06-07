@@ -6,7 +6,6 @@ import { Button } from '../ui/button';
 import { MessageCircleQuestion, Send, X, Bot, User, Loader2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../ui/card';
 import { Input } from '../ui/input';
-import { askAboutTheEagles } from '@/ai/flows/ask-about-the-eagles';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -58,18 +57,22 @@ export function AiChatbot() {
     setMessages((prev) => [...prev, modelResponse]);
     
     try {
-        const { stream, response } = await askAboutTheEagles(input);
-        for await (const chunk of stream) {
-             setMessages(prev => {
-                const newMessages = [...prev];
-                const lastMessage = newMessages[newMessages.length-1];
-                if(lastMessage.role === 'model') {
-                    lastMessage.content += chunk;
-                }
-                return newMessages;
-            });
-        }
-        await response;
+        const response = await fetch('/api/genkit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ query: input }),
+        });
+        const { answer } = await response.json();
+        setMessages(prev => {
+            const newMessages = [...prev];
+            const lastMessage = newMessages[newMessages.length-1];
+            if(lastMessage.role === 'model') {
+                lastMessage.content = answer;
+            }
+            return newMessages;
+        });
 
     } catch (error) {
       console.error('Chatbot error:', error);

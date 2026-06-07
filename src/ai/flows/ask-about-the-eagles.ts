@@ -1,9 +1,8 @@
 
 import {ai} from '@/ai/genkit';
-import {defineFlow} from 'genkit';
 import {z} from 'zod';
 
-export const askAboutTheEagles = defineFlow(
+export const askAboutTheEagles = ai.defineFlow(
   {
     name: 'askAboutTheEagles',
     inputSchema: z.object({query: z.string()}),
