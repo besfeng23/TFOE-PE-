@@ -2,9 +2,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { type Message } from '@/lib/types';
 
-const supabase = createClient();
-
 export const getMessages = async (conversationId: string): Promise<Message[]> => {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('messages')
     .select('*')
@@ -19,6 +18,7 @@ export const getMessages = async (conversationId: string): Promise<Message[]> =>
 };
 
 export const createMessage = async (message: Omit<Message, 'id'>): Promise<Message | null> => {
+    const supabase = await createClient();
     const { data, error } = await supabase.from('messages').insert(message).single();
     if (error) {
         console.error('Error creating message:', error);
