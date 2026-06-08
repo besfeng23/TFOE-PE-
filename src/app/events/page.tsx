@@ -15,8 +15,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getEvents } from '@/lib/repositories/events.repository';
 
 export default function EventsPage() {
-  const { profile, loading: isProfileLoading } = useAuth();
-  const isAdmin = profile?.roleId === 'Admin';
+  const { profile, isLoading: isProfileLoading } = useAuth();
+  const isAdmin = profile?.roleId === 'SuperAdmin';
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [eventForForm, setEventForForm] = useState<Event | null>(null);

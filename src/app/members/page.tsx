@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,19 +12,31 @@ import { MemberFormDialog } from '@/components/members/member-form-dialog';
 import { ReportDialog } from '@/components/members/report-dialog';
 import { AiImportDialog } from '@/components/members/ai-import-dialog';
 import { getMembersAction } from '@/app/members/actions';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface MembersPageProps {
-    members: UserProfile[];
+    initialMembers: UserProfile[];
 }
 
-function MembersPage({ members }: MembersPageProps) {
+function MembersPage({ initialMembers }: MembersPageProps) {
+    const [members, setMembers] = useState(initialMembers);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
     const [isAiImportOpen, setIsAiImportOpen] = useState(false);
     const [prefilledData, setPrefilledData] = useState<Partial<UserProfile> | null>(null);
 
-    // Mocking canAdd and canImportExport for now, will be replaced with real RBAC
+    useEffect(() => {
+        const fetchMembers = async () => {
+            setIsLoading(true);
+            const updatedMembers = await getMembersAction();
+            setMembers(updatedMembers);
+            setIsLoading(false);
+        };
+        fetchMembers();
+    }, []);
+
     const canAdd = true;
     const canImportExport = true;
 
@@ -87,7 +99,11 @@ function MembersPage({ members }: MembersPageProps) {
                             </div>
                             {/* Quick filters will go here */}
                         </div>
-                        <MembersTable searchTerm={searchTerm} members={members} />
+                        {isLoading ? (
+                            <Skeleton className="w-full h-[300px]"/>
+                        ) : (
+                            <MembersTable searchTerm={searchTerm} members={members} isLoading={false} />
+                        )}
                     </CardContent>
                 </Card>
             </div>
@@ -118,5 +134,5 @@ function MembersPage({ members }: MembersPageProps) {
 
 export default async function MembersPageWrapper() {
     const members = await getMembersAction();
-    return <MembersPage members={members} />;
+    return <MembersPage initialMembers={members} />;
 }

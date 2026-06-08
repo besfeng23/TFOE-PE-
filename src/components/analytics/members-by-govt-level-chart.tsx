@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList, Pie, PieChart } from 'recharts';
 import {
   ChartContainer,
   ChartTooltipContent,
@@ -30,22 +30,11 @@ export default function MembersByGovtLevelChart({ data }: MembersByGovtLevelChar
   return (
     <ChartContainer config={chartConfig} className="min-h-[200px] w-full h-full">
         <ResponsiveContainer width="100%" height={300}>
-            <BarChart accessibilityLayer data={data} layout="vertical" margin={{ left: 20, top: 20, right: 20, bottom: 20 }}>
-                <CartesianGrid horizontal={false} />
-                <YAxis
-                dataKey="branch"
-                type="category"
-                tickLine={false}
-                tickMargin={10}
-                axisLine={false}
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                />
-                <XAxis dataKey="members" type="number" hide />
-                <Tooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                <Bar dataKey="members" fill="var(--color-members)" radius={5}>
-                    <LabelList dataKey="members" position="right" offset={8} className="fill-foreground font-semibold" fontSize={12} />
-                </Bar>
-            </BarChart>
+          <PieChart>
+            <Pie data={data} dataKey="members">
+                <LabelList dataKey="members" position="right" offset={8} className="fill-foreground font-semibold" fontSize={12} />
+            </Pie>
+          </PieChart>
         </ResponsiveContainer>
     </ChartContainer>
   );
