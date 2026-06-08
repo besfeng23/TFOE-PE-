@@ -1,9 +1,9 @@
 
 import getSupabaseServerClient from '../supabase/server';
 
-const TABLE_NAME = 'members';
+const TABLE_NAME = 'clubs';
 
-export async function getMembers() {
+export async function getClubs() {
     const client = getSupabaseServerClient();
     const { data, error } = await client.from(TABLE_NAME).select('*');
 
@@ -14,7 +14,7 @@ export async function getMembers() {
     return data;
 }
 
-export async function getMember(id: string) {
+export async function getClub(id: string) {
     const client = getSupabaseServerClient();
     const { data, error } = await client.from(TABLE_NAME).select('*').eq('id', id).single();
 
@@ -25,9 +25,9 @@ export async function getMember(id: string) {
     return data;
 }
 
-export async function createMember(member: any) {
+export async function createClub(club: any) {
     const client = getSupabaseServerClient();
-    const { data, error } = await client.from(TABLE_NAME).insert(member).select().single();
+    const { data, error } = await client.from(TABLE_NAME).insert(club).select().single();
 
     if (error) {
         throw new Error(error.message);
@@ -36,9 +36,9 @@ export async function createMember(member: any) {
     return data;
 }
 
-export async function updateMember(id: string, member: any) {
+export async function updateClub(id: string, club: any) {
     const client = getSupabaseServerClient();
-    const { data, error } = await client.from(TABLE_NAME).update(member).eq('id', id).select().single();
+    const { data, error } = await client.from(TABLE_NAME).update(club).eq('id', id).select().single();
 
     if (error) {
         throw new Error(error.message);
@@ -47,7 +47,7 @@ export async function updateMember(id: string, member: any) {
     return data;
 }
 
-export async function deleteMember(id: string) {
+export async function deleteClub(id: string) {
     const client = getSupabaseServerClient();
     const { error } = await client.from(TABLE_NAME).delete().eq('id', id);
 

@@ -19,6 +19,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Card, CardContent } from '../ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 import { MemberFormDialog } from './member-form-dialog';
+import { deleteMember } from '@/lib/repositories/members.repository';
+import { toast } from '@/hooks/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface MembersTableProps {
   searchTerm: string;
@@ -35,7 +38,7 @@ const getStatusBadgeVariant = (status?: string) => {
     }
 }
 
-const MemberCard = ({ member, onEdit }: { member: UserProfile, onEdit: (member: UserProfile) => void }) => {
+const MemberCard = ({ member, onEdit, onDelete }: { member: UserProfile, onEdit: (member: UserProfile) => void, onDelete: (member: UserProfile) => void }) => {
     // Mocking canEdit for now, will be replaced with real RBAC
     const canEdit = true;
 
@@ -67,7 +70,7 @@ const MemberCard = ({ member, onEdit }: { member: UserProfile, onEdit: (member: 
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                         <DropdownMenuItem onClick={() => onEdit(member)}>Edit Member</DropdownMenuItem>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuItem className='text-destructive focus:bg-destructive/10 focus:text-destructive'>Delete Member</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onDelete(member)} className='text-destructive focus:bg-destructive/10 focus:text-destructive'>Delete Member</DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             )}
@@ -102,6 +105,7 @@ const MemberCard = ({ member, onEdit }: { member: UserProfile, onEdit: (member: 
 export default function MembersTable({ searchTerm, members, isLoading }: MembersTableProps) {
   const [selectedMember, setSelectedMember] = useState<UserProfile | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   
   const filteredMembers = useMemo(() => {
     if (!members) return [];
@@ -121,6 +125,24 @@ export default function MembersTable({ searchTerm, members, isLoading }: Members
   const handleEdit = (member: UserProfile) => {
     setSelectedMember(member);
     setIsFormOpen(true);
+  }
+
+  const handleDelete = (member: UserProfile) => {
+    setSelectedMember(member);
+    setIsDeleteAlertOpen(true);
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!selectedMember) return;
+    try {
+      await deleteMember(selectedMember.id);
+      toast({ title: 'Success', description: 'Member deleted successfully.' });
+      setIsDeleteAlertOpen(false);
+      setSelectedMember(null);
+      // You might want to refresh the members list here
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to delete member. Please try again.', variant: 'destructive' });
+    }
   }
 
   const handleCloseForm = () => {
@@ -211,7 +233,7 @@ export default function MembersTable({ searchTerm, members, isLoading }: Members
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 <DropdownMenuItem onClick={() => handleEdit(member)}>Edit Member</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className='text-destructive focus:bg-destructive/10 focus:text-destructive'>Delete Member</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDelete(member)} className='text-destructive focus:bg-destructive/10 focus:text-destructive'>Delete Member</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </TableCell>
@@ -229,7 +251,7 @@ export default function MembersTable({ searchTerm, members, isLoading }: Members
         {/* Mobile Card View */}
         <div className="md:hidden space-y-4">
             {filteredMembers && filteredMembers.map(member => (
-                <MemberCard key={member.id} member={member} onEdit={handleEdit} />
+                <MemberCard key={member.id} member={member} onEdit={handleEdit} onDelete={handleDelete} />
             ))}
              {filteredMembers && filteredMembers.length === 0 && (
                 <div className="text-center p-8 text-muted-foreground">
@@ -243,6 +265,20 @@ export default function MembersTable({ searchTerm, members, isLoading }: Members
             onClose={handleCloseForm}
             member={selectedMember}
         />
+        <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the member and remove their data from our servers.
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleConfirmDelete}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
       </>
   );
 }

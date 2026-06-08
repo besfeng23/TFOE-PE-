@@ -14,12 +14,8 @@ import { AiImportDialog } from '@/components/members/ai-import-dialog';
 import { getMembersAction } from '@/app/members/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface MembersPageProps {
-    initialMembers: UserProfile[];
-}
-
-function MembersPage({ initialMembers }: MembersPageProps) {
-    const [members, setMembers] = useState(initialMembers);
+function MembersPage() {
+    const [members, setMembers] = useState<UserProfile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -132,7 +128,4 @@ function MembersPage({ initialMembers }: MembersPageProps) {
     )
 }
 
-export default async function MembersPageWrapper() {
-    const members = await getMembersAction();
-    return <MembersPage initialMembers={members} />;
-}
+export default MembersPage;

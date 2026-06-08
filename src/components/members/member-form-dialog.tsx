@@ -34,6 +34,7 @@ import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import type { UserProfile } from '@/lib/types';
 import { Separator } from '../ui/separator';
+import { createMember, updateMember } from '@/lib/repositories/members.repository';
 
 interface MemberFormDialogProps {
   isOpen: boolean;
@@ -105,7 +106,22 @@ export function MemberFormDialog({ isOpen, onClose, member, prefilledData }: Mem
   };
 
   const onSubmit = async (data: FormValues) => {
-    // TODO: Connect to Supabase
+    setIsSaving(true);
+    try {
+      if (isEditing && member) {
+        await updateMember(member.id, data);
+        toast({ title: 'Success', description: 'Member updated successfully.' });
+      } else {
+        await createMember(data);
+        toast({ title: 'Success', description: 'Member added successfully.' });
+      }
+      onClose();
+    } catch (error) {
+      console.error('Failed to save member:', error);
+      toast({ title: 'Error', description: 'Failed to save member. Please try again.', variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (

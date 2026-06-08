@@ -42,31 +42,6 @@ export interface UserProfile {
     avatarUrl?: string;
 }
 
-export interface Member {
-    id: string;
-    fullName: string;
-    eagleId: string;
-    email: string;
-    mobileNumber: string;
-    region: string;
-    councilName: string;
-    clubName: string;
-    orgRole: string;
-    governmentRole: string;
-    governmentBranch: string;
-    barangayName: string;
-    municipalityCity: string;
-    province: string;
-    status: MemberStatus;
-    joinedDate: Date;
-    membershipType: string;
-    tags: string[];
-    fiveIsStage: string;
-    avatarUrl: string;
-    lastUpdatedAt: Date;
-    searchKeywords: string[];
-}
-
 export type ApplicationFiveIsStage = "Applicant" | "Interview" | "Indoctrination" | "Initiation" | "Induction" | "Completed";
 export type ApplicationStatus = "In Progress" | "On Hold" | "Returned" | "Rejected" | "Approved" | "ConvertedToMember";
 
