@@ -30,10 +30,10 @@ function ApplicationsPage({ applications }: ApplicationsPageProps) {
     const canExport = profile?.roleId && ['CouncilAdmin', 'RegionAdmin', 'SuperAdmin'].includes(profile.roleId);
 
     const totalApplications = applications.length;
-    const inInterview = applications.filter(a => a.status === 'Interview').length;
-    const forRegionalReview = applications.filter(a => a.status === 'Regional Review').length;
-    const forNationalApproval = applications.filter(a => a.status === 'National Approval').length;
-    const approvedLast30Days = applications.filter(a => a.status === 'Approved' && new Date(a.approvedDate) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length;
+    const inInterview = applications.filter(a => a.fiveIsStage === 'Interview').length;
+    const forRegionalReview = applications.filter(a => a.status === 'In Progress' && a.currentHandlerLevel === 'Region').length;
+    const forNationalApproval = applications.filter(a => a.status === 'In Progress' && a.currentHandlerLevel === 'National').length;
+    const approvedLast30Days = applications.filter(a => a.status === 'Approved' && new Date(a.updatedAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length;
 
     return (
         <div className="space-y-6">

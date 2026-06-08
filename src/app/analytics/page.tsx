@@ -34,9 +34,9 @@ function AnalyticsCard({ title, icon: Icon, value, description, isLoading, error
 
 
 export default function AnalyticsPage() {
-  const { user, profile, loading: isProfileLoading } = useAuth();
+  const { user, profile, isLoading: isProfileLoading } = useAuth();
   const supabase = createClient();
-  const isAdmin = profile?.roleId === 'Admin';
+  const isAdmin = profile?.roleId === 'SuperAdmin';
 
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);

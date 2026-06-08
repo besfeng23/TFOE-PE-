@@ -5,8 +5,7 @@
  */
 import { ai } from '@/ai/genkit';
 import { googleAI } from '@genkit-ai/google-genai';
-import { z } from 'genkit';
-import { getOperation } from '@genkit-ai/core';
+import { z, getOperation } from 'genkit';
 
 const GenerateVideoInputSchema = z.object({
   prompt: z.string().describe('The text prompt to generate the video from.'),
@@ -50,7 +49,7 @@ export async function checkVideoOperation(input: z.infer<typeof CheckVideoOperat
     let operation = await getOperation(input.operationName);
 
     if (operation.done && !operation.error) {
-        const videoPart = operation.output?.message?.content.find((p) => !!p.media);
+        const videoPart = operation.output?.message?.content.find((p: any) => !!p.media);
         if (videoPart?.media?.url) {
              const fetch = (await import('node-fetch')).default;
             const videoDownloadResponse = await fetch(
