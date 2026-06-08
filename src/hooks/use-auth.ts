@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { type User } from '@supabase/supabase-js';
 import { type UserProfile } from '@/lib/types';
 import { useRouter } from 'next/navigation';
-import { getProfile } from '@/lib/repositories/identity';
+import { getProfile } from '@/lib/repositories/client-only/identity';
 
 export function useAuth(options: { redirectTo?: string, redirectIfFound?: boolean } = {}) {
   const [user, setUser] = useState<User | null>(null);
@@ -32,7 +32,7 @@ export function useAuth(options: { redirectTo?: string, redirectIfFound?: boolea
                     email: 'guest@example.com'
                 });
             } else {
-                const userProfile = await getProfile(supabase, sessionUser.id);
+                const userProfile = await getProfile(sessionUser.id);
                 setProfile(userProfile);
             }
         } else {
@@ -63,7 +63,7 @@ export function useAuth(options: { redirectTo?: string, redirectIfFound?: boolea
                         email: 'guest@example.com'
                     });
                 } else {
-                    const userProfile = await getProfile(supabase, sessionUser.id);
+                    const userProfile = await getProfile(sessionUser.id);
                     setProfile(userProfile);
                 }
             } else {

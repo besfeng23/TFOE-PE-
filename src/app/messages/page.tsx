@@ -10,7 +10,7 @@ import type { Conversation, UserProfile } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
 import NewConversationDialog from "@/components/messages/new-conversation-dialog";
 import { Button } from "@/components/ui/button";
-import { getProfiles } from "@/lib/repositories/profiles.repository";
+import { getProfiles } from "@/lib/repositories/client-only/identity";
 import { createClient } from "@/lib/supabase/client";
 
 export default function MessagesPage() {
@@ -26,7 +26,7 @@ export default function MessagesPage() {
     const fetchProfiles = async () => {
         if (!user) return;
         try {
-            const data = await getProfiles(supabase);
+            const data = await getProfiles();
             setProfiles(data || []);
         } catch (error) {
             console.error("Error fetching profiles:", error);

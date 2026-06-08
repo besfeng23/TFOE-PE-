@@ -12,7 +12,7 @@ import EventList from '@/components/events/event-list';
 import EventDetails from '@/components/events/event-details';
 import { EventFormDialog } from '@/components/events/event-form-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getEvents } from '@/lib/repositories/events.repository';
+import { getEvents } from '@/lib/repositories/client-only/events';
 
 export default function EventsPage() {
   const { profile, isLoading: isProfileLoading } = useAuth();

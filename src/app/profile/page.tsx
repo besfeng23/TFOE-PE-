@@ -12,7 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { updateProfile } from '@/lib/repositories/identity';
+import { updateProfile } from '@/lib/repositories/client-only/identity';
 import { createClient } from '@/lib/supabase/client';
 
 export default function ProfilePage() {
@@ -45,7 +45,7 @@ export default function ProfilePage() {
     };
 
     setIsSaving(true);
-    const updatedProfile = await updateProfile(supabase, user.id, { firstName, lastName, contactInfo });
+    const updatedProfile = await updateProfile(user.id, { firstName, lastName, contactInfo });
     
     if (!updatedProfile) {
         toast({

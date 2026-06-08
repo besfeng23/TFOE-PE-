@@ -16,8 +16,8 @@ import {
 import type { UserProfile } from '@/lib/types';
 import { format } from 'date-fns';
 import React from 'react';
-import { getProfiles } from '@/lib/repositories/profiles.repository';
-import getSupabaseServerClient from '@/lib/supabase/server';
+import { getProfiles } from '@/lib/repositories/members.repository';
+import { createClient } from '@/lib/supabase/server';
 import { DashboardCharts } from '@/components/analytics/dashboard-charts';
 
 function StatCard({ title, value, description, icon: Icon }: { title: string, value: number, description: string, icon: React.ElementType }) {
@@ -36,11 +36,11 @@ function StatCard({ title, value, description, icon: Icon }: { title: string, va
 }
 
 export default async function DashboardPage() {
-  const supabase = getSupabaseServerClient();
+  const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user?.id).single();
 
-  const profiles: UserProfile[] = await getProfiles(supabase);
+  const profiles: UserProfile[] = await getProfiles();
 
   const stats = {
     total: profiles.length,
