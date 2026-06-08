@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { type User } from '@supabase/supabase-js';
 import { type UserProfile } from '@/lib/types';
 import { useRouter } from 'next/navigation';
-import { getMember } from '@/lib/repositories/members.repository';
+import { getProfile } from '@/lib/repositories/identity';
 
 export function useAuth(options: { redirectTo?: string, redirectIfFound?: boolean } = {}) {
   const [user, setUser] = useState<User | null>(null);
@@ -32,7 +32,7 @@ export function useAuth(options: { redirectTo?: string, redirectIfFound?: boolea
                     email: 'guest@example.com'
                 });
             } else {
-                const userProfile = await getMember(sessionUser.id);
+                const userProfile = await getProfile(supabase, sessionUser.id);
                 setProfile(userProfile);
             }
         } else {
@@ -63,7 +63,7 @@ export function useAuth(options: { redirectTo?: string, redirectIfFound?: boolea
                         email: 'guest@example.com'
                     });
                 } else {
-                    const userProfile = await getMember(sessionUser.id);
+                    const userProfile = await getProfile(supabase, sessionUser.id);
                     setProfile(userProfile);
                 }
             } else {
@@ -79,7 +79,7 @@ export function useAuth(options: { redirectTo?: string, redirectIfFound?: boolea
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase.auth, router, options.redirectIfFound, options.redirectTo]);
+  }, [supabase, router, options.redirectIfFound, options.redirectTo]);
 
   useEffect(() => {
     if (isLoading) return;
