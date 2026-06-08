@@ -44,9 +44,7 @@ export default function ConversationList({
     const sortedConversations = React.useMemo(() => {
         if (!conversations) return [];
         return [...conversations].sort((a, b) => {
-            // @ts-ignore
             const aTimestamp = a.lastMessage?.timestamp?.toDate() || new Date(0);
-            // @ts-ignore
             const bTimestamp = b.lastMessage?.timestamp?.toDate() || new Date(0);
             return bTimestamp.getTime() - aTimestamp.getTime();
         });
@@ -101,7 +99,6 @@ export default function ConversationList({
                                 <p className="font-medium truncate">{otherParticipant.name}</p>
                                 {convo.lastMessage?.timestamp && (
                                      <p className="text-xs text-muted-foreground whitespace-nowrap">
-                                        {/* @ts-ignore */}
                                         {formatDistanceToNow(convo.lastMessage.timestamp.toDate(), { addSuffix: true })}
                                      </p>
                                 )}

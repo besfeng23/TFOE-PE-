@@ -1,12 +1,12 @@
+import { Timestamp } from 'firebase/firestore';
 
 export type MembershipStatus = 'APPLICANT' | 'INCUBATING' | 'INDOCTRINATING' | 'INDUCTED' | 'SUSPENDED' | 'EXPELLED';
 export type DuesStatus = 'Paid' | 'Pending' | 'Overdue';
 export type AppRole = 'SuperAdmin' | 'RegionAdmin' | 'CouncilAdmin' | 'ClubAdmin' | 'Member' | 'Guest';
 export type PositionType = 'Elected' | 'Appointed' | 'Volunteer' | 'None';
-export type MemberStatus = "Active" | "Inactive" | "Suspended" | "Expelled" | "Deceased";
+export type MemberStatus = 'Active' | 'Inactive' | 'Suspended' | 'Expelled' | 'Deceased';
 
 export interface UserProfile {
-    // Core Identity
     id: string; // Firebase Auth UID
     email: string;
     firstName: string;
@@ -156,26 +156,6 @@ export interface Event {
     passcode?: string;
 }
 
-export interface Partnership {
-    id: string;
-    name: string;
-    contactPerson: string;
-    email: string;
-    phone?: string;
-    address?: string;
-    partnershipType: 'Corporate' | 'NGO' | 'Private';
-    status: 'Active' | 'Inactive';
-}
-
-export interface Endorsement {
-    id: string;
-    partnershipId: string;
-    subject: string;
-    body: string;
-    generatedDate: Date;
-    generatedByUserId: string;
-}
-
 export interface Conversation {
     id: string;
     participants: string[];
@@ -186,7 +166,7 @@ export interface Conversation {
     }[];
     lastMessage?: {
         text: string;
-        timestamp: Date;
+        timestamp: Timestamp; // Changed from Date to Timestamp
         senderId: string;
     };
 }
@@ -195,5 +175,5 @@ export interface Message {
     id: string;
     senderId: string;
     text: string;
-    timestamp: Date;
+    timestamp: Timestamp;
 }
