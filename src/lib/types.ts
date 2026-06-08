@@ -65,17 +65,20 @@ export interface Application {
     councilName: string;
     clubName: string;
     clearances: { [key: string]: boolean };
-    documents: {
-        type: string;
-        url: string;
-        uploadedAt: Date;
-        uploadedBy: string;
-    }[];
     linkedMemberId: string | null;
     currentHandlerLevel: "Club" | "Region" | "National";
     createdByUserId: string;
     createdAt: Date;
     updatedAt: Date;
+}
+
+export interface ApplicationDocument {
+    id: string;
+    application_id: string;
+    type: string;
+    url: string;
+    uploaded_at: Date;
+    uploaded_by: string;
 }
 
 
