@@ -15,7 +15,7 @@ import { Download, Eye, Sparkles } from 'lucide-react';
 import { SummarizeDialog } from './summarize-dialog';
 import type { Document } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
-import { getDocuments } from '@/lib/repositories/client-only/documents';
+import { getDocuments } from '@/lib/repositories/client/documents';
 
 const documentCategories: { [key: string]: string } = {
     'resolution': 'Resolution',
