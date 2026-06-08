@@ -10,7 +10,8 @@ import type { Conversation, UserProfile } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
 import NewConversationDialog from "@/components/messages/new-conversation-dialog";
 import { Button } from "@/components/ui/button";
-import { getProfiles } from "@/lib/repositories/members.repository";
+import { getProfiles } from "@/lib/repositories/profiles.repository";
+import { createClient } from "@/lib/supabase/client";
 
 export default function MessagesPage() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
@@ -19,12 +20,13 @@ export default function MessagesPage() {
 
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [profilesLoading, setProfilesLoading] = useState(true);
+  const supabase = createClient();
 
   useEffect(() => {
     const fetchProfiles = async () => {
         if (!user) return;
         try {
-            const data = await getProfiles();
+            const data = await getProfiles(supabase);
             setProfiles(data || []);
         } catch (error) {
             console.error("Error fetching profiles:", error);
@@ -33,7 +35,7 @@ export default function MessagesPage() {
         }
     };
     fetchProfiles();
-  }, [user]);
+  }, [user, supabase]);
 
   const handleSelectConversation = (conversation: Conversation) => {
     setSelectedConversation(conversation);

@@ -1,10 +1,9 @@
 
-import getSupabaseServerClient from '../supabase/server';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 const TABLE_NAME = 'clubs';
 
-export async function getClubs() {
-    const client = getSupabaseServerClient();
+export async function getClubs(client: SupabaseClient) {
     const { data, error } = await client.from(TABLE_NAME).select('*');
 
     if (error) {
@@ -14,8 +13,7 @@ export async function getClubs() {
     return data;
 }
 
-export async function getClub(id: string) {
-    const client = getSupabaseServerClient();
+export async function getClub(client: SupabaseClient, id: string) {
     const { data, error } = await client.from(TABLE_NAME).select('*').eq('id', id).single();
 
     if (error) {
@@ -25,8 +23,7 @@ export async function getClub(id: string) {
     return data;
 }
 
-export async function createClub(club: any) {
-    const client = getSupabaseServerClient();
+export async function createClub(client: SupabaseClient, club: any) {
     const { data, error } = await client.from(TABLE_NAME).insert(club).select().single();
 
     if (error) {
@@ -36,8 +33,7 @@ export async function createClub(club: any) {
     return data;
 }
 
-export async function updateClub(id: string, club: any) {
-    const client = getSupabaseServerClient();
+export async function updateClub(client: SupabaseClient, id: string, club: any) {
     const { data, error } = await client.from(TABLE_NAME).update(club).eq('id', id).select().single();
 
     if (error) {
@@ -47,8 +43,7 @@ export async function updateClub(id: string, club: any) {
     return data;
 }
 
-export async function deleteClub(id: string) {
-    const client = getSupabaseServerClient();
+export async function deleteClub(client: SupabaseClient, id: string) {
     const { error } = await client.from(TABLE_NAME).delete().eq('id', id);
 
     if (error) {

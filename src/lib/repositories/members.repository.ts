@@ -1,10 +1,9 @@
 
-import getSupabaseServerClient from '../supabase/server';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 const TABLE_NAME = 'members';
 
-export async function getMembers() {
-    const client = getSupabaseServerClient();
+export async function getMembers(client: SupabaseClient) {
     const { data, error } = await client.from(TABLE_NAME).select('*');
 
     if (error) {
@@ -14,8 +13,7 @@ export async function getMembers() {
     return data;
 }
 
-export async function getMember(id: string) {
-    const client = getSupabaseServerClient();
+export async function getMember(client: SupabaseClient, id: string) {
     const { data, error } = await client.from(TABLE_NAME).select('*').eq('id', id).single();
 
     if (error) {
@@ -25,8 +23,7 @@ export async function getMember(id: string) {
     return data;
 }
 
-export async function createMember(member: any) {
-    const client = getSupabaseServerClient();
+export async function createMember(client: SupabaseClient, member: any) {
     const { data, error } = await client.from(TABLE_NAME).insert(member).select().single();
 
     if (error) {
@@ -36,8 +33,7 @@ export async function createMember(member: any) {
     return data;
 }
 
-export async function updateMember(id: string, member: any) {
-    const client = getSupabaseServerClient();
+export async function updateMember(client: SupabaseClient, id: string, member: any) {
     const { data, error } = await client.from(TABLE_NAME).update(member).eq('id', id).select().single();
 
     if (error) {
@@ -47,8 +43,7 @@ export async function updateMember(id: string, member: any) {
     return data;
 }
 
-export async function deleteMember(id: string) {
-    const client = getSupabaseServerClient();
+export async function deleteMember(client: SupabaseClient, id: string) {
     const { error } = await client.from(TABLE_NAME).delete().eq('id', id);
 
     if (error) {

@@ -4,7 +4,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 
 let client: SupabaseClient | undefined;
 
-export default function getSupabaseClient(): SupabaseClient {
+export function createClient(): SupabaseClient {
     if (client) {
         return client;
     }

@@ -17,6 +17,7 @@ import {
   ClipboardPenLine,
   BarChart3,
   MessageCircle,
+  Building,
 } from 'lucide-react';
 
 import {
@@ -76,6 +77,10 @@ export function CommandMenu({ open, setOpen }: CommandMenuProps) {
            <CommandItem onSelect={() => navigate('/partnerships')}>
             <Handshake className="mr-2 h-4 w-4" />
             <span>Partnerships</span>
+          </CommandItem>
+           <CommandItem onSelect={() => navigate('/clubs')}>
+            <Building className="mr-2 h-4 w-4" />
+            <span>Clubs</span>
           </CommandItem>
           <CommandItem onSelect={() => navigate('/documents')}>
             <FileText className="mr-2 h-4 w-4" />
